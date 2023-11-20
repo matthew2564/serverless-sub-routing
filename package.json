@@ -18,6 +18,7 @@
     "@aws-lambda-powertools/commons": "^1.16.0",
     "@aws-lambda-powertools/tracer": "^1.16.0",
     "@aws-sdk/client-dynamodb": "^3.454.0",
+    "@aws-sdk/credential-providers": "^3.454.0",
     "@aws-sdk/lib-dynamodb": "^3.454.0",
     "express": "^4.18.2",
     "reflect-metadata": "^0.1.13",
@@ -30,6 +31,8 @@
     "@types/node": "^20.9.2",
     "rimraf": "^5.0.5",
     "serverless": "^3.37.0",
+    "serverless-dotenv-plugin": "^6.0.0",
+    "serverless-dynamodb": "^0.2.47",
     "serverless-offline": "^13.3.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.3.2"

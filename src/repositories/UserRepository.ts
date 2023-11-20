@@ -1,5 +1,6 @@
 import { GetCommand } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient, DynamoDBClientConfig } from '@aws-sdk/client-dynamodb';
+import { fromEnv, fromIni } from '@aws-sdk/credential-providers';
 import { Service } from "typedi";
 
 @Service()
@@ -12,7 +13,19 @@ export class UserRepository {
     }
 
     private createDynamoClient(): DynamoDBClient {
-        return new DynamoDBClient(UserRepository.opts);
+        const opts = { ...UserRepository.opts };
+
+        // If using `~/.aws/credentials` file
+        if (process.env.USE_CREDENTIALS === 'true') {
+            opts.credentials = fromIni();
+
+        // If using serverless-offline
+        } else if (process.env.IS_OFFLINE === 'true') {
+            opts.credentials = fromEnv();
+            opts.endpoint = process.env.DDB_OFFLINE_ENDPOINT;
+        }
+
+        return new DynamoDBClient(opts);
     }
 
     private get dynamoDBTable(): string {

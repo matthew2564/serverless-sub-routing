@@ -1,0 +1,44 @@
+[
+  {
+    "role": "DE",
+    "staffNumber": "1234567",
+    "testPermissionPeriods": [
+      {
+        "from": "2019-07-01",
+        "testCategory": "B",
+        "to": null
+      },
+      {
+        "from": "2019-07-01",
+        "testCategory": "B+E",
+        "to": null
+      },
+      {
+        "from": "2019-07-01",
+        "testCategory": "C",
+        "to": null
+      }
+    ]
+  },
+  {
+    "role": "LDTM",
+    "staffNumber": "7483920",
+    "testPermissionPeriods": [
+      {
+        "from": "2019-07-01",
+        "testCategory": "D",
+        "to": null
+      },
+      {
+        "from": "2019-07-01",
+        "testCategory": "D+E",
+        "to": null
+      },
+      {
+        "from": "2019-07-01",
+        "testCategory": "ADI2",
+        "to": null
+      }
+    ]
+  }
+]

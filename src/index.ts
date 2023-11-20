@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import serverless from 'serverless-http';
 import { createExpressServer, useContainer } from 'routing-controllers';
-import { UserController } from './controllers/UserController';
+import { UserResource } from './resources/UserResource';
 import { NotFoundMiddleware } from './middleware/NotFoundMiddleware';
 import { Container } from 'typedi';
 
@@ -9,7 +9,7 @@ import { Container } from 'typedi';
 useContainer(Container);
 
 const app = createExpressServer({
-	controllers: [UserController], // We specify controllers to use
+	controllers: [UserResource], // We specify controllers to use
 	middlewares: [NotFoundMiddleware],
 });
 

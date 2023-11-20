@@ -7,7 +7,7 @@ serverless-sub-routing /
 │
 ├── src/
 │   ├── controllers/       # HTTP routing
-│   │   └── UserController.ts
+│   │   └── UserResource.ts
 │   │
 │   ├── middleware/       # HTTP route error handling
 │   │   └── NotFoundMiddleware.ts
@@ -16,7 +16,7 @@ serverless-sub-routing /
 │   │   └── UserService.ts
 │   │
 │   ├── repositories/      # Database interaction layer
-│   │   └── UserRepository.ts
+│   │   └── UserProvider.ts
 │   │
 │   └── index.ts           # Application entry point
 │
@@ -33,17 +33,17 @@ serverless-sub-routing /
 
 # Architecture
 
-### Controllers
+### Resources
 
-Controllers in `src/controllers` handle incoming HTTP requests and delegate complex business logic to the services. They are responsible for responding to the client.
+Resources in `src/resources` handle incoming HTTP requests and delegate complex business logic to the services. They are responsible for responding to the client.
 
 ### Services
 
 The `src/services` directory contains service classes. Services encapsulate the core business logic of the application. They interact with the repository layer to fetch and manipulate data.
 
-### Repositories
+### Providers
 
-Repositories in `src/repositories` are responsible for direct database interactions. They abstract the data layer, making it easier to manage data operations.
+Providers in `src/providers` are responsible for direct database interactions. They abstract the data layer, making it easier to manage data operations.
 
 ### Dependency Injection
 

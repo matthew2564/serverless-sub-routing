@@ -4,7 +4,7 @@ import { fromEnv, fromIni } from '@aws-sdk/credential-providers';
 import { Service } from 'typedi';
 
 @Service()
-export class UserRepository {
+export class UserProvider {
 	private static opts = { region: 'eu-west-1' } as DynamoDBClientConfig;
 	private dynamoClient: DynamoDBClient;
 
@@ -13,7 +13,7 @@ export class UserRepository {
 	}
 
 	private createDynamoClient(): DynamoDBClient {
-		const opts = { ...UserRepository.opts };
+		const opts = { ...UserProvider.opts };
 
 		// If using `~/.aws/credentials` file
 		if (process.env.USE_CREDENTIALS === 'true') {

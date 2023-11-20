@@ -1,12 +1,12 @@
 import { Service } from 'typedi';
 import { NotFoundError } from 'routing-controllers';
-import { UserRepository } from '../repositories/UserRepository';
+import { UserProvider } from '../providers/UserProvider';
 
 @Service()
 export class UserService {
-	private userRepository: UserRepository;
+	private userRepository: UserProvider;
 
-	constructor(userRepository: UserRepository) {
+	constructor(userRepository: UserProvider) {
 		this.userRepository = userRepository;
 	}
 

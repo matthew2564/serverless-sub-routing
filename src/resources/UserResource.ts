@@ -5,7 +5,7 @@ import { UserService } from '../services/UserService';
 
 @Service()
 @JsonController('/users')
-export class UserController {
+export class UserResource {
 	constructor(private userService: UserService) {}
 
 	@Get('/:staffNumber')

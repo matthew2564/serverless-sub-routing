@@ -1,8 +1,12 @@
 import 'reflect-metadata';
 import serverless from 'serverless-http';
-import {createExpressServer} from 'routing-controllers';
-import {UserController} from "./controller/UserController";
+import {createExpressServer, useContainer} from 'routing-controllers';
+import {UserController} from "./controllers/UserController";
 import {NotFoundMiddleware} from "./middleware/NotFoundMiddleware";
+import {Container} from "typedi";
+
+// This line tells routing-controllers to use typedi container
+useContainer(Container);
 
 const app = createExpressServer({
     controllers: [UserController], // We specify controllers to use

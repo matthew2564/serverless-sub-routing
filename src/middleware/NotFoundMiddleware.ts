@@ -1,14 +1,15 @@
 import { Middleware, ExpressMiddlewareInterface } from 'routing-controllers';
 import { Request, Response, NextFunction } from 'express';
+import { Service } from "typedi";
 
+@Service()
 @Middleware({ type: 'after' })
 export class NotFoundMiddleware implements ExpressMiddlewareInterface {
 
-    use({ path }: Request, res: Response, next: NextFunction): void {
+    use({ path }: Request, res: Response, next: NextFunction) {
         if (!res.headersSent) {
-            res.status(404).send({ message: `Route '${path}' not found` });
-        } else {
-            next();
+            return res.status(404).send({ message: `Route '${path}' not found` });
         }
+        next();
     }
 }

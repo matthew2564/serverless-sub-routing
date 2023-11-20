@@ -1,6 +1,8 @@
 import { GetCommand } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient, DynamoDBClientConfig } from '@aws-sdk/client-dynamodb';
+import { Service } from "typedi";
 
+@Service()
 export class UserRepository {
     private static opts = { region: 'eu-west-1' } as DynamoDBClientConfig;
     private dynamoClient: DynamoDBClient;

@@ -4,11 +4,7 @@ import { UserProvider } from '../providers/UserProvider';
 
 @Service()
 export class UserService {
-	private userRepository: UserProvider;
-
-	constructor(userRepository: UserProvider) {
-		this.userRepository = userRepository;
-	}
+	constructor(private userRepository: UserProvider) {}
 
 	async getUserByStaffNumber(staffNumber: string): Promise<void> {
 		const user = await this.userRepository.findUserRecord(staffNumber);

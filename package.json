@@ -1,0 +1,36 @@
+{
+  "name": "serverless-sub-routing",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsc && serverless offline",
+    "clean": "rimraf build"
+  },
+  "keywords": [
+    "serverless",
+    "typescript",
+    "express"
+  ],
+  "author": "matthew2564",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-lambda-powertools/commons": "^1.16.0",
+    "@aws-lambda-powertools/tracer": "^1.16.0",
+    "@aws-sdk/client-dynamodb": "^3.454.0",
+    "@aws-sdk/lib-dynamodb": "^3.454.0",
+    "express": "^4.18.2",
+    "reflect-metadata": "^0.1.13",
+    "routing-controllers": "^0.10.4",
+    "serverless-http": "^3.2.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.9.2",
+    "rimraf": "^5.0.5",
+    "serverless": "^3.37.0",
+    "serverless-offline": "^13.3.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.2"
+  }
+}

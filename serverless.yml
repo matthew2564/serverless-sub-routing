@@ -1,0 +1,18 @@
+service: serverless-sub-routing
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: dev
+  region: eu-west-1
+
+functions:
+  app:
+    handler: build/index.handler
+    events:
+      - http:
+          path: /{proxy+}
+          method: any
+
+plugins:
+  - serverless-offline

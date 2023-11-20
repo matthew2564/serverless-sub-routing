@@ -6,7 +6,7 @@ This project is a Node.js application utilising routing-controllers for route ma
 serverless-sub-routing /
 │
 ├── src/
-│   ├── controllers/       # HTTP routing
+│   ├── resources/       # HTTP routing
 │   │   └── UserResource.ts
 │   │
 │   ├── middleware/       # HTTP route error handling
@@ -15,7 +15,7 @@ serverless-sub-routing /
 │   ├── services/          # Business logic implementation
 │   │   └── UserService.ts
 │   │
-│   ├── repositories/      # Database interaction layer
+│   ├── providers/      # Database interaction layer
 │   │   └── UserProvider.ts
 │   │
 │   └── index.ts           # Application entry point

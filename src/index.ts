@@ -9,7 +9,8 @@ import { Container } from 'typedi';
 useContainer(Container);
 
 const app = createExpressServer({
-	controllers: [UserResource], // We specify controllers to use
+	cors: true,
+	controllers: [UserResource],
 	middlewares: [NotFoundMiddleware],
 });
 

@@ -31,6 +31,11 @@ serverless-sub-routing /
 - Node.js
 - npm
 
+## Getting started
+1) `npm i` - Installs dependencies
+2) `npm run setup` - Installs Serverless DynamoDB local
+3) `npm run start` - Starts Serverless offline
+
 # Architecture
 
 ### Resources

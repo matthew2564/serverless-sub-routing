@@ -13,7 +13,7 @@ provider:
 
 functions:
   app:
-    handler: build/index.handler
+    handler: build/src/index.handler
     events:
       - http:
           path: /{proxy+}

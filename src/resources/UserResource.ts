@@ -1,12 +1,20 @@
 import { JsonController, Param, Get, Res, NotFoundError } from 'routing-controllers';
 import { Response } from 'express';
-import { Service } from 'typedi';
+import { Container, Service } from 'typedi';
 import { UserService } from '../services/UserService';
+import { version } from '../../package.json';
 
 @Service()
-@JsonController('/users')
+@JsonController('/1.0/users')
 export class UserResource {
-	constructor(private userService: UserService) {}
+	constructor(private userService: UserService) {
+		this.userService = Container.get(UserService);
+	}
+
+	@Get('/version')
+	getVersion(@Res() response: Response) {
+		return response.status(200).json({ version });
+	}
 
 	@Get('/:staffNumber')
 	async getUser(@Param('staffNumber') staffNumber: string, @Res() response: Response) {

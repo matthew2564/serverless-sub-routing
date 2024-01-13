@@ -1,5 +1,8 @@
+.DS_Store/
 .dynamodb/
 idea/
 build
+dist
+/artifacts/
 node_modules
 .env

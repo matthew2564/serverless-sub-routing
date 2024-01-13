@@ -1,24 +1,26 @@
 {
   "name": "serverless-sub-routing",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Serverless Sub Routing with DI",
+  "main": "./src/index.ts",
+  "author": "matthew2564",
+  "license": "ISC",
   "scripts": {
-    "clean": "rimraf build",
+    "clean": "rimraf artifacts build dist",
     "format": "prettier . --write",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "prepare": "husky install",
     "setup": "sls dynamodb install",
-    "start": "tsc && serverless offline start"
+    "start": "tsc && serverless offline start",
+    "package": "node build-artifact.js && zip lambda.zip dist/lambda.js && mkdir -p artifacts && mv lambda.zip artifacts/lambda.zip"
   },
   "keywords": [
     "serverless",
     "typescript",
+    "di",
     "express"
   ],
-  "author": "matthew2564",
-  "license": "ISC",
   "dependencies": {
     "@aws-lambda-powertools/commons": "^1.16.0",
     "@aws-lambda-powertools/tracer": "^1.16.0",
@@ -27,7 +29,7 @@
     "@aws-sdk/lib-dynamodb": "^3.454.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "reflect-metadata": "^0.1.13",
+    "reflect-metadata": "^0.2.1",
     "routing-controllers": "^0.10.4",
     "serverless-http": "^3.2.0",
     "typedi": "^0.10.0"
@@ -37,6 +39,7 @@
     "@types/node": "^20.9.2",
     "@typescript-eslint/eslint-plugin": "^6.12.0",
     "@typescript-eslint/parser": "^6.12.0",
+    "esbuild": "^0.19.11",
     "eslint": "^8.53.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-import": "^2.29.0",

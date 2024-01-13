@@ -6,6 +6,7 @@ import { Service } from 'typedi';
 @Service()
 export class UserProvider {
 	private static opts = { region: 'eu-west-1' } as DynamoDBClientConfig;
+	private static dynamoDBTable: string = process.env.USERS_DDB_TABLE_NAME || 'users';
 	private dynamoClient: DynamoDBClient;
 
 	constructor() {
@@ -28,14 +29,10 @@ export class UserProvider {
 		return new DynamoDBClient(opts);
 	}
 
-	private get dynamoDBTable(): string {
-		return process.env.USERS_DDB_TABLE_NAME || 'users';
-	}
-
 	async findUserRecord(staffNumber: string) {
 		const response = await this.dynamoClient.send(
 			new GetCommand({
-				TableName: this.dynamoDBTable,
+				TableName: UserProvider.dynamoDBTable,
 				Key: { staffNumber },
 			})
 		);

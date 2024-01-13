@@ -6,19 +6,19 @@ This project is a Node.js application utilising routing-controllers for route ma
 serverless-sub-routing /
 │
 ├── src/
-│   ├── resources/       # HTTP routing
+│   ├── resources/        # HTTP routing
 │   │   └── UserResource.ts
 │   │
 │   ├── middleware/       # HTTP route error handling
 │   │   └── NotFoundMiddleware.ts
 │   │
-│   ├── services/          # Business logic implementation
+│   ├── services/         # Business logic implementation
 │   │   └── UserService.ts
 │   │
-│   ├── providers/      # Database interaction layer
+│   ├── providers/        # Database interaction layer
 │   │   └── UserProvider.ts
 │   │
-│   └── index.ts           # Application entry point
+│   └── index.ts          # Application entry point
 │
 ├── package.json
 ├── tsconfig.json
@@ -32,9 +32,12 @@ serverless-sub-routing /
 - npm
 
 ## Getting started
-1) `npm i` - Installs dependencies
-2) `npm run setup` - Installs Serverless DynamoDB local
-3) `npm run start` - Starts Serverless offline
+
+1. `npm i` - Installs dependencies
+2. `npm run setup` - Installs Serverless DynamoDB local
+3. `npm run start` - Starts Serverless offline
+
+###### `npm run package` - Packages the project and outputs to `/artifacts/lambda.zip`
 
 # Architecture
 

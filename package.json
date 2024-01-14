@@ -14,8 +14,9 @@
     "test:coverage": "jest --coverage",
     "prepare": "husky install",
     "setup": "sls dynamodb install",
-    "start": "ts-node compile-service.ts && serverless offline start",
-    "package": "ts-node compile-service.ts && zip lambda.zip dist/lambda.js && mkdir -p artifacts && mv lambda.zip artifacts/lambda.zip"
+    "build": "ts-node compile-service.ts",
+    "start": "npm run build && serverless offline start",
+    "package": "npm run build && zip lambda.zip dist/lambda.js && mkdir -p artifacts && mv lambda.zip artifacts/lambda.zip"
   },
   "keywords": [
     "serverless",

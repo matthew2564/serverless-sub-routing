@@ -12,8 +12,8 @@
     "lint:fix": "eslint src --ext .ts --fix",
     "prepare": "husky install",
     "setup": "sls dynamodb install",
-    "start": "tsc && serverless offline start",
-    "package": "node build-artifact.js && zip lambda.zip dist/lambda.js && mkdir -p artifacts && mv lambda.zip artifacts/lambda.zip"
+    "start": "node compile-service.js && serverless offline start",
+    "package": "node compile-service.js && zip lambda.zip dist/lambda.js && mkdir -p artifacts && mv lambda.zip artifacts/lambda.zip"
   },
   "keywords": [
     "serverless",

@@ -20,15 +20,9 @@ export class UserResource {
 
 	@Get('/version')
 	getVersion(@Res() response: Response) {
-		try {
-			this.logger.debug(`Version v${version}`);
+		this.logger.debug(`Version v${version}`);
 
-			return response.status(200).json({ version });
-		} catch (err) {
-			this.logger.error('[ERROR]: getVersion', (err as Error).message);
-
-			return response.status(500).send({ message: 'Internal server error' });
-		}
+		return response.status(200).json({ version });
 	}
 
 	@Get('/:staffNumber')

@@ -1,11 +1,11 @@
-import { Container, Service } from 'typedi';
+import { Inject, Service } from 'typedi';
 import { NotFoundError } from 'routing-controllers';
 import { UserProvider } from '../providers/UserProvider';
 
 @Service()
 export class UserService {
-	constructor(private userProvider: UserProvider) {
-		this.userProvider = Container.get(UserProvider);
+	constructor(@Inject() private userProvider: UserProvider) {
+		this.userProvider = userProvider;
 	}
 
 	async getUserByStaffNumber(staffNumber: string): Promise<void> {

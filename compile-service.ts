@@ -1,5 +1,6 @@
 import { build } from 'esbuild';
 import { readFileSync } from 'fs';
+import { esbuildDecorators } from 'esbuild-plugin-typescript-decorators';
 const [majorNodeVersion] = readFileSync('.nvmrc', 'utf-8').trim().split('.');
 
 (async () => {
@@ -13,6 +14,7 @@ const [majorNodeVersion] = readFileSync('.nvmrc', 'utf-8').trim().split('.');
 			target: `node${majorNodeVersion}`,
 			outfile: 'dist/lambda.js',
 			external: ['@koa/*', '@babel/*'],
+			plugins: [esbuildDecorators()],
 		});
 
 		console.log('\x1b[36m%s\x1b[0m', '\nProject compiled successfully.');

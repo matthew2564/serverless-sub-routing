@@ -1,6 +1,6 @@
 import { JsonController, Param, Get, Res, NotFoundError } from 'routing-controllers';
 import { Response } from 'express';
-import { Container, Service } from 'typedi';
+import { Inject, Service } from 'typedi';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { LogLevel } from '@aws-lambda-powertools/logger/lib/types';
 import { UserService } from '../services/UserService';
@@ -14,8 +14,8 @@ export class UserResource {
 		logLevel: (process.env.LOG_LEVEL as LogLevel) || 'info',
 	});
 
-	constructor(private userService: UserService) {
-		this.userService = Container.get(UserService);
+	constructor(@Inject() private userService: UserService) {
+		this.userService = userService;
 	}
 
 	@Get('/version')

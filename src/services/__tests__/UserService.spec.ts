@@ -1,25 +1,15 @@
-import { Container, Service } from 'typedi';
+import { Container } from 'typedi';
 import { HttpError, NotFoundError } from 'routing-controllers';
 import { UserProvider } from '../../providers/UserProvider';
 import { UserService } from '../UserService';
 import { User } from '../../models/UserModel';
+import { UserProviderMock } from '../../providers/__mocks__/UserProvider.mock';
 
 jest.mock('../../providers/UserProvider');
 
 describe('UserService', () => {
 	let userService: UserService;
 	let mockUserProvider: jest.Mocked<UserProvider>;
-
-	@Service()
-	class UserProviderMock extends UserProvider {
-		constructor() {
-			super();
-		}
-
-		async findUserRecord() {
-			return null;
-		}
-	}
 
 	beforeEach(() => {
 		// set the mock implementation

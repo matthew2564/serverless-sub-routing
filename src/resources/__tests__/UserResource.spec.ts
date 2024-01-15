@@ -1,12 +1,12 @@
 import { HttpError, NotFoundError } from 'routing-controllers';
 import { Response } from 'express';
-import { Container, Service } from 'typedi';
+import { Container } from 'typedi';
 import { version } from '../../../package.json';
 import { UserService } from '../../services/UserService';
-import { UserProvider } from '../../providers/UserProvider';
 import { UserResource } from '../UserResource';
 import { User } from '../../models/UserModel';
 import { ErrorEnum } from '../../enums/Error.enum';
+import { UserServiceMock } from '../../services/__mocks__/UserService.mock';
 
 jest.mock('../../services/UserService');
 jest.mock('../../providers/UserProvider');
@@ -26,17 +26,6 @@ describe('UserResource', () => {
 		staffNumber: '123',
 		age: 65,
 	};
-
-	@Service()
-	class UserServiceMock extends UserService {
-		constructor() {
-			super({} as UserProvider);
-		}
-
-		async getUserByStaffNumber() {
-			return;
-		}
-	}
 
 	beforeEach(() => {
 		// set the mock implementation

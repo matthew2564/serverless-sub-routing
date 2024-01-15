@@ -51,7 +51,7 @@ describe('UserResource', () => {
 
 	describe('getUser', () => {
 		it('should return 200 when user is found', async () => {
-			await userResource.getUser('123', mockResponse as Response);
+			await userResource.getUser(123, mockResponse as Response);
 
 			expect(mockResponse.status).toHaveBeenCalledWith(200);
 			expect(mockResponse.json).toHaveBeenCalledWith({});
@@ -60,7 +60,7 @@ describe('UserResource', () => {
 		it('should return 404 when user is not found', async () => {
 			mockUserService.getUserByStaffNumber.mockRejectedValue(new NotFoundError('User not found'));
 
-			await userResource.getUser('456', mockResponse as Response);
+			await userResource.getUser(456, mockResponse as Response);
 
 			expect(mockResponse.status).toHaveBeenCalledWith(404);
 			expect(mockResponse.send).toHaveBeenCalledWith({ message: 'User not found' });
@@ -69,7 +69,7 @@ describe('UserResource', () => {
 		it('should return 500 if undefined error', async () => {
 			mockUserService.getUserByStaffNumber.mockRejectedValue(new Error('Unexpected error'));
 
-			await userResource.getUser('789', mockResponse as Response);
+			await userResource.getUser(789, mockResponse as Response);
 
 			expect(mockResponse.status).toHaveBeenCalledWith(500);
 			expect(mockResponse.send).toHaveBeenCalledWith({ message: 'Internal server error' });

@@ -30,8 +30,6 @@ export class UserResource {
 		try {
 			this.logger.info(`Calling \`getUserByStaffNumber\` with staff number ${staffNumber}`);
 
-			console.log(staffNumber);
-
 			await this.userService.getUserByStaffNumber(staffNumber.toString());
 
 			this.logger.debug(`User found with staff number ${staffNumber}`);

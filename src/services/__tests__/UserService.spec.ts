@@ -1,4 +1,4 @@
-import { Container } from 'typedi';
+import { Container, Service } from 'typedi';
 import { NotFoundError } from 'routing-controllers';
 import { UserProvider } from '../../providers/UserProvider';
 import { UserService } from '../UserService';
@@ -9,16 +9,25 @@ describe('UserService', () => {
 	let userService: UserService;
 	let mockUserProvider: jest.Mocked<UserProvider>;
 
+	@Service()
+	class UserProviderMock extends UserProvider {
+		constructor() {
+			super();
+		}
+
+		async findUserRecord() {
+			return null;
+		}
+	}
+
 	beforeEach(() => {
-		mockUserProvider = new UserProvider() as jest.Mocked<UserProvider>;
+		// set the mock implementation
+		Container.set(UserProvider, new UserProviderMock());
 
-		jest.spyOn(Container, 'get').mockImplementation((token) => {
-			if (token === UserProvider) {
-				return mockUserProvider;
-			}
-			throw new Error(`Unexpected token: ${token}`);
-		});
+		// get the mock provider from the container
+		mockUserProvider = Container.get(UserProvider) as jest.Mocked<UserProvider>;
 
+		// inject the mock provider into the service
 		userService = new UserService(mockUserProvider);
 	});
 

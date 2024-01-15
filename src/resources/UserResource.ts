@@ -26,11 +26,13 @@ export class UserResource {
 	}
 
 	@Get('/:staffNumber')
-	async getUser(@Param('staffNumber') staffNumber: string, @Res() response: Response) {
+	async getUser(@Param('staffNumber') staffNumber: number, @Res() response: Response) {
 		try {
 			this.logger.info(`Calling \`getUserByStaffNumber\` with staff number ${staffNumber}`);
 
-			await this.userService.getUserByStaffNumber(staffNumber);
+			console.log(staffNumber);
+
+			await this.userService.getUserByStaffNumber(staffNumber.toString());
 
 			this.logger.debug(`User found with staff number ${staffNumber}`);
 

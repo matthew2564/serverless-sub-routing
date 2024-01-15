@@ -1,5 +1,5 @@
-import { build } from 'esbuild';
 import { readFileSync } from 'fs';
+import { build } from 'esbuild';
 import { esbuildDecorators } from 'esbuild-plugin-typescript-decorators';
 const [majorNodeVersion] = readFileSync('.nvmrc', 'utf-8').trim().split('.');
 

@@ -4,14 +4,16 @@ import { createExpressServer, useContainer } from 'routing-controllers';
 import { Container } from 'typedi';
 import { UserResource } from './resources/UserResource';
 import { NotFoundMiddleware } from './middleware/NotFoundMiddleware';
+import { CustomErrorMiddleware } from './middleware/CustomErrorMiddleware';
 
 // This line tells routing-controllers to use typedi container
 useContainer(Container);
 
 const app = createExpressServer({
 	cors: true,
+	defaultErrorHandler: false,
 	controllers: [UserResource],
-	middlewares: [NotFoundMiddleware],
+	middlewares: [CustomErrorMiddleware, NotFoundMiddleware],
 });
 
 if (process.env.IS_OFFLINE === 'true') {

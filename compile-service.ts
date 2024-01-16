@@ -8,7 +8,6 @@ const [majorNodeVersion] = readFileSync('.nvmrc', 'utf-8').trim().split('.');
 		await build({
 			entryPoints: ['src/index.ts'],
 			bundle: true,
-			keepNames: true,
 			minify: true,
 			logLevel: 'info',
 			platform: 'node',

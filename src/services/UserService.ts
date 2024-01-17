@@ -1,6 +1,8 @@
 import { Inject, Service } from 'typedi';
-import { NotFoundError } from 'routing-controllers';
+import { HttpError, NotFoundError } from 'routing-controllers';
 import { UserProvider } from '../providers/UserProvider';
+import { User } from '../models/UserModel';
+import { ErrorEnum } from '../enums/Error.enum';
 
 @Service()
 export class UserService {
@@ -13,6 +15,14 @@ export class UserService {
 
 		if (!user) {
 			throw new NotFoundError(`User with staff number ${staffNumber} not found`);
+		}
+	}
+
+	async postUser(user: User): Promise<void> {
+		const statusCode = await this.userProvider.postUserRecord(user);
+
+		if (statusCode !== 200) {
+			throw new HttpError(500, `${ErrorEnum.CREATING}. StatusCode from DynamoDB: ${statusCode}`);
 		}
 	}
 }

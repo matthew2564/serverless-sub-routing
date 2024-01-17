@@ -9,8 +9,9 @@ serverless-sub-routing /
 │   ├── resources/        # HTTP routing
 │   │   └── UserResource.ts
 │   │
-│   ├── middleware/       # HTTP route error handling
+│   ├── middleware/       # HTTP route, request & response error handling
 │   │   └── NotFoundMiddleware.ts
+|   |   └── CustomErrorMiddleware.ts
 │   │
 │   ├── services/         # Business logic implementation
 │   │   └── UserService.ts

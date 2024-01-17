@@ -1,7 +1,8 @@
-import { GetCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient, DynamoDBClientConfig } from '@aws-sdk/client-dynamodb';
 import { fromEnv, fromIni } from '@aws-sdk/credential-providers';
 import { Service } from 'typedi';
+import { User } from '../models/UserModel';
 
 @Service()
 export class UserProvider {
@@ -38,5 +39,16 @@ export class UserProvider {
 		);
 
 		return response.Item || null;
+	}
+
+	async postUserRecord(user: User) {
+		const response = await this.dynamoClient.send(
+			new PutCommand({
+				TableName: UserProvider.dynamoDBTable,
+				Item: user,
+			})
+		);
+
+		return response?.$metadata.httpStatusCode;
 	}
 }

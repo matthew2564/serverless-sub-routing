@@ -1,4 +1,4 @@
-import { JsonController, Param, Get, Res, NotFoundError } from 'routing-controllers';
+import { Authorized, JsonController, Param, Get, Res, NotFoundError } from 'routing-controllers';
 import { Response } from 'express';
 import { Inject, Service } from 'typedi';
 import { Logger } from '@aws-lambda-powertools/logger';
@@ -26,6 +26,7 @@ export class UserResource {
 	}
 
 	@Get('/:staffNumber')
+	@Authorized(['SomeRole'])
 	async getUser(@Param('staffNumber') staffNumber: number, @Res() response: Response) {
 		try {
 			this.logger.info(`Calling \`getUserByStaffNumber\` with staff number ${staffNumber}`);

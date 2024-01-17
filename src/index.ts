@@ -1,7 +1,8 @@
 import 'reflect-metadata';
 import serverless from 'serverless-http';
-import { createExpressServer, useContainer } from 'routing-controllers';
+import { Action, createExpressServer, useContainer } from 'routing-controllers';
 import { Container } from 'typedi';
+import { APIGatewayProxyEvent } from 'aws-lambda';
 import { UserResource } from './resources/UserResource';
 import { NotFoundMiddleware } from './middleware/NotFoundMiddleware';
 import { CustomErrorMiddleware } from './middleware/CustomErrorMiddleware';
@@ -14,6 +15,26 @@ const app = createExpressServer({
 	defaultErrorHandler: false,
 	controllers: [UserResource],
 	middlewares: [CustomErrorMiddleware, NotFoundMiddleware],
+	authorizationChecker: ({ request }: Action, roles: string | string[]) => {
+		// if running locally, skip the auth check
+		if (process.env.IS_OFFLINE === 'true') return true;
+
+		// check if a singular or list of roles were passed into the @Authorized decorator & remove nullish values
+		const requiredRoles = (Array.isArray(roles) ? roles : [roles]).filter((role) => !!role);
+
+		// if empty, then assume users with a valid token can access the resource without needing any specific role
+		if (requiredRoles.length === 0) return true;
+
+		// extract the `roles` property from JWT claims object
+		const tokenRoles = (request as APIGatewayProxyEvent).requestContext.authorizer?.jwt.claims.roles;
+
+		// if there are no roles in JWT token, then deny access to resource
+		if (!tokenRoles || tokenRoles.length === 0) return false;
+
+		// check if one of the required roles is present in JWT token, and if so allow access
+		// @TODO: Check if this needs to be every/some role
+		return requiredRoles.some((role) => tokenRoles.includes(role));
+	},
 });
 
 if (process.env.IS_OFFLINE === 'true') {

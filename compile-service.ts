@@ -9,6 +9,7 @@ const [majorNodeVersion] = readFileSync('.nvmrc', 'utf-8').trim().split('.');
 			entryPoints: ['src/index.ts'],
 			bundle: true,
 			minify: true,
+			sourcemap: process.argv.includes('--source-map'),
 			logLevel: 'info',
 			platform: 'node',
 			target: `node${majorNodeVersion}`,

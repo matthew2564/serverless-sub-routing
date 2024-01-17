@@ -15,7 +15,7 @@
     "prepare": "husky install",
     "setup": "sls dynamodb install",
     "build": "ts-node compile-service.ts",
-    "start": "npm run build && serverless offline start",
+    "start": "npm run build -- --source-map && serverless offline start",
     "package": "npm run build && zip lambda.zip dist/lambda.js && mkdir -p artifacts && mv lambda.zip artifacts/lambda.zip"
   },
   "keywords": [

@@ -6,6 +6,7 @@ import { APIGatewayProxyEvent } from 'aws-lambda';
 import { UserResource } from './resources/UserResource';
 import { NotFoundMiddleware } from './middleware/NotFoundMiddleware';
 import { CustomErrorMiddleware } from './middleware/CustomErrorMiddleware';
+import { TestFacilityResource } from './resources/TestFacilityResource';
 
 // This line tells routing-controllers to use typedi container
 useContainer(Container);
@@ -13,7 +14,7 @@ useContainer(Container);
 const app = createExpressServer({
 	cors: true,
 	defaultErrorHandler: false,
-	controllers: [UserResource],
+	controllers: [UserResource, TestFacilityResource],
 	middlewares: [CustomErrorMiddleware, NotFoundMiddleware],
 	authorizationChecker: ({ request }: Action, roles: string | string[]) => {
 		// if running locally, skip the auth check

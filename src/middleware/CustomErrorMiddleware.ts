@@ -10,6 +10,7 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 	private static ValueSanitiserRegExp = /\(.*?\)/g;
 
 	error(error: unknown, _request: Request, response: Response, next: NextFunction) {
+		// this is the error handler for when using @Param('param') and the parsing fails
 		if (error instanceof HttpError && error.name === 'ParamNormalizationError') {
 			const body = {
 				message: error.message.replace(CustomErrorMiddleware.ValueSanitiserRegExp, 'supplied'),
@@ -17,6 +18,7 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 			return response.status(error.httpCode).send(body);
 		}
 
+		// this is the error handler for when using @Body({ validate: true }) and the class-transformer
 		if (error instanceof BadRequestError) {
 			const requestError = error as BadRequestError & { errors: ValidationError[] };
 

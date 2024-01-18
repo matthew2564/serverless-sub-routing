@@ -3,6 +3,7 @@ import { HttpError, NotFoundError } from 'routing-controllers';
 import { UserProvider } from '../../providers/UserProvider';
 import { UserService } from '../UserService';
 import { User } from '../../models/UserModel';
+import { UserProviderMock } from '../../providers/__mocks__/UserProvider.mock';
 
 jest.mock('../../providers/UserProvider');
 
@@ -11,15 +12,13 @@ describe('UserService', () => {
 	let mockUserProvider: jest.Mocked<UserProvider>;
 
 	beforeEach(() => {
-		mockUserProvider = new UserProvider() as jest.Mocked<UserProvider>;
+		// set the mock implementation
+		Container.set(UserProvider, new UserProviderMock());
 
-		jest.spyOn(Container, 'get').mockImplementation((token) => {
-			if (token === UserProvider) {
-				return mockUserProvider;
-			}
-			throw new Error(`Unexpected token: ${token}`);
-		});
+		// get the mock provider from the container
+		mockUserProvider = Container.get(UserProvider) as jest.Mocked<UserProvider>;
 
+		// inject the mock provider into the service
 		userService = new UserService(mockUserProvider);
 	});
 

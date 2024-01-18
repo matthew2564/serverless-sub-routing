@@ -3,10 +3,10 @@ import { Response } from 'express';
 import { Container } from 'typedi';
 import { version } from '../../../package.json';
 import { UserService } from '../../services/UserService';
-import { UserProvider } from '../../providers/UserProvider';
 import { UserResource } from '../UserResource';
 import { User } from '../../models/UserModel';
 import { ErrorEnum } from '../../enums/Error.enum';
+import { UserServiceMock } from '../../services/__mocks__/UserService.mock';
 
 jest.mock('../../services/UserService');
 jest.mock('../../providers/UserProvider');
@@ -28,15 +28,13 @@ describe('UserResource', () => {
 	};
 
 	beforeEach(() => {
-		mockUserService = new UserService(new UserProvider()) as jest.Mocked<UserService>;
+		// set the mock implementation
+		Container.set(UserService, new UserServiceMock());
 
-		jest.spyOn(Container, 'get').mockImplementation((token) => {
-			if (token === UserService) {
-				return mockUserService;
-			}
-			throw new Error(`Unexpected token: ${token}`);
-		});
+		// get the mock service from the container
+		mockUserService = Container.get(UserService) as jest.Mocked<UserService>;
 
+		// inject the mock service into the resource
 		userResource = new UserResource(mockUserService);
 
 		mockResponse = {

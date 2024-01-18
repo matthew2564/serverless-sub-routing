@@ -9,7 +9,9 @@ describe('NotFoundMiddleware', () => {
 
 	beforeEach(() => {
 		middleware = new NotFoundMiddleware();
-		mockRequest = {};
+		mockRequest = {
+			method: 'GET',
+		};
 		mockResponse = {
 			headersSent: false,
 			status: jest.fn().mockReturnThis(),
@@ -24,7 +26,7 @@ describe('NotFoundMiddleware', () => {
 		middleware.use(mockRequest as Request, mockResponse as Response, mockNext);
 
 		expect(mockResponse.status).toHaveBeenCalledWith(404);
-		expect(mockResponse.send).toHaveBeenCalledWith({ message: "Route '/non-existent-route' not found" });
+		expect(mockResponse.send).toHaveBeenCalledWith({ message: "Route '/non-existent-route' not found for GET" });
 		expect(mockNext).not.toHaveBeenCalled();
 	});
 

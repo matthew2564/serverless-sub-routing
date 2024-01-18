@@ -1,6 +1,9 @@
-import { HttpError } from 'routing-controllers';
+import { BadRequestError, HttpError } from 'routing-controllers';
 import { Request, Response, NextFunction } from 'express';
 import { CustomErrorMiddleware } from '../CustomErrorMiddleware';
+import { ValidationError } from 'class-validator';
+
+type Constraint = { [type: string]: string };
 
 describe('CustomErrorMiddleware', () => {
 	const middleware = new CustomErrorMiddleware();
@@ -18,14 +21,33 @@ describe('CustomErrorMiddleware', () => {
 		mockNext = jest.fn();
 	});
 
-	it('should handle HttpError correctly', () => {
+	it("should handle HttpError correctly for ParamNormalizationError's", () => {
 		const httpError = new HttpError(400, errorMessage);
+		httpError.name = 'ParamNormalizationError';
 
 		middleware.error(httpError, mockRequest as Request, mockResponse as Response, mockNext);
 
 		expect(mockResponse.status).toHaveBeenCalledWith(400);
 		expect(mockResponse.send).toHaveBeenCalledWith({
 			message: 'Given parameter staffNumber is invalid. Value supplied cannot be parsed into number.',
+		});
+		expect(mockNext).not.toHaveBeenCalled();
+	});
+
+	it('should handle HttpError correctly', () => {
+		const httpError = new BadRequestError('Some error message');
+
+		(httpError as BadRequestError & { errors: ValidationError[] }).errors = [
+			{ constraints: { email: 'Email is invalid' } as Constraint },
+			{ constraints: { staffNumber: 'Must be a minimum of 3 characters' } as Constraint },
+		] as ValidationError[];
+
+		middleware.error(httpError, mockRequest as Request, mockResponse as Response, mockNext);
+
+		expect(mockResponse.status).toHaveBeenCalledWith(400);
+		expect(mockResponse.send).toHaveBeenCalledWith({
+			message: 'Validation error',
+			errors: ['Email is invalid', 'Must be a minimum of 3 characters'],
 		});
 		expect(mockNext).not.toHaveBeenCalled();
 	});

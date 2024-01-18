@@ -10,6 +10,13 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 	private static ValueSanitiserRegExp = /\(.*?\)/g;
 
 	error(error: unknown, _request: Request, response: Response, next: NextFunction) {
+		if (error instanceof HttpError && error.name === 'ParamNormalizationError') {
+			const body = {
+				message: error.message.replace(CustomErrorMiddleware.ValueSanitiserRegExp, 'supplied'),
+			};
+			return response.status(error.httpCode).send(body);
+		}
+
 		if (error instanceof BadRequestError) {
 			const requestError = error as BadRequestError & { errors: ValidationError[] };
 
@@ -19,12 +26,6 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 			});
 		}
 
-		if (error instanceof HttpError) {
-			const body = {
-				message: error.message.replace(CustomErrorMiddleware.ValueSanitiserRegExp, 'supplied'),
-			};
-			return response.status(error.httpCode).send(body);
-		}
 		next();
 	}
 }

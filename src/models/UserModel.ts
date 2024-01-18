@@ -3,7 +3,7 @@ import { IsEmail, IsNumber, MaxLength, MinLength, IsOptional } from 'class-valid
 export class User {
 	@IsOptional()
 	@IsEmail({}, { message: 'Email is invalid' })
-	email: string | undefined;
+	email?: string;
 
 	@IsNumber({}, { message: 'Age must be a number' })
 	age!: number;

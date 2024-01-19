@@ -1,35 +1,17 @@
 import { Service } from 'typedi';
-import { DynamoDBClient, DynamoDBClientConfig } from '@aws-sdk/client-dynamodb';
-import { fromEnv, fromIni } from '@aws-sdk/credential-providers';
+import { DynamoDBClientConfig } from '@aws-sdk/client-dynamodb';
 import { PutCommand, QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { TEST_STATION_STATUS } from '../enums/TestStation.enum';
 import { ITestStation } from '../models/TestStation.model';
+import { DynamoDbClient } from '../classes/DynamoDbClient';
 
 @Service()
-export class TestFacilityProvider {
+export class TestFacilityProvider extends DynamoDbClient {
 	private static opts = { region: 'eu-west-1' } as DynamoDBClientConfig;
 	private static dynamoDBTable: string = process.env.TEST_STATIONS_DDB_TABLE_NAME || 'test-stations';
-	private dynamoClient: DynamoDBClient;
 
 	constructor() {
-		this.dynamoClient = this.createDynamoClient();
-	}
-
-	// This logic we are looking to wrap up in a common package so the setup will be abstracted
-	private createDynamoClient(): DynamoDBClient {
-		const opts = { ...TestFacilityProvider.opts };
-
-		// If using `~/.aws/credentials` file
-		if (process.env.USE_CREDENTIALS === 'true') {
-			opts.credentials = fromIni();
-
-			// If using serverless-offline
-		} else if (process.env.IS_OFFLINE === 'true') {
-			opts.credentials = fromEnv();
-			opts.endpoint = process.env.DDB_OFFLINE_ENDPOINT;
-		}
-
-		return new DynamoDBClient(opts);
+		super(TestFacilityProvider.opts);
 	}
 
 	async findAllTestStations() {

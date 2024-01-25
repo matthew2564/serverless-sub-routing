@@ -19,39 +19,6 @@ functions:
           path: /{proxy+}
           method: any
 
-custom:
-  dynamodb:
-    stages:
-      - test
-      - dev
-    start:
-      port: 8000
-      inMemory: true
-      migrate: true
-      seed: true
-    seed:
-      test:
-        sources:
-          - table: users
-            sources: [./test-data/dynamo-seed-users.json]
-
-resources:
-  Resources:
-    users:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.USERS_DDB_TABLE_NAME}
-        AttributeDefinitions:
-          - AttributeName: staffNumber
-            AttributeType: S
-        KeySchema:
-          - AttributeName: staffNumber
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 5
-          WriteCapacityUnits: 5
-
 plugins:
   - serverless-dotenv-plugin
-  - serverless-dynamodb
   - serverless-offline

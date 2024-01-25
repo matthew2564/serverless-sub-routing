@@ -10,7 +10,10 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 	private static ValueSanitiserRegExp = /\(.*?\)/g;
 
 	error(error: unknown, _request: Request, response: Response, next: NextFunction) {
-		if (error instanceof HttpError && error.name === 'ParamNormalizationError') {
+		if (
+			error instanceof HttpError &&
+			(error.name === 'ParamNormalizationError' || error.name === 'ParameterParseJsonError')
+		) {
 			const body = {
 				message: error.message.replace(CustomErrorMiddleware.ValueSanitiserRegExp, 'supplied'),
 			};

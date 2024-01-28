@@ -1,13 +1,12 @@
 import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { Service } from 'typedi';
 import { DynamoDb } from '@dvsa/cvs-microservice-common/classes/aws/dynamo-db-client';
 import { User } from '../models/UserModel';
 
 @Service()
 export class UserProvider {
-	private static dynamoDBTable: string = process.env.USERS_DDB_TABLE_NAME || 'users';
-	private dynamoClient: DynamoDBClient;
+	private static dynamoDBTable = process.env.USERS_DDB_TABLE_NAME || 'users';
+	private dynamoClient; // `DynamoDBClient` instance is inferred due to assignment in constructor
 
 	constructor() {
 		this.dynamoClient = DynamoDb.getClient({ region: 'eu-west-1' });

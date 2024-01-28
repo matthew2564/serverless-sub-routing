@@ -1,6 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
-import { fromEnv, fromIni } from '@aws-sdk/credential-providers';
 import { UserProvider } from '../UserProvider';
 import { User } from '../../models/UserModel';
 
@@ -16,10 +15,6 @@ jest.mock('@aws-sdk/client-dynamodb', () => {
 		DynamoDBClient: jest.fn(),
 	};
 });
-jest.mock('@aws-sdk/credential-providers', () => ({
-	fromEnv: jest.fn(),
-	fromIni: jest.fn(),
-}));
 
 describe('UserProvider', () => {
 	let userProvider: UserProvider;
@@ -43,32 +38,6 @@ describe('UserProvider', () => {
 	afterEach(() => {
 		process.env = originalEnvironment;
 		jest.clearAllMocks();
-	});
-
-	describe('createDynamoClient', () => {
-		it('should use fromIni when USE_CREDENTIALS is true', () => {
-			// ARRANGE
-			mockSend.mockResolvedValueOnce(mockResponse);
-			process.env.USE_CREDENTIALS = 'true';
-
-			// ACT
-			new UserProvider().findUserRecord('staffNumber');
-
-			// ASSERT
-			expect(fromIni).toHaveBeenCalled();
-		});
-
-		it('should use fromEnv when USE_CREDENTIALS is not true and IS_OFFLINE is true', () => {
-			// ARRANGE
-			mockSend.mockResolvedValueOnce(mockResponse);
-			process.env.IS_OFFLINE = 'true';
-
-			// ACT
-			new UserProvider().findUserRecord('staffNumber');
-
-			// ASSERT
-			expect(fromEnv).toHaveBeenCalled();
-		});
 	});
 
 	describe('findUserRecord', () => {

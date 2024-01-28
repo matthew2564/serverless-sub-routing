@@ -31,7 +31,7 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 		}
 
 		if (error instanceof Error) {
-			console.log('CustomErrorMiddleware', error);
+			console.error('[ERROR]: Caught in `CustomErrorMiddleware`', error);
 
 			return response.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
 				message: ErrorEnum.INTERNAL_SERVER_ERROR,

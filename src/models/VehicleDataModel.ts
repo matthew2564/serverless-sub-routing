@@ -1,5 +1,5 @@
 import { IsNotEmpty, Matches } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Transform, Exclude } from 'class-transformer';
 import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 
 export class VehicleData {

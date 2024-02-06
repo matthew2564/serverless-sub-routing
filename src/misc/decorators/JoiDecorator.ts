@@ -23,6 +23,7 @@ export function ValidateSchema<T>(schema: ObjectSchema) {
 				});
 			}
 
+
 			// proceed with attached method if no error
 			return originalMethod.apply(this, [body, res, next]);
 		};

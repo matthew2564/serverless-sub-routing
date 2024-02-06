@@ -39,6 +39,8 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 			});
 		}
 
+		console.error('[ERROR]: Un-caught in `CustomErrorMiddleware`', error);
+
 		next();
 	}
 }

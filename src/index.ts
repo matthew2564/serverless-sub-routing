@@ -3,7 +3,7 @@ import serverless from 'serverless-http';
 import { Action, createExpressServer, useContainer } from 'routing-controllers';
 import { Container } from 'typedi';
 import { APIGatewayProxyEvent } from 'aws-lambda';
-import { UserResource } from './resources/UserResource';
+import { OperatorVisitResource } from './resources/OperatorVisitResource';
 import { NotFoundMiddleware } from './middleware/NotFoundMiddleware';
 import { CustomErrorMiddleware } from './middleware/CustomErrorMiddleware';
 
@@ -13,7 +13,7 @@ useContainer(Container);
 const app = createExpressServer({
 	cors: true,
 	defaultErrorHandler: false,
-	controllers: [UserResource],
+	controllers: [OperatorVisitResource],
 	middlewares: [CustomErrorMiddleware, NotFoundMiddleware],
 	authorizationChecker: ({ request }: Action, roles: string | string[]) => {
 		// if running locally, skip the auth check

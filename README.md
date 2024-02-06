@@ -7,17 +7,17 @@ serverless-sub-routing /
 │
 ├── src/
 │   ├── resources/        # HTTP routing
-│   │   └── UserResource.ts
+│   │   └── OperatorVisitResource.ts
 │   │
 │   ├── middleware/       # HTTP route, request & response error handling
 │   │   └── NotFoundMiddleware.ts
 |   |   └── CustomErrorMiddleware.ts
 │   │
 │   ├── services/         # Business logic implementation
-│   │   └── UserService.ts
+│   │   └── OperatorVisitService.ts
 │   │
 │   ├── providers/        # Database interaction layer
-│   │   └── UserProvider.ts
+│   │   └── OperatorVisitProvider.ts
 │   │
 │   └── index.ts          # Application entry point
 │

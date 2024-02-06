@@ -1,7 +1,9 @@
 import { IsNotEmpty, Matches } from 'class-validator';
-import { Transform, Exclude } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
+import { JsonInclude } from '../misc/decorators/JsonInclude';
 
+@JsonInclude()
 export class VehicleData {
 	constructor() {}
 

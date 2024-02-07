@@ -2,21 +2,20 @@ import { JsonController, Get, Res, QueryParams, BadRequestError, NotFoundError }
 import { Response } from 'express';
 import { Inject, Service } from 'typedi';
 import { Logger } from '@aws-lambda-powertools/logger';
-import { LogLevel } from '@aws-lambda-powertools/logger/lib/types';
 import { VehicleService } from '../services/VehicleService';
-import { name, version } from '../../package.json';
+import { version } from '../../package.json';
 import { ErrorEnum } from '../enums/Error.enum';
 import { VehicleParams } from '../models/VehicleDataModel';
 import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes';
-import {LOGGER} from "../repository/di-tokens";
+import { LOGGER } from '../repository/di-tokens';
 
 @Service()
 @JsonController('/1.0/vehicle')
 export class VehicleResource {
 	constructor(
 		@Inject() private vehicleService: VehicleService,
-		@Inject(LOGGER) private logger: Logger,
+		@Inject(LOGGER) private logger: Logger
 	) {
 		this.vehicleService = vehicleService;
 	}

@@ -29,6 +29,7 @@ export class VehicleResource {
 
 	@Get('/')
 	async getVehicleByVrm(
+		// validate the query parameter, using the `VehicleParams` class
 		@QueryParams({ validate: { stopAtFirstError: true } }) { identifier }: VehicleParams,
 		@Res() response: Response
 	) {

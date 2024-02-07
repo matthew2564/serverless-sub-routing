@@ -16,6 +16,7 @@ export class VehicleService {
 		try {
 			const response = await this.vehicleProvider.getVehicleByVrm(identifier);
 
+			// attempt to convert the `response.data` to an instance of the `VehicleData` class
 			return plainToInstance(VehicleData, response.data);
 		} catch (err) {
 			const axiosErr = err as AxiosError;

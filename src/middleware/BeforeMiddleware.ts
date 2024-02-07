@@ -6,16 +6,17 @@ import { EnvironmentVariables } from '@dvsa/cvs-microservice-common/classes/misc
 import { LOGGER, SECRETS_MANAGER } from '../repository/di-tokens';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { LogLevel } from '@aws-lambda-powertools/logger/lib/types';
-import { name } from '../../package.json';
+import { name, version } from '../../package.json';
 import { SecretModel } from '../models/SecretModel';
 
 @Service()
-@Middleware({ type: 'before' })
+@Middleware({ type: 'before', priority: 10 })
 export class BeforeMiddleware implements ExpressMiddlewareInterface {
 	async use(_req: Request, _res: Response, next: NextFunction) {
 		const logger = new Logger({
 			serviceName: name,
 			logLevel: (process.env.LOG_LEVEL as LogLevel) || 'debug',
+			persistentLogAttributes: { version },
 		});
 
 		logger.debug('BeforeMiddleware: Setting up logger and secrets manager.');
@@ -33,6 +34,7 @@ export class BeforeMiddleware implements ExpressMiddlewareInterface {
 
 		logger.debug('BeforeMiddleware: Finished.');
 
+		// continue to the next middleware/resource
 		next();
 	}
 }

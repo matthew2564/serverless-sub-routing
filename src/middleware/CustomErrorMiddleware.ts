@@ -1,9 +1,11 @@
 import { Middleware, ExpressErrorMiddlewareInterface, HttpError, BadRequestError } from 'routing-controllers';
 import { NextFunction, Response, Request } from 'express';
-import { Service } from 'typedi';
+import {Container, Inject, Service} from 'typedi';
 import { ValidationError } from 'class-validator';
 import { ErrorEnum } from '../enums/Error.enum';
 import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes';
+import {LOGGER} from "../repository/di-tokens";
+import {Logger} from "@aws-lambda-powertools/logger";
 
 @Service()
 @Middleware({ type: 'after' })
@@ -15,13 +17,16 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 			error instanceof HttpError &&
 			(error.name === 'ParamNormalizationError' || error.name === 'ParameterParseJsonError')
 		) {
-			const body = {
+			console.error(`[ERROR]: CustomErrorMiddleware - instanceof HttpError & ParamError`, error);
+
+			return response.status(error.httpCode).send({
 				message: error.message.replace(CustomErrorMiddleware.ValueSanitiserRegExp, 'supplied'),
-			};
-			return response.status(error.httpCode).send(body);
+			});
 		}
 
 		if (error instanceof BadRequestError) {
+			console.error(`[ERROR]: CustomErrorMiddleware - instanceof BadRequestError`, error);
+
 			const requestError = error as BadRequestError & { errors: ValidationError[] };
 
 			return response.status(requestError.httpCode).send({
@@ -31,7 +36,7 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 		}
 
 		if (error instanceof Error) {
-			console.error('[ERROR]: Caught in `CustomErrorMiddleware`', error);
+			console.error(`[ERROR]: CustomErrorMiddleware - instanceof Error`, error);
 
 			return response.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
 				message: ErrorEnum.INTERNAL_SERVER_ERROR,
@@ -39,7 +44,9 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 			});
 		}
 
-		console.error('[ERROR]: Un-caught in `CustomErrorMiddleware`', error);
+		// This is log for anything that falls through the cracks. This should never in theory run, although would
+		// give visibility of errors that are not being caught correctly.
+		console.error(`[ERROR]: CustomErrorMiddleware - Uncaught error`, error);
 
 		next();
 	}

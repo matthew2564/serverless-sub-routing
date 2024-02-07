@@ -9,16 +9,15 @@ import { ErrorEnum } from '../enums/Error.enum';
 import { VehicleParams } from '../models/VehicleDataModel';
 import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes';
+import {LOGGER} from "../repository/di-tokens";
 
 @Service()
 @JsonController('/1.0/vehicle')
 export class VehicleResource {
-	private readonly logger: Logger = new Logger({
-		serviceName: name,
-		logLevel: (process.env.LOG_LEVEL as LogLevel) || 'info',
-	});
-
-	constructor(@Inject() private vehicleService: VehicleService) {
+	constructor(
+		@Inject() private vehicleService: VehicleService,
+		@Inject(LOGGER) private logger: Logger,
+	) {
 		this.vehicleService = vehicleService;
 	}
 

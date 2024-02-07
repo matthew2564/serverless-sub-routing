@@ -3,14 +3,15 @@ import { Request, Response, NextFunction } from 'express';
 import { Container, Service } from 'typedi';
 import { SecretsManager } from '@dvsa/cvs-microservice-common/classes/aws/secrets-manager-client';
 import { EnvironmentVariables } from '@dvsa/cvs-microservice-common/classes/misc/env-vars';
-import { LOGGER, SECRETS_MANAGER } from '../repository/di-tokens';
+import { LOGGER, SECRET } from '../repository/di-tokens';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { LogLevel } from '@aws-lambda-powertools/logger/lib/types';
 import { name, version } from '../../package.json';
 import { SecretModel } from '../models/SecretModel';
+import { Priority } from '../enums/MiddlewarePriority.enum';
 
 @Service()
-@Middleware({ type: 'before', priority: 10 })
+@Middleware({ type: 'before', priority: Priority.HIGHEST })
 export class BeforeMiddleware implements ExpressMiddlewareInterface {
 	async use(_req: Request, _res: Response, next: NextFunction) {
 		const logger = new Logger({
@@ -26,7 +27,7 @@ export class BeforeMiddleware implements ExpressMiddlewareInterface {
 
 		// store secret in container
 		Container.set(
-			SECRETS_MANAGER,
+			SECRET,
 			await SecretsManager.get<SecretModel>({
 				SecretId: EnvironmentVariables.get('secretkey'),
 			})

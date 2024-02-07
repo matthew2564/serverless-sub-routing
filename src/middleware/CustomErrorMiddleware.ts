@@ -6,9 +6,10 @@ import { ErrorEnum } from '../enums/Error.enum';
 import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes';
 import { LOGGER } from '../repository/di-tokens';
 import { Logger } from '@aws-lambda-powertools/logger';
+import { Priority } from '../enums/MiddlewarePriority.enum';
 
 @Service()
-@Middleware({ type: 'after', priority: 1 })
+@Middleware({ type: 'after', priority: Priority.MEDIUM })
 export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 	private static ValueSanitiserRegExp = /\(.*?\)/g;
 
@@ -37,6 +38,7 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 
 			return response.status(error.httpCode).send({
 				message: error.message.replace(CustomErrorMiddleware.ValueSanitiserRegExp, 'supplied'),
+				detail: error.message,
 			});
 		}
 

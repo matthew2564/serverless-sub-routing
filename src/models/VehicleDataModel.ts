@@ -37,7 +37,7 @@ export class VehicleData {
 export class VehicleParams {
 	// Validators are applied in bottom-up order i.e. @IsNotEmpty() is applied first, then @Matches()
 	// In the resource, I have opted to use `{ validate: { stopAtFirstError: true } }` to stop on first error
-	@Matches(/^[A-Za-z0-9]*$/, { message: 'Identifier parameter has illegal values' })
-	@IsNotEmpty({ message: 'Identifier parameter must be specified' })
+	@Matches(/^[A-Za-z0-9]*$/, { message: 'Invalid format for field - identifier' })
+	@IsNotEmpty({ message: 'Parameter must be specified - identifier' })
 	identifier!: string;
 }

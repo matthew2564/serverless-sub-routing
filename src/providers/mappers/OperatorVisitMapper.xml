@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--suppress ALL -->
+
+<mapper namespace="dvsa.mc">
+    <select id="getOperatorVisit">
+        SELECT FAS.GENERATED_NUMBER,
+        FAS.FAS_STATUS,
+        FAS.ACTUAL_START_DATE,
+        FAS.ACTUAL_END_DATE,
+        FAS.OPERATOR_LICENCE_NUMBER,
+        FAS.CLIENT_GUID,
+        FAS.LAST_UPDATE,
+        FAS.VISIT_TYPE,
+        FAS.INPUT_TIME,
+        FAS.CHR_NUMBER,
+        FAS.OPERATOR_NAME,
+        FAS.ADDR_1,
+        FAS.ADDR_2,
+        FAS.ADDR_3,
+        FAS.ADDR_4,
+        FAS.POSTCODE,
+        FAS.POST_TOWN,
+        FAS.DIGITAL_TACHO_QTY,
+        FAS.PAPER_TACHO_QTY,
+        VVR.DESCRIPTION AS VVR_DESC,
+        VVR.CODE AS VVR_CODE,
+        VVR.DELETION_IND AS VVR_DEL_IND,
+        VVR.SEQUENCE_NUMBER AS VVR_SEQ_NUM,
+        IRE.DESCRIPTION AS IRE_DESC,
+        IRE.GENERATED_NUMBER AS IRE_GEN_NUM,
+        IRE.DELETION_IND AS IRE_DEL_IND,
+        IRE.SEQUENCE_NUMBER AS IRE_SEQ_NUM,
+        IRE.USAGE AS IRE_USAGE,
+        THR.DESCRIPTION AS THR_DESC,
+        THR.CODE AS THR_CODE,
+        THR.DELETION_IND AS THR_DEL_IND,
+        THR.SEQUENCE_NUMBER AS THR_SEQ_NUM,
+        TOR.DESCRIPTION as TOR_DESC,
+        TOR.CODE AS TOR_CODE,
+        TOR.DELETION_IND AS TOR_DEL_IND,
+        TOR.SEQUENCE_NUMBER AS TOR_SEQ_NUM,
+        (SELECT USER_ID
+        FROM (SELECT MRU.USER_ID
+        FROM MC_REQUEST_USER MRU
+        WHERE FAS.USE_EHR_EMPLOYEE_ID_RECORDER = MRU.EMPLOYEE_ID) AS RECORDER_USER
+        LIMIT 1) as USER_ID,
+        (SELECT FIRST_NAME
+        FROM (SELECT MRU.FIRST_NAME
+        FROM MC_REQUEST_USER MRU
+        WHERE FAS.USE_EHR_EMPLOYEE_ID_RECORDER = MRU.EMPLOYEE_ID) AS RECORDER_FIRST
+        LIMIT 1) as FIRST_NAME,
+        (SELECT LAST_NAME
+        FROM (SELECT MRU.LAST_NAME
+        FROM MC_REQUEST_USER MRU
+        WHERE FAS.USE_EHR_EMPLOYEE_ID_RECORDER = MRU.EMPLOYEE_ID) AS RECORDER_LAST
+        LIMIT 1) as SURNAME
+        FROM MC_FLEET_ASSESSMENT FAS
+        LEFT JOIN MC_INITIATING_REASON IRE
+        ON (FAS.IRE_GENERATED_NUMBER = IRE.GENERATED_NUMBER)
+        LEFT JOIN MC_TE_HOURS_RESULT THR
+        ON (FAS.THR_CODE = THR.CODE)
+        LEFT JOIN MC_TE_OTHER_RESULT TOR
+        ON (FAS.TOR_CODE = TOR.CODE)
+        LEFT JOIN MC_VE_VISIT_RESULT VVR
+        ON (FAS.VVR_CODE = VVR.CODE)
+        <where>
+            <if test="operatorLicenceNumber != null">
+                UPPER(FAS.OPERATOR_LICENCE_NUMBER) = UPPER(#{operatorLicenceNumber})
+            </if>
+            <if test="clientGuid != null">
+                AND FAS.CLIENT_GUID = #{clientGuid}
+            </if>
+            <if test="visitType != null">
+                AND FAS.VISIT_TYPE = #{visitType}
+            </if>
+            <if test="fromDate != null">
+                AND FAS.ACTUAL_START_DATE &gt;= STR_TO_DATE(#{fromDate},'%Y-%m-%d')
+            </if>
+            <if test="toDate != null">
+                AND FAS.ACTUAL_START_DATE &lt;= STR_TO_DATE(#{toDate},'%Y-%m-%d')
+            </if>
+        </where>
+        ORDER BY FAS.ACTUAL_START_DATE DESC
+    </select>
+
+    <select id="getOperatorVehicleEncounter">
+        SELECT COALESCE((SELECT VEN_INSPECTION_RESULT
+                         FROM (SELECT CASE
+                                          WHEN NTY.FK_NTY_CODE = 'BMPZ01' AND NTY.S_MARKED = 'Y'
+                                              THEN 'Prohibited (Significant Failure)'
+                                          WHEN NTY.FK_NTY_CODE = 'BMPZ01' OR
+                                               NTY.FK_NTY_CODE = 'BOPA01' AND NTY.S_MARKED = 'N'
+                                              THEN 'Prohibited'
+                                          ELSE 'Clear Inspection'
+                                          END AS VEN_INSPECTION_RESULT
+                               FROM MC_NOTICE NTY
+                               WHERE NTY.FK_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER
+                               ORDER BY 1 desc) as NOTICE
+                         LIMIT 1), 'Clear Inspection') AS VEN_INSPECTION_RESULT,
+               VEN.GENERATED_NUMBER,
+               VEN.CLIENT_GUID,
+               VEN.RTE_VEH_ID,
+               VEN.ENCNTR_START_DATE,
+               VEN.FAS_GENERATED_NUMBER,
+               (SELECT USER_ID
+                FROM (SELECT MRU.USER_ID
+                      FROM MC_REQUEST_USER MRU
+                      WHERE VEN.USE_EHR_EMPLOYEE_ID_EXAMINER = MRU.EMPLOYEE_ID) AS USER
+                LIMIT 1)                               AS USER_ID
+        FROM MC_VEHICLE_ENCOUNTER VEN
+        WHERE VEN.FAS_GENERATED_NUMBER = #{generatedNumber}
+        ORDER BY VEN.GENERATED_NUMBER DESC
+    </select>
+</mapper>

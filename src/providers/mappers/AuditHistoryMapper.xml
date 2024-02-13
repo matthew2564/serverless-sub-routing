@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--suppress ALL -->
+
+<mapper namespace="dvsa.mc">
+    <select id="getAuditHistory">
+        SELECT EAU.EVENT_TIMESTAMP   AS EVENT_TIMESTAMP,
+               EAU.USE_FIRST_NAME    AS USE_FIRST_NAME,
+               EAU.USE_SURNAME       AS USE_SURNAME,
+               EAU.USE_USER_ID       AS USE_USER_ID,
+               EAU.EVENT_UNIT        AS EVENT_UNIT,
+               EAU.FK_AEV_EVENT_CODE AS FK_AEV_EVENT_CODE,
+               EAU.COMMENTS          AS COMMENTS
+        FROM MC_ENCOUNTER_AUDIT EAU
+        WHERE EAU.FK_VEN_GENERATED_NUMBER = #{identifier}
+        ORDER BY EAU.EVENT_TIMESTAMP DESC
+    </select>
+
+    <select id="getAevEventCode">
+        SELECT AEV.EVENT_CODE              AS EVENT_CODE,
+               AEV.EVENT_SHORT_DESCRIPTION AS EVENT_SHORT_DESCRIPTION,
+               AEV.EVENT_FULL_DESCRIPTION  AS EVENT_FULL_DESCRIPTION,
+               AEV.DELETION_IND            AS DELETION_MARKER,
+               AEV.FP_NOTICE_INDICATOR     AS NOTICE_INDICATOR
+        FROM MC_AUDIT_EVENT AEV
+        WHERE AEV.EVENT_CODE = #{fkAevEventCode}
+    </select>
+</mapper>

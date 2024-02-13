@@ -1,66 +1,56 @@
-import {Inject, Service} from 'typedi';
-import {OperatorVisitData, OperatorVisitVehicleEncounter} from "../models/OperatorVisitDataModel";
-import {OperatorVisitRequest} from "../models/McModel";
-import {SESSION} from "../repository/di-tokens";
-import {DataSource, Repository} from "typeorm";
+import { Inject, Service } from 'typedi';
+import * as path from 'path';
+import MyBatis, { Format, Params } from 'mybatis-mapper';
+import { Connection, RowDataPacket } from 'mysql2';
+import { Logger } from '@aws-lambda-powertools/logger';
+import { OperatorVisitRequest } from '../domain/models/McModel';
+import { CONNECTION, LOGGER } from '../domain/di-tokens/di-tokens';
+import { plainToInstance } from 'class-transformer';
+import { OperatorVisitMap } from '../domain/models/OperatorVistitMapModel';
+import { OperatorVehicleEncounterMap } from '../domain/models/OperatorVehicleEncounterMapModel';
 
 @Service()
 export class OperatorVisitProvider {
-	private operatorVisit: Repository<OperatorVisit>;
+	private static readonly namespace = 'dvsa.mc';
 
-	constructor(@Inject(SESSION) session: DataSource) {
-		this.operatorVisit = session.getRepository(OperatorVisit);
+	constructor(
+		@Inject(CONNECTION) private connection: Connection,
+		@Inject(LOGGER) private logger: Logger
+	) {}
+
+	async getOperatorVisit(operatorVisitRequest: OperatorVisitRequest): Promise<OperatorVisitMap[]> {
+		MyBatis.createMapper([path.resolve(__dirname, './mappers/OperatorVisitMapper.xml')]);
+
+		const [rows] = await this.connection
+			.promise()
+			.query(this.constructQuery('getOperatorVisit', { ...operatorVisitRequest }));
+
+		return (rows as RowDataPacket[]).map((row) => plainToInstance(OperatorVisitMap, row));
 	}
 
-	async getOperatorVisit(operatorVisitRequest: OperatorVisitRequest) {
-		try {
-			let queryBuilder = this.operatorVisit
-				.createQueryBuilder('operatorVisit')
-				.select([
-					'operatorVisit.generatedNumber',
-					'operatorVisit.fasStatus',
-					'operatorVisit.actualStartDate'
-				]);
+	async getOperatorVehicleEncounter(operatorVisit: OperatorVisitMap): Promise<OperatorVehicleEncounterMap[]> {
+		if (operatorVisit.generatedNumber !== null) {
+			MyBatis.createMapper([path.resolve(__dirname, './mappers/OperatorVisitMapper.xml')]);
 
-			// queryBuilder
-			// 	.leftJoinAndSelect('operatorVisit.initiatingReason', 'initiatingReason')
-			// 	.leftJoinAndSelect('operatorVisit.teHoursResult', 'teHoursResult')
-			// 	.leftJoinAndSelect('operatorVisit.teOtherResult', 'teOtherResult')
-			// 	.leftJoinAndSelect('operatorVisit.veVisitResult', 'veVisitResult')
-			//
-			// if (operatorVisitRequest.operatorLicenceNumber) {
-			// 	queryBuilder = queryBuilder.andWhere('operatorVisit.operatorLicenceNumber = :operatorLicenceNumber', { operatorLicenceNumber: operatorVisitRequest.operatorLicenceNumber });
-			// }
-			//
-			// if (operatorVisitRequest.clientGuid) {
-			// 	queryBuilder = queryBuilder.andWhere('operatorVisit.clientGuid = :clientGuid', { clientGuid: operatorVisitRequest.clientGuid });
-			// }
-			//
-			// if (operatorVisitRequest.visitType) {
-			// 	queryBuilder = queryBuilder.andWhere('operatorVisit.visitType = :visitType', { visitType: operatorVisitRequest.visitType });
-			// }
-			//
-			// if (operatorVisitRequest.fromDate) {
-			// 	queryBuilder = queryBuilder.andWhere('operatorVisit.actualStartDate >= :fromDate', { fromDate: operatorVisitRequest.fromDate });
-			// }
-			//
-			// if (operatorVisitRequest.toDate) {
-			// 	queryBuilder = queryBuilder.andWhere('operatorVisit.actualStartDate <= :toDate', { toDate: operatorVisitRequest.toDate });
-			// }
-			//
-			// queryBuilder = queryBuilder.orderBy('operatorVisit.actualStartDate', 'DESC');
+			const params = { generatedNumber: operatorVisit.generatedNumber };
 
-			return await queryBuilder.getMany();
-		} catch (err) {
-			throw err;
+			const [rows] = await this.connection
+				.promise()
+				.query(this.constructQuery('getOperatorVehicleEncounter', { ...params }));
+
+			return (rows as RowDataPacket[]).map((row) => plainToInstance(OperatorVehicleEncounterMap, row));
 		}
-	}
 
-	async getOperatorVehicleEncounter(operatorVisitsData: OperatorVisitData): Promise<OperatorVisitVehicleEncounter[]> {
-		if (operatorVisitsData.generatedNumber !== null) {
-			// do something here
-			return [];
-		}
+		this.logger.warn('`getOperatorVehicleEncounter` called with a null `generatedNumber`.', {
+			operatorVisitID: operatorVisit.clientGuid,
+		});
 		return [];
+	}
+
+	private constructQuery(queryID: string, params: Params): string {
+		return MyBatis.getStatement(OperatorVisitProvider.namespace, queryID, params, {
+			language: 'sql',
+			indent: '  ',
+		} satisfies Format);
 	}
 }

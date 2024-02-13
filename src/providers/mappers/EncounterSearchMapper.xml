@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--suppress ALL -->
+
+<mapper namespace="dvsa.mc">
+    <select id="getSearchEncounters">
+        WITH RECURSIVE ENC AS (
+        SELECT MVE.GENERATED_NUMBER
+        FROM MC_VEHICLE_ENCOUNTER MVE
+        <if test="firstName != null and lastName != null">
+            INNER JOIN MC_REQUEST_USER MRU ON (MVE.USE_EHR_EMPLOYEE_ID_EXAMINER = MRU.EMPLOYEE_ID)
+        </if>
+        <if test="sanction != null">
+            INNER JOIN MC_NOTICE ON (MVE.GENERATED_NUMBER = MC_NOTICE.FK_VEN_GENERATED_NUMBER)
+            <choose>
+                <when test='("D".equalsIgnoreCase(sanction) or "C".equalsIgnoreCase(sanction))'>
+                    INNER JOIN MC_VEH_ENC_DEFECT_SUMMARY ON (MVE.GENERATED_NUMBER =
+                    MC_VEH_ENC_DEFECT_SUMMARY.FK_VEN_GENERATED_NUMBER)
+                </when>
+            </choose>
+        </if>
+        <if test="driverFirstName != null and driverLastName != null">
+            INNER JOIN MC_OBSERVED_DRIVER OBD ON (MVE.GENERATED_NUMBER = OBD.FK_VEN_GENERATED_NUMBER)
+        </if>
+        <where>
+            <if test="startDate != null and endDate != null">
+                AND (MVE.ENCNTR_START_DATE >= STR_TO_DATE(#{startDate}, '%Y-%m-%d')
+                AND MVE.ENCNTR_START_DATE &lt;= (STR_TO_DATE(#{endDate}, '%Y-%m-%d') + INTERVAL 1 DAY))
+            </if>
+            <if test="vrm != null">
+                AND MVE.RTE_VEH_ID = UPPER(#{vrm})
+            </if>
+            <if test="licenceNo != null">
+                AND (MVE.ODT_OLI_LICENCE_NUMBER = UPPER(#{licenceNo})
+                <if test="sanction != null">
+                    OR MC_NOTICE.OLI_LICENCE_NUMBER = UPPER(#{licenceNo})
+                </if>
+                )
+            </if>
+            <if test="locationId != null">
+                AND MVE.CSI_GENERATED_NUMBER = #{locationId}
+            </if>
+            <if test="firstName != null and lastName != null">
+                AND (MRU.FIRST_NAME = #{firstName} AND MRU.LAST_NAME = #{lastName})
+            </if>
+            <if test="sanction != null">
+                <if test='"P".equalsIgnoreCase(sanction)'>
+                    AND MC_NOTICE.FK_NTY_CODE IN (
+                    'BMPZ01',
+                    'FMPZ01',
+                    'BMFZ01',
+                    'BMRZ01',
+                    'FMRZ01',
+                    'BWPZ01',
+                    'FWPZ01',
+                    'BWRZ01',
+                    'FWRZ01',
+                    'BOPA01',
+                    'BOPB01',
+                    'BORZ01',
+                    'FOPA01',
+                    'FOPB01',
+                    'FORZ01',
+                    'BDGP01',
+                    'BMVZ01',
+                    'BMXZ01',
+                    'FMXZ01')
+                    AND MC_NOTICE.NOTICE_STATUS != 'W'
+                </if>
+                <if test='"R".equalsIgnoreCase(sanction)'>
+                    AND MC_NOTICE.FK_NTY_CODE IN (
+                    'BMPZ01',
+                    'FMPZ01',
+                    'BMFZ01',
+                    'BMRZ01',
+                    'FMRZ01',
+                    'BMVZ01',
+                    'BMXZ01',
+                    'FMXZ01')
+                    AND MC_NOTICE.NOTICE_STATUS != 'W'
+                </if>
+                <if test='"W".equalsIgnoreCase(sanction)'>
+                    AND MC_NOTICE.FK_NTY_CODE IN (
+                    'BWPZ01',
+                    'FWPZ01',
+                    'BWRZ01',
+                    'FWRZ01')
+                    AND MC_NOTICE.NOTICE_STATUS != 'W'
+                </if>
+                <if test='"O".equalsIgnoreCase(sanction)'>
+                    AND MC_NOTICE.FK_NTY_CODE IN (
+                    'BOPA01',
+                    'BOPB01',
+                    'BORZ01',
+                    'FOPA01',
+                    'FOPB01',
+                    'FORZ01')
+                    AND MC_NOTICE.NOTICE_STATUS != 'W'
+                </if>
+                <if test='"H".equalsIgnoreCase(sanction)'>
+                    AND MC_NOTICE.FK_NTY_CODE IN ('BDGP01')
+                    AND MC_NOTICE.NOTICE_STATUS != 'W'
+                </if>
+                <if test='"F".equalsIgnoreCase(sanction)'>
+                    AND MC_NOTICE.FK_NTY_CODE IN (
+                    'BFPN01',
+                    'FFPN01',
+                    'FDEN01')
+                    AND MC_NOTICE.NOTICE_STATUS != 'W'
+                </if>
+                <if test='"S".equalsIgnoreCase(sanction)'>
+                    AND (MC_NOTICE.S_MARKED = 'Y' or MVE.SIG_MAINT_FAILURE = 'Y')
+                </if>
+                <if test='"D".equalsIgnoreCase(sanction)'>
+                    AND MC_VEH_ENC_DEFECT_SUMMARY.DEVIATION_DEFECT_COUNT > 0
+                </if>
+                <if test='"C".equalsIgnoreCase(sanction)'>
+                    AND MC_VEH_ENC_DEFECT_SUMMARY.CAT_9_9_DEFECT_COUNT > 0
+                </if>
+            </if>
+            <if test="driverFirstName != null and driverLastName != null">
+                AND (OBD.FORENAME = #{driverFirstName} AND OBD.SURNAME = #{driverLastName})
+            </if>
+        </where>
+        UNION
+        SELECT d.VEN_GENERATED_NUMBER
+        FROM MC_VEHICLE_ENCOUNTER d
+        JOIN ENC a ON a.GENERATED_NUMBER = d.VEN_GENERATED_NUMBER)
+
+        SELECT * FROM (
+        SELECT DISTINCT
+        VEN.GENERATED_NUMBER AS ENCOUNTER_ID,
+        VEN.RTE_VEH_ID AS VEHICLE_IDENTIFIER,
+        VEN.ODT_OLI_LICENCE_NUMBER AS ENCOUNTER_OPERATOR_LICENCE_NO,
+        VEN.ENCNTR_START_DATE AS ENCOUNTER_DATE,
+        VEN.EXAM_OFFICER_TYPE AS EXAM_OFFICER_TYPE,
+        VEN.VEHICLE_MAKE AS MAKE,
+        VEN.VEHICLE_MODEL AS MODEL,
+        RVT.DESCRIPTION AS ROADSIDE_VEHICLE_TYPE,
+        VEN.VEN_GENERATED_NUMBER AS TOWING_VEHICLE_ENCOUNTER_ID,
+        CHS.CSI_NAME AS CHECKSITE_NAME,
+        CHS.ROAD AS CHECKSITE_ROAD,
+        CHS.TOWN_OR_VILLAGE AS CHECKSITE_TOWN,
+        CHS.COU_DESCRIPTION AS CHECKSITE_COUNTY,
+        VEN.ILE_INSPECTION_LEVEL AS INSPECTION_LEVEL,
+        VEN.ACTION_CODE,
+        VEN.WEIGHT_CHECK_IND,
+        CTY.CHECK_TYPE,
+        CTY.CHECK_TYPE_DESCRIPTION,
+        (SELECT DISTINCT CONCAT(MC1.FIRST_NAME,' ', MC1.LAST_NAME)
+        FROM MC_REQUEST_USER MC1
+        WHERE (VEN.USE_EHR_EMPLOYEE_ID_EXAMINER = MC1.EMPLOYEE_ID)
+        LIMIT 1) AS EMP_NAME,
+        (SELECT NAME FROM MC_ENCOUNTER_REASON ERE
+        WHERE VEN.ERE_CODE = ERE.CODE
+        AND VEN.ERE_VERSION = ERE.VERSION) AS ENCOUNTER_REASON
+        FROM MC_VEHICLE_ENCOUNTER VEN
+        LEFT JOIN MC_CHECK_SITE CHS on VEN.CSI_GENERATED_NUMBER = CHS.GENERATED_NUMBER
+        LEFT JOIN MC_ROADSIDE_VEH_TYPE RVT on VEN.RVT_NUMBER = RVT.RVT_NUMBER
+        LEFT JOIN MC_ACTUAL_OFFENCE AOF on VEN.GENERATED_NUMBER = AOF.FK_VEN_GENERATED_NUMBER,
+        MC_CHECK_TYPE CTY
+        WHERE VEN.GENERATED_NUMBER in (SELECT * FROM ENC WHERE VEN_GENERATED_NUMBER IS NULL)
+        AND VEN.CHECK_TYPE = CTY.CHECK_TYPE
+        <if test='"Y".equalsIgnoreCase(endorsableFlag)'>
+            AND AOF.ENDORSABLE_FLAG = 'Y'
+        </if>
+        ORDER BY VEN.ENCNTR_START_DATE DESC
+        ) AS SEARCH_ENCOUNTERS
+        LIMIT 200
+    </select>
+
+    <select id="getEndorsableFlag">
+        SELECT CASE
+                   WHEN (SELECT COUNT(*)
+                         FROM MC_ACTUAL_OFFENCE
+                         WHERE MC_ACTUAL_OFFENCE.FK_VEN_GENERATED_NUMBER = #{identifier}
+                           AND MC_ACTUAL_OFFENCE.ENDORSABLE_FLAG = 'Y') > 0 THEN 'Y'
+                   ELSE 'N'
+                   END AS ENDORSABLE_FLAG
+        FROM DUAL
+    </select>
+
+    <select id="getTrailerCount">
+        WITH RECURSIVE ENC AS (SELECT GENERATED_NUMBER
+                               FROM MC_VEHICLE_ENCOUNTER
+                               WHERE GENERATED_NUMBER = #{identifier}
+                               UNION
+                               SELECT t.GENERATED_NUMBER
+                               FROM MC_VEHICLE_ENCOUNTER t
+                                        JOIN ENC a ON t.VEN_GENERATED_NUMBER = a.GENERATED_NUMBER)
+
+        SELECT COUNT(*) - 1 AS COUNT
+        FROM ENC
+    </select>
+
+    <select id="getSanctionCode">
+        WITH RECURSIVE ENC AS (SELECT GENERATED_NUMBER
+                               FROM MC_VEHICLE_ENCOUNTER
+                               WHERE GENERATED_NUMBER = #{identifier}
+                               UNION
+                               SELECT t.GENERATED_NUMBER
+                               FROM MC_VEHICLE_ENCOUNTER t
+                                        JOIN ENC a ON t.VEN_GENERATED_NUMBER = a.GENERATED_NUMBER)
+
+        SELECT N.FK_NTY_CODE,
+               N.CLEARANCE_DATE,
+               N.NOTICE_STATUS,
+               N.IN_FORCE_DATE
+        FROM MC_NOTICE N
+        WHERE N.FK_VEN_GENERATED_NUMBER IN (SELECT GENERATED_NUMBER FROM ENC)
+          AND N.NOTICE_STATUS != 'W'
+          AND N.FK_NTY_CODE IN (
+                                'BMPZ01',
+                                'FMPZ01',
+                                'BMFZ01',
+                                'BMRZ01',
+                                'FMRZ01',
+                                'BWPZ01',
+                                'FWPZ01',
+                                'BWRZ01',
+                                'FWRZ01',
+                                'BOPA01',
+                                'BOPB01',
+                                'BORZ01',
+                                'FOPA01',
+                                'FOPB01',
+                                'FORZ01',
+                                'BDGP01',
+                                'BMVZ01',
+                                'BMXZ01',
+                                'FFPN01',
+                                'BFPN01',
+                                'FDEN01',
+                                'FMXZ01')
+    </select>
+
+    <select id="getDriverName">
+        SELECT DRIVER_TYPE,
+               FORENAME,
+               SURNAME
+        FROM MC_OBSERVED_DRIVER
+        WHERE FK_VEN_GENERATED_NUMBER = #{identifier}
+        ORDER BY DRIVER_TYPE
+    </select>
+
+    <select id="getImmobilisationCount">
+        SELECT count(*)
+        FROM MC_IMMOBILISATION
+        WHERE CLIENT_GUID = (SELECT CLIENT_GUID
+                             FROM MC_VEHICLE_ENCOUNTER
+                             WHERE GENERATED_NUMBER = #{identifier})
+          AND IMS_ID IN (SELECT ID FROM MC_IMMOBILISATION_STATUS WHERE CODE != 'WTH')
+    </select>
+</mapper>

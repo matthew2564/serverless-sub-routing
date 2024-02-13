@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import 'source-map-support/register';
 import serverless from 'serverless-http';
 import { Action, createExpressServer, useContainer } from 'routing-controllers';
 import { Container } from 'typedi';
@@ -6,7 +7,7 @@ import { APIGatewayProxyEvent } from 'aws-lambda';
 import { OperatorVisitResource } from './resources/OperatorVisitResource';
 import { NotFoundMiddleware } from './middleware/NotFoundMiddleware';
 import { CustomErrorMiddleware } from './middleware/CustomErrorMiddleware';
-import { BeforeMiddleware } from "./middleware/BeforeMiddleware";
+import { BeforeMiddleware } from './middleware/BeforeMiddleware';
 
 // This line tells routing-controllers to use typedi container
 useContainer(Container);

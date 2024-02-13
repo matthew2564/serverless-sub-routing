@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--suppress ALL -->
+
+<mapper namespace="dvsa.mc">
+    <!-- For the SQL query below, forename and surname are always used in the where clause. However dateOfBirth will
+         only be included if it is not blank. If only forename and surname are passed in, dateOfBirth is still used in
+         the 'group by' to try to identify each unique driver with the same name. The issue is that a driver name might
+         have many records where the dateOfBirth is blank but are actually different drivers. Here the union is used to
+         also filter by address 1 in the event dateOfBirth is blank. It is possible for a driver returned in the list
+         to have the same name as other drivers returned, but no dateOfBirth, and no address. The dobFlag is used in
+         this case to help identify which record is selected on screen. On the union, dateOfBirth flag is used for
+         address restriction as in provider no dateOfBirth implies address -->
+
+    <select id="getObservedDriverByName">
+        SELECT * FROM (
+        <if test='"Y".equalsIgnoreCase(dobFlag) or dobFlag == null'>
+            SELECT OBD.FORENAME,
+            OBD.SURNAME,
+            DATE_FORMAT(OBD.DATE_OF_BIRTH, '%Y-%m-%d') AS DATE_OF_BIRTH,
+            (MAX(VEN.ENCNTR_START_DATE)) AS LATEST_ENCOUNTER_DATE,
+            NULL AS ADDR_1,
+            OBD.DRIVER_LIC_NUM,
+            'Y' AS DOB_FLAG
+            FROM MC_OBSERVED_DRIVER OBD
+            INNER JOIN MC_VEHICLE_ENCOUNTER VEN ON (OBD.FK_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
+            <where>
+                VEN.JOB_COMPLETE = 'Y'
+                AND VEN.ACTION_CODE != 'T'
+                <if test="forename != null">
+                    <choose>
+                        <when test='"Y".equalsIgnoreCase(dobFlag)'>
+                            AND OBD.FORENAME = #{forename}
+                        </when>
+                        <otherwise>
+                            AND instr(OBD.FORENAME, #{forename}) > 0
+                        </otherwise>
+                    </choose>
+                </if>
+                AND OBD.SURNAME = #{surname}
+                <choose>
+                    <when test="dateOfBirth != null">
+                        AND DATE_FORMAT(OBD.DATE_OF_BIRTH, '%Y-%m-%d') = #{dateOfBirth}
+                    </when>
+                    <otherwise>
+                        AND OBD.DATE_OF_BIRTH IS NOT NULL
+                    </otherwise>
+                </choose>
+            </where>
+            GROUP BY OBD.FORENAME, OBD.SURNAME, DATE_FORMAT(OBD.DATE_OF_BIRTH, '%Y-%m-%d'), OBD.DRIVER_LIC_NUM
+        </if>
+        <if test="dateOfBirth == null and dobFlag == null">
+            UNION
+        </if>
+        <if test='dateOfBirth == null and ("N".equalsIgnoreCase(dobFlag) or dobFlag == null)'>
+            SELECT OBD.FORENAME,
+            OBD.SURNAME,
+            DATE_FORMAT(OBD.DATE_OF_BIRTH, '%Y-%m-%d') AS DATE_OF_BIRTH,
+            (MAX(VEN.ENCNTR_START_DATE)) AS LATEST_ENCOUNTER_DATE,
+            OBD.ADDR_1,
+            OBD.DRIVER_LIC_NUM,
+            'N' AS DOB_FLAG
+            FROM MC_OBSERVED_DRIVER OBD
+            INNER JOIN MC_VEHICLE_ENCOUNTER VEN ON (OBD.FK_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
+            <where>
+                <if test="forename != null">
+                    <choose>
+                        <when test='"N".equalsIgnoreCase(dobFlag)'>
+                            OBD.FORENAME = #{forename}
+                        </when>
+                        <otherwise>
+                            instr(OBD.FORENAME, #{forename}) > 0
+                        </otherwise>
+                    </choose>
+                </if>
+                AND OBD.SURNAME = #{surname}
+                AND OBD.DATE_OF_BIRTH IS NULL
+                <if test='"N".equalsIgnoreCase(dobFlag)'>
+                    AND OBD.ADDR_1 IS NULL
+                </if>
+            </where>
+            GROUP BY OBD.FORENAME, OBD.SURNAME, DATE_FORMAT(OBD.DATE_OF_BIRTH, '%Y-%m-%d'), OBD.ADDR_1, OBD.DRIVER_LIC_NUM
+        </if>
+        ORDER BY LATEST_ENCOUNTER_DATE DESC) AS OBSERVED_DRIVER LIMIT 25
+    </select>
+
+    <!-- For the SQL query below, licenceNo is always used in the where clause. However, forename, surname and
+         dateOfBirth are only included if they are not blank. If only licenceNo is passed in, forename, surname and
+         dateOfBirth is still used in the 'group by' to try to identify each unique licenceNo. Here the union is used
+         to also filter by address 1 in the event dateOfBirth is blank -->
+
+    <select id="getObservedDriverByLicNo">
+        SELECT * FROM (
+        <if test='"Y".equalsIgnoreCase(dobFlag) or dobFlag == null'>
+            SELECT OBD.FORENAME,
+            OBD.SURNAME,
+            DATE_FORMAT(OBD.DATE_OF_BIRTH, '%Y-%m-%d') as DATE_OF_BIRTH,
+            (MAX(VEN.ENCNTR_START_DATE)) AS LATEST_ENCOUNTER_DATE,
+            NULL AS ADDR_1,
+            OBD.DRIVER_LIC_NUM AS DRIVER_LIC_NUM,
+            'Y' AS DOB_FLAG
+            FROM MC_OBSERVED_DRIVER OBD
+            INNER JOIN MC_VEHICLE_ENCOUNTER VEN ON (OBD.FK_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
+            <where>
+                VEN.JOB_COMPLETE = 'Y'
+                AND VEN.ACTION_CODE != 'T'
+                AND OBD.DRIVER_LIC_NUM = #{licenceNo}
+                <if test="forename != null">
+                    AND instr(OBD.FORENAME, #{forename}) > 0
+                </if>
+                <if test="surname != null">
+                    AND OBD.SURNAME = #{surname}
+                </if>
+                <choose>
+                    <when test="dateOfBirth != null">
+                        AND DATE_FORMAT(OBD.DATE_OF_BIRTH, '%Y-%m-%d') = #{dateOfBirth}
+                    </when>
+                    <otherwise>
+                        AND OBD.DATE_OF_BIRTH IS NOT NULL
+                    </otherwise>
+                </choose>
+            </where>
+            GROUP BY OBD.FORENAME, OBD.SURNAME, DATE_FORMAT(OBD.DATE_OF_BIRTH, '%Y-%m-%d'), OBD.DRIVER_LIC_NUM
+        </if>
+        <if test="dateOfBirth == null and dobFlag == null">
+            UNION
+        </if>
+        <if test='dateOfBirth == null and ("N".equalsIgnoreCase(dobFlag) or dobFlag == null)'>
+            SELECT OBD.FORENAME,
+            OBD.SURNAME,
+            DATE_FORMAT(OBD.DATE_OF_BIRTH, '%Y-%m-%d') AS DATE_OF_BIRTH,
+            (MAX(VEN.ENCNTR_START_DATE)) AS LATEST_ENCOUNTER_DATE,
+            OBD.ADDR_1 AS ADDR_1,
+            OBD.DRIVER_LIC_NUM AS DRIVER_LIC_NUM,
+            'N' AS DOB_FLAG
+            FROM MC_OBSERVED_DRIVER OBD
+            INNER JOIN MC_VEHICLE_ENCOUNTER VEN ON (OBD.FK_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
+            <where>
+                VEN.JOB_COMPLETE = 'Y'
+                AND VEN.ACTION_CODE != 'T'
+                AND
+                OBD.DRIVER_LIC_NUM = #{licenceNo}
+                <if test="forename != null">
+                    <choose>
+                        <when test="dobFlag == null">
+                            AND instr(FORENAME, #{forename}) > 0
+                        </when>
+                        <otherwise>
+                            AND OBD.FORENAME = #{forename}
+                        </otherwise>
+                    </choose>
+                </if>
+                <if test="surname != null">
+                    AND OBD.SURNAME = #{surname}
+                </if>
+                AND OBD.DATE_OF_BIRTH IS NULL
+                <if test='"N".equalsIgnoreCase(dobFlag)'>
+                    AND OBD.ADDR_1 IS NULL
+                </if>
+            </where>
+            GROUP BY OBD.FORENAME, OBD.SURNAME, DATE_FORMAT(OBD.DATE_OF_BIRTH, '%Y-%m-%d'), OBD.ADDR_1, OBD.DRIVER_LIC_NUM
+        </if>
+        ORDER BY LATEST_ENCOUNTER_DATE DESC) AS OBSERVED_DRIVER LIMIT 25
+    </select>
+
+    <select id="getIdentifiedDriverByNameAndAddress">
+        SELECT *
+        FROM (
+                 SELECT DISTINCT OBD.FORENAME,
+                                 OBD.SURNAME,
+                                 OBD.DATE_OF_BIRTH,
+                                 OBD.ADDR_1                   AS ADDR_1,
+                                 OBD.DRIVER_LIC_NUM,
+                                 'N'                          AS DOB_FLAG,
+                                 (MAX(VEN.ENCNTR_START_DATE)) AS LATEST_ENCOUNTER_DATE
+                 FROM MC_OBSERVED_DRIVER OBD
+                          INNER JOIN MC_VEHICLE_ENCOUNTER VEN ON (OBD.FK_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
+                 WHERE VEN.JOB_COMPLETE = 'Y'
+                   AND VEN.ACTION_CODE != 'T'
+          AND FORENAME = #{forename}
+                   AND SURNAME = #{surname}
+                   AND DATE_OF_BIRTH IS NULL
+                   AND ADDR_1 = #{address}
+                 GROUP BY OBD.FORENAME, OBD.SURNAME, OBD.DATE_OF_BIRTH, OBD.ADDR_1, OBD.DRIVER_LIC_NUM
+                 ORDER BY LATEST_ENCOUNTER_DATE DESC) AS IDENTIFIED_DRIVER
+        LIMIT 25
+    </select>
+
+    <select id="getEncounterIDsByName">
+        SELECT *
+        FROM MC_OBSERVED_DRIVER OBD
+        INNER JOIN MC_VEHICLE_ENCOUNTER VEN ON (OBD.FK_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
+        <where>
+            VEN.JOB_COMPLETE = 'Y'
+            AND VEN.ACTION_CODE != 'T'
+            AND
+            SURNAME = #{surname}
+            <if test="forename != null">
+                AND instr(FORENAME, #{forename}) > 0
+            </if>
+            <if test="dateOfBirth != null">
+                AND DATE_FORMAT(OBD.DATE_OF_BIRTH, '%Y-%m-%d') = #{dateOfBirth}
+            </if>
+            <if test="address != null">
+                AND ADDR_1 = #{address}
+            </if>
+        </where>
+        LIMIT 25
+    </select>
+
+    <select id="getEncounterIDsByLicNo">
+        SELECT *
+        FROM MC_OBSERVED_DRIVER OBD
+        INNER JOIN MC_VEHICLE_ENCOUNTER VEN ON (OBD.FK_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
+        <where>
+            VEN.JOB_COMPLETE = 'Y'
+            AND VEN.ACTION_CODE != 'T'
+            AND
+            DRIVER_LIC_NUM = #{licenceNo}
+            <if test="dateOfBirth != null">
+                AND DATE_FORMAT(OBD.DATE_OF_BIRTH, '%Y-%m-%d') = #{dateOfBirth}
+            </if>
+            <if test="forename != null and surname != null">
+                AND FORENAME = #{forename}
+                AND SURNAME = #{surname}
+            </if>
+            <if test="address != null">
+                AND ADDR_1 = #{address}
+            </if>
+        </where>
+        LIMIT 25
+    </select>
+
+    <!-- For the SQL query below, data is returned from MC_OBSERVED_DRIVER for each encounter in the list -->
+
+    <select id="getObservedEncountersByDriver">
+        SELECT
+        OBD.FK_VEN_GENERATED_NUMBER,
+        OBD.FORENAME,
+        OBD.SURNAME,
+        OBD.DATE_OF_BIRTH,
+        OBD.BIRTH_PLACE,
+        OBD.DDO_DRIVER_DETAILS_ORIGIN_CODE,
+        OBD.DRIVER_LIC_NUM,
+        OBD.ADDR_1,
+        OBD.ADDR_2,
+        OBD.ADDR_3,
+        OBD.ADDR_4,
+        OBD.POSTOWN,
+        OBD.POSTCODE,
+        OBD.UK_RESIDENT,
+        OBD.LICENCE_CATEGORY,
+        OBD.LICENCE_TYPE,
+        OBD.DRIVING_LICENCE_STATUS,
+        OBD.LICENCE_ISSUE_NO,
+        OBD.DRIVING_LICENCE_ISSUE_DATE,
+        OBD.IRI_IRL_CODE_DRIVING_LICENCE,
+        OBD.PASSPORT_NUMBER,
+        OBD.REG_KEEPER_INDICTR,
+        OBD.SEX,
+        OBD.GENERATED_NUMBER
+        FROM MC_OBSERVED_DRIVER OBD
+        INNER JOIN MC_VEHICLE_ENCOUNTER VEN ON (OBD.FK_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
+        WHERE
+        VEN.JOB_COMPLETE = 'Y'
+        AND VEN.ACTION_CODE != 'T'
+        AND OBD.GENERATED_NUMBER IN
+        <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+            #{item.generatedNo}
+        </foreach>
+        ORDER BY OBD.GENERATED_NUMBER DESC LIMIT 25
+    </select>
+
+    <!-- For the SQL query below, encounterData is returned from MC_VEHICLE_ENCOUNTER for each encounter in the list -->
+
+    <select id="getDriverEncounterData">
+        SELECT
+        VEN.GENERATED_NUMBER AS ENCOUNTER_ID,
+        VEN.RTE_VEH_ID AS VEHICLE_IDENTIFIER,
+        VEN.ODT_OLI_LICENCE_NUMBER AS ENCOUNTER_OPERATOR_LICENCE_NO,
+        CHS.CSI_NAME AS CHECKSITE_NAME,
+        CHS.ROAD AS CHECKSITE_ROAD,
+        CHS.TOWN_OR_VILLAGE AS CHECKSITE_TOWN,
+        CHS.COU_DESCRIPTION AS CHECKSITE_COUNTY,
+        VEN.ENCNTR_START_DATE AS ENCOUNTER_DATE,
+        VEN.EXAM_OFFICER_TYPE AS EXAM_OFFICER_TYPE,
+        RVT.DESCRIPTION AS ROADSIDE_VEHICLE_TYPE,
+        VEN.VEHICLE_MAKE AS MAKE,
+        VEN.VEHICLE_MODEL AS MODEL,
+        VEN.VEN_GENERATED_NUMBER AS TOWING_VEHICLE_ENCOUNTER_ID,
+        CASE WHEN (SELECT COUNT(*)
+        FROM MC_NOTICE
+        WHERE MC_NOTICE.FK_NTY_CODE
+        in
+        ('BMPZ01', 'BMVZ01', 'BMFZ01', 'FMPZ01', 'BWPZ01', 'FWPZ01', 'FOPA01', 'BOPA01', 'FOPB01', 'BOPB01', 'BDGP01')
+        AND VEN.GENERATED_NUMBER = MC_NOTICE.FK_VEN_GENERATED_NUMBER AND MC_NOTICE.NOTICE_STATUS != 'W') > 0
+        THEN 'Y'
+        ELSE 'N'
+        END AS PROHIBITION_NOTICE,
+        CASE WHEN (SELECT COUNT(*)
+        FROM MC_NOTICE
+        WHERE MC_NOTICE.FK_NTY_CODE
+        in
+        ('BMPZ01', 'BMVZ01', 'BMFZ01', 'FMPZ01', 'BWPZ01', 'FWPZ01', 'FOPA01', 'BOPA01', 'FOPB01', 'BOPB01', 'BDGP01')
+        AND (MC_NOTICE.CLEARANCE_DATE is NULL OR MC_NOTICE.CLEARANCE_DATE &gt;= (DATE_FORMAT(CONVERT_TZ(CURRENT_TIMESTAMP, 'UTC', 'Europe/London'), '%Y-%m-%d')))
+        AND MC_NOTICE.NOTICE_STATUS = 'A'
+        AND MC_NOTICE.IN_FORCE_DATE &lt;= (DATE_FORMAT(CONVERT_TZ(CURRENT_TIMESTAMP, 'UTC', 'Europe/London'), '%Y-%m-%d'))
+        AND VEN.GENERATED_NUMBER = MC_NOTICE.FK_VEN_GENERATED_NUMBER) > 0
+        THEN 'Y'
+        ELSE 'N'
+        END AS PROHIBITION_OUTSTANDING
+        FROM MC_VEHICLE_ENCOUNTER VEN
+        LEFT JOIN MC_CHECK_SITE CHS
+        ON CHS.GENERATED_NUMBER = VEN.CSI_GENERATED_NUMBER
+        LEFT JOIN MC_ROADSIDE_VEH_TYPE RVT
+        ON VEN.RVT_NUMBER = RVT.RVT_NUMBER
+        WHERE VEN.JOB_COMPLETE = 'Y'
+        AND VEN.ACTION_CODE != 'T'
+        AND VEN.GENERATED_NUMBER IN
+        <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+            #{item.enforcementId}
+        </foreach>
+        ORDER BY VEN.ENCNTR_START_DATE DESC, VEN.GENERATED_NUMBER DESC
+    </select>
+</mapper>

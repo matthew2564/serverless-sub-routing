@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--suppress ALL -->
+
+<mapper namespace="dvsa.mc">
+    <select id="getOperatorScores">
+        SELECT MCOS.OPERATOR_IDENTIFIER as operatorIdentifier,
+        MCOS.IRI_IRL_CODE as nationality,
+        (SELECT MCOST.SCORE_TYPE_DESCRIPTION
+        FROM MC_OWNER.MC_OCRS_SCORE_TYPE MCOST
+        WHERE MCOST.SCORE_TYPE_CODE = MCOS.FK_OSY_SCORE_TYPE) as scoreType,
+        MCOS.SCORE as ocrsNumericBand,
+        CASE WHEN MCOS.SCORE = 00 THEN 'Blue'
+        WHEN MCOS.SCORE &lt; MCOT.AMBER_THRESHOLD THEN 'Green'
+        WHEN MCOS.SCORE &lt; MCOT.RED_THRESHOLD THEN 'Amber'
+        ELSE 'Red'
+        END as ocrsBand
+        FROM MC_OWNER.MC_OCRS_THRESHOLD MCOT, MC_OWNER.MC_OPERATOR_SCORE MCOS
+        WHERE MCOS.FK_OSY_SCORE_TYPE = MCOT.SCORE_TYPE_CODE
+        AND MCOS.OPERATOR_IDENTIFIER IN
+        <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+            #{item.operatorIdentifier}
+        </foreach>
+        ORDER BY MCOS.OPERATOR_IDENTIFIER, MCOS.SCORE DESC, MCOS.FK_OSY_SCORE_TYPE
+    </select>
+
+    <select id="getOCRSSnapshots">
+        SELECT (SELECT MCOST.SCORE_TYPE_DESCRIPTION
+                FROM MC_OWNER.MC_OCRS_SCORE_TYPE MCOST
+                WHERE MCOST.SCORE_TYPE_CODE = MCOSS.FK_OSY_SCORE_TYPE_CODE) as SCORE_TYPE,
+               MCOSS.GRADE                                                  as GRADE,
+               MCOSS.SCORE                                                  as SCORE
+        FROM MC_OWNER.MC_OPERATOR_SNAPSHOT MCOSS
+        WHERE MCOSS.VEN_GENERATED_NUMBER = #{encounterId}
+        ORDER BY MCOSS.GENERATED_NUMBER desc
+    </select>
+
+</mapper>

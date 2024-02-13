@@ -1,23 +1,25 @@
 import { Middleware, ExpressErrorMiddlewareInterface, HttpError, BadRequestError } from 'routing-controllers';
 import { NextFunction, Response, Request } from 'express';
-import {Container, Inject, Service} from 'typedi';
+import { Container, Service } from 'typedi';
 import { ValidationError } from 'class-validator';
-import { ErrorEnum } from '../enums/Error.enum';
 import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes';
-import {LOGGER} from "../repository/di-tokens";
-import {Logger} from "@aws-lambda-powertools/logger";
+import { ErrorEnum } from '../domain/enums/Error.enum';
+import { Priority } from '../domain/enums/MiddlewarePriority.enum';
+import { LOGGER } from '../domain/di-tokens/di-tokens';
 
 @Service()
-@Middleware({ type: 'after' })
+@Middleware({ type: 'after', priority: Priority.MEDIUM })
 export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 	private static ValueSanitiserRegExp = /\(.*?\)/g;
 
 	error(error: unknown, _request: Request, response: Response, next: NextFunction) {
+		const logger = Container.get(LOGGER);
+
 		if (
 			error instanceof HttpError &&
 			(error.name === 'ParamNormalizationError' || error.name === 'ParameterParseJsonError')
 		) {
-			console.error(`[ERROR]: CustomErrorMiddleware - instanceof HttpError & ParamError`, error);
+			logger.error(`[ERROR]: CustomErrorMiddleware - instanceof HttpError & ParamError`, { error });
 
 			return response.status(error.httpCode).send({
 				message: error.message.replace(CustomErrorMiddleware.ValueSanitiserRegExp, 'supplied'),
@@ -25,7 +27,7 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 		}
 
 		if (error instanceof BadRequestError) {
-			console.error(`[ERROR]: CustomErrorMiddleware - instanceof BadRequestError`, error);
+			logger.error(`[ERROR]: CustomErrorMiddleware - instanceof BadRequestError`, { error });
 
 			const requestError = error as BadRequestError & { errors: ValidationError[] };
 
@@ -36,7 +38,7 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 		}
 
 		if (error instanceof Error) {
-			console.error(`[ERROR]: CustomErrorMiddleware - instanceof Error`, error);
+			logger.error(`[ERROR]: CustomErrorMiddleware - instanceof Error`, { error });
 
 			return response.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
 				message: ErrorEnum.INTERNAL_SERVER_ERROR,
@@ -46,7 +48,7 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 
 		// This is log for anything that falls through the cracks. This should never in theory run, although would
 		// give visibility of errors that are not being caught correctly.
-		console.error(`[ERROR]: CustomErrorMiddleware - Uncaught error`, error);
+		logger.error(`[ERROR]: CustomErrorMiddleware - Uncaught error`, { error });
 
 		next();
 	}

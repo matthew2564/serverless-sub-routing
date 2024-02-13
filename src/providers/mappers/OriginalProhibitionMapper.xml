@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--suppress ALL -->
+
+<mapper namespace="dvsa.mc">
+    <select id="getIssueDate">
+        SELECT *
+        FROM (
+        SELECT MNOT.ISSUE_DATE
+        FROM MC_NOTICE MNOT
+        WHERE MNOT.RTE_VEH_ID = UPPER(#{rteVehId})
+        AND MNOT.ISSUE_DATE &lt;= STR_TO_DATE(#{currentEncounterStartDateTime}, '%Y-%m-%d %H:%I:%s')
+        AND (MNOT.CLEARANCE_DATE >= STR_TO_DATE(#{currentEncounterStartDateTime}, '%Y-%m-%d %H:%I:%s') OR
+        MNOT.CLEARANCE_DATE IS NULL)
+        AND MNOT.NOTICE_STATUS = 'A'
+        AND MNOT.FK_NTY_CODE IN
+        <foreach item="item" index="index" collection="ntyCodes" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        ORDER BY MNOT.ISSUE_DATE DESC
+        ) AS ISSUE_DATE
+        LIMIT 1
+    </select>
+</mapper>

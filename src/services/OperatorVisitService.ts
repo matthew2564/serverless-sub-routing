@@ -1,51 +1,52 @@
-import {Inject, Service} from 'typedi';
-import {OperatorVisitProvider} from '../providers/OperatorVisitProvider';
-import {OperatorVisitRequest} from '../models/McModel';
-import {OperatorVisitData} from "../models/OperatorVisitDataModel";
-import {OperatorVisitResponseModel} from "../models/OperatorVisitResponseModel";
-import {LOGGER} from "../repository/di-tokens";
-import {Logger} from "@aws-lambda-powertools/logger";
+import { Inject, Service } from 'typedi';
+import { OperatorVisitProvider } from '../providers/OperatorVisitProvider';
+import { OperatorVisitRequest } from '../domain/models/McModel';
+import { OperatorVisitMap } from '../domain/models/OperatorVistitMapModel';
+import { OperatorVisitResponseModel } from '../domain/models/OperatorVisitResponseModel';
+import { LOGGER } from '../domain/di-tokens/di-tokens';
+import { Logger } from '@aws-lambda-powertools/logger';
+import { OperatorVehicleEncounterMap } from '../domain/models/OperatorVehicleEncounterMapModel';
+import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 
 @Service()
 export class OperatorVisitService {
-    constructor(
-        @Inject() private operatorVisitProvider: OperatorVisitProvider,
-        @Inject(LOGGER) private logger: Logger,
-    ) {
-        this.operatorVisitProvider = operatorVisitProvider;
-    }
+	constructor(
+		@Inject() private operatorVisitProvider: OperatorVisitProvider,
+		@Inject(LOGGER) private logger: Logger
+	) {}
 
-    async getOperatorVisit(operatorVisitRequest: OperatorVisitRequest): Promise<OperatorVisitResponseModel> {
-        const operatorVisitData = await this.operatorVisitProvider.getOperatorVisit(operatorVisitRequest);
+	async getOperatorVisit(operatorVisitRequest: OperatorVisitRequest): Promise<OperatorVisitResponseModel> {
+		const operatorVisits = await this.operatorVisitProvider.getOperatorVisit(operatorVisitRequest);
 
-        console.log(operatorVisitData);
-        //
-        // this.logger.debug(`Operator visit data returned`);
-        //
-        // const opVisitsWithEncounters = await Promise.all(operatorVisitData.map(async (visit) => {
-        //     // Asynchronously get vehicle encounters for each visit and set the clientGuid for each encounter
-        //     const opVehicleEncounters = await this.operatorVisitProvider.getOperatorVehicleEncounter(visit);
-        //
-        //     // Return a new visit object with the updated vehicle encounters
-        //     return {
-        //         ...visit,
-        //         vehicleEncounters: opVehicleEncounters.map((encounter) => ({
-        //             ...encounter,
-        //             clientGuid: visit.clientGuid as string,
-        //         })),
-        //     } satisfies OperatorVisitData;
-        // }));
+		const opVisitsWithEncounters: OperatorVisitMap[] = await Promise.all(
+			operatorVisits.map(async (opVisit) => {
+				let opVehicleEncounters: OperatorVehicleEncounterMap[] = [];
 
-        return {
-            timeStamp: new Date().toISOString(),
-            count: 1,
-            operatorVisitsData: [],
-        };
+				try {
+					// Attempt to get vehicle encounters for each visit
+					opVehicleEncounters = await this.operatorVisitProvider.getOperatorVehicleEncounter(opVisit);
+				} catch (err) {
+					// Log the error & continue processing other visits
+					// 'opVehicleEncounters' will be an empty array due to the initialisation value
+					this.logger.error('[ERROR]: getOperatorVehicleEncounter', { err });
+				}
 
-        // return {
-        //     timeStamp: new Date().toISOString(),
-        //     count: opVisitsWithEncounters.length,
-        //     operatorVisitsData: opVisitsWithEncounters,
-        // };
-    }
+				// Return a new visit object with the updated vehicle encounters
+				return {
+					...opVisit,
+					vehicleEncounters: opVehicleEncounters.map((encounter) => ({
+						...encounter,
+						encounterStartDate: DateTime.at(encounter.encounterStartDate).format('DD/MM/YYYY HH:mm:ss'),
+						clientGuid: opVisit.clientGuid as string,
+					})),
+				};
+			})
+		);
+
+		return {
+			timeStamp: new Date().toISOString(),
+			count: opVisitsWithEncounters.length,
+			operatorVisitsData: opVisitsWithEncounters,
+		};
+	}
 }

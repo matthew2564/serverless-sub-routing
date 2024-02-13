@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--suppress ALL -->
+
+<mapper namespace="dvsa.mc">
+    <select id="getEncounterAxlesById">
+        SELECT AXW.FK_VEN_GENERATED_NUMBER AS ENCOUNTER_ID,
+               AXW.AXLE_NUMBER             AS AXLE_NUMBER,
+               AXW.CMPNSTNG_AXLE_CODE      AS COMPENSATING_CODE,
+               AXW.ACTUAL_WGHT_AMOUNT      AS ACTUAL_WEIGHT,
+               AXW.PERMITTED_WEIGHT        AS PERMITTED_WEIGHT,
+               CASE
+                   WHEN
+                       (COALESCE(AXW.ACTUAL_WGHT_AMOUNT, 0) > COALESCE(AXW.PERMITTED_WEIGHT, 0))
+                       THEN
+                       (COALESCE(AXW.ACTUAL_WGHT_AMOUNT, 0) - COALESCE(AXW.PERMITTED_WEIGHT, 0))
+                   ELSE 0
+                   END                     AS OVERWEIGHT,
+               ROUND(CASE
+                         WHEN COALESCE(AXW.PERMITTED_WEIGHT, 0) = 0
+                             THEN 0
+                         WHEN (COALESCE(AXW.ACTUAL_WGHT_AMOUNT, 0) > COALESCE(AXW.PERMITTED_WEIGHT, 0))
+                             THEN
+                             (COALESCE(AXW.ACTUAL_WGHT_AMOUNT, 0) - COALESCE(AXW.PERMITTED_WEIGHT, 0)) /
+                             COALESCE(AXW.PERMITTED_WEIGHT, 0)
+                         ELSE 0
+                         END, 4)           AS PERCENT_OVERWEIGHT,
+               CASE
+                   WHEN AXW.AXLE_NUMBER &lt;= COALESCE(VEN.TRACTOR_AXLES, 0) THEN 'Motor Vehicle'
+                   WHEN AXW.AXLE_NUMBER > COALESCE(VEN.TRACTOR_AXLES, 0) AND
+                        AXW.AXLE_NUMBER &lt;= (COALESCE(VEN.TRACTOR_AXLES, 0) +
+                                               COALESCE(VEN.TRAILER_1_AXLES, 0)) THEN 'Trailer 1'
+                   ELSE 'Trailer 2'
+                   END                     AS AXLE_VEH_TYPE
+        FROM MC_AXLE_WEIGHT AXW
+                 LEFT JOIN MC_VEHICLE_ENCOUNTER VEN ON (AXW.FK_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
+        WHERE VEN.JOB_COMPLETE = 'Y'
+          AND VEN.ACTION_CODE != 'T'
+          AND AXW.FK_VEN_GENERATED_NUMBER = #{id}
+        UNION
+        SELECT AXW.FK_VEN_GENERATED_NUMBER                       AS ENCOUNTER_ID,
+               99                                                AS AXLE_NUMBER,
+               CONCAT('Compensating Total ', CMPNSTNG_AXLE_CODE) AS COMPENSATING_CODE,
+               SUM(AXW.ACTUAL_WGHT_AMOUNT)                       AS ACTUAL_WEIGHT,
+               SUM(AXW.PERMITTED_WEIGHT)                         AS PERMITTED_WEIGHT,
+               CASE
+                   WHEN
+                       (COALESCE(SUM(AXW.ACTUAL_WGHT_AMOUNT), 0) > COALESCE(SUM(AXW.PERMITTED_WEIGHT), 0))
+                       THEN
+                       (COALESCE(SUM(AXW.ACTUAL_WGHT_AMOUNT), 0) - COALESCE(SUM(AXW.PERMITTED_WEIGHT), 0))
+                   ELSE 0
+                   END                                           AS OVERWEIGHT,
+               ROUND(CASE
+                         WHEN COALESCE(SUM(AXW.PERMITTED_WEIGHT), 0) = 0
+                             THEN 0
+                         WHEN (COALESCE(SUM(AXW.ACTUAL_WGHT_AMOUNT), 0) > COALESCE(SUM(AXW.PERMITTED_WEIGHT), 0))
+                             THEN
+                             (COALESCE(SUM(AXW.ACTUAL_WGHT_AMOUNT), 0) - COALESCE(SUM(AXW.PERMITTED_WEIGHT), 0)) /
+                             COALESCE(SUM(AXW.PERMITTED_WEIGHT), 0)
+                         ELSE 0
+                         END, 4)                                 AS PERCENT_OVERWEIGHT,
+               CASE
+                   WHEN AXW.AXLE_NUMBER &lt;= COALESCE(VEN.TRACTOR_AXLES, 0) THEN 'Motor Vehicle'
+                   WHEN AXW.AXLE_NUMBER > COALESCE(VEN.TRACTOR_AXLES, 0) AND
+                        AXW.AXLE_NUMBER &lt;= (COALESCE(VEN.TRACTOR_AXLES, 0) +
+                                               COALESCE(VEN.TRAILER_1_AXLES, 0)) THEN 'Trailer 1'
+                   ELSE 'Trailer 2'
+                   END                                           AS AXLE_VEH_TYPE
+        FROM MC_AXLE_WEIGHT AXW
+                 LEFT JOIN MC_VEHICLE_ENCOUNTER VEN ON (AXW.FK_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
+        WHERE VEN.JOB_COMPLETE = 'Y'
+          AND VEN.ACTION_CODE != 'T'
+          AND AXW.FK_VEN_GENERATED_NUMBER = #{id}
+          and AXW.CMPNSTNG_AXLE_CODE IS NOT NULL
+        GROUP BY AXW.FK_VEN_GENERATED_NUMBER, AXLE_NUMBER, CONCAT('Compensating Total ', CMPNSTNG_AXLE_CODE),
+                 (CASE
+                      WHEN AXW.AXLE_NUMBER &lt;= COALESCE(VEN.TRACTOR_AXLES, 0) THEN 'Motor Vehicle'
+                      WHEN AXW.AXLE_NUMBER > COALESCE(VEN.TRACTOR_AXLES, 0) AND
+                           AXW.AXLE_NUMBER &lt;= (COALESCE(VEN.TRACTOR_AXLES, 0) +
+                                                  COALESCE(VEN.TRAILER_1_AXLES, 0)) THEN 'Trailer 1'
+                      ELSE 'Trailer 2'
+                     END), AXW.CMPNSTNG_AXLE_CODE
+        ORDER BY AXLE_VEH_TYPE, AXLE_NUMBER, COMPENSATING_CODE
+    </select>
+
+    <select id="getEncounterNoticesById">
+        select case
+                   when NTC.FK_NTY_CODE = 'BWPZ01'
+                       then 'TE160W'
+                   when NTC.FK_NTY_CODE = 'BWRZ01'
+                       then 'TE160R'
+                   when NTC.FK_NTY_CODE = 'BMPZ01'
+                       then 'PG9'
+                   when NTC.FK_NTY_CODE = 'BWDZ01'
+                       then 'TE160DIR'
+                   when NTC.FK_NTY_CODE = 'BMIZ01'
+                       then 'PGDN35'
+                   when NTC.FK_NTY_CODE = 'BMRZ01'
+                       then 'PG10'
+                   when NTC.FK_NTY_CODE = 'BMVZ01'
+                       then 'PG9A'
+                   when NTC.FK_NTY_CODE = 'BMXZ01'
+                       then 'PG9B'
+                   when NTC.FK_NTY_CODE = 'BMFZ01'
+                       then 'PG9C'
+                   when NTC.FK_NTY_CODE = 'BOPA01'
+                       then 'TE160'
+                   when NTC.FK_NTY_CODE = 'BOPB01'
+                       then 'TE160DH'
+                   when NTC.FK_NTY_CODE = 'BORZ01'
+                       then 'TE160DHR'
+                   when NTC.FK_NTY_CODE = 'FOPA01'
+                       then 'GV170'
+                   when NTC.FK_NTY_CODE = 'FOPB01'
+                       then 'GV170'
+                   when NTC.FK_NTY_CODE = 'FORZ01'
+                       then 'GV170'
+                   when NTC.FK_NTY_CODE = 'FWPZ01'
+                       then 'GV170'
+                   when NTC.FK_NTY_CODE = 'FWRZ01'
+                       then 'GV170'
+                   when NTC.FK_NTY_CODE = 'FMPZ01'
+                       then 'GV171'
+                   when NTC.FK_NTY_CODE = 'FMRZ01'
+                       then 'GV171B'
+                   when NTC.FK_NTY_CODE = 'FMXZ01'
+                       then 'GV171A'
+                   else TRIM(NTC.FK_NTY_CODE)
+                   end                          AS NOTICE_TYPE,
+               NTC.FK_NTY_CODE                  AS RAW_NOTICE_TYPE,
+               NTY.NTY_DESC                     AS NOTICE_DESCRIPTION,
+               CASE
+                   WHEN NTC.IMMEDIATE_IND = 'I' THEN 'Immediate'
+                   WHEN NTC.IMMEDIATE_IND = 'D' THEN 'Delayed'
+                   WHEN NTC.IMMEDIATE_IND = '1' THEN 'Advisory Against Vehicle'
+                   WHEN NTC.IMMEDIATE_IND = '2' THEN 'Advisory Against Trailer'
+                   WHEN NTC.IMMEDIATE_IND = '3' THEN 'Advisory Against Vehicle and Trailer'
+                   WHEN NTC.IMMEDIATE_IND = '4' THEN 'Advisory Against Vehicle and Both Trailers'
+                   WHEN NTC.IMMEDIATE_IND = '5' THEN 'Advisory Against Both Trailers'
+                   ELSE NTC.IMMEDIATE_IND
+                   END                          AS IMMEDIATE_IND,
+               NTC.IN_FORCE_DATE                AS NOTICE_IN_FORCE_DATE,
+               NTC.CLEARANCE_DATE               AS CLEARANCE_DATE,
+               NTC.RCEIVED_BY_FORENME           AS RECEIVED_BY_FORENME,
+               NTC.RCEIVED_BY_SURNAME           AS RECEIVED_BY_SURNAME,
+               NTC.FK_VEN_GENERATED_NUMBER      AS NOTICE_VEH_GEN_NUM,
+               NTC.INPUT_DATE                   AS NOTICE_INPUT_DATE,
+               NTC.TACHO_LAST_CALIBRATION_DATE  AS TACHO_LAST_CLBRTN_DATE,
+               NTC.TACHO_INSPECTION_DUE_DATE    AS TACHO_INSPECTION_DUE_DATE,
+               NTC.DANGEROUS_GOODS_DIRECTION    AS DANGER_GOODS_DIRECTION,
+               NTC.DANGER_GOODS_IMM_PROH_IND    AS IMMEDIATE_PROHIBITION,
+               NTC.DANGER_GOODS_DEFERRAL_PERIOD AS DEFERRAL_PERIOD,
+               CASE
+                   WHEN NTC.FK_NTY_CODE
+                       IN
+                        ('BMPZ01', 'BMVZ01', 'BMFZ01', 'FMPZ01', 'BWPZ01', 'FWPZ01', 'FOPA01', 'BOPA01', 'FOPB01',
+                         'BOPB01', 'BDGP01')
+                       THEN 'Y'
+                   ELSE 'N'
+                   END                          AS PROHIBITION_NOTICE,
+               CASE
+                   WHEN NTC.FK_NTY_CODE
+                            IN
+                        ('BMPZ01', 'BMVZ01', 'BMFZ01', 'FMPZ01', 'BWPZ01', 'FWPZ01', 'FOPA01', 'BOPA01', 'FOPB01',
+                         'BOPB01', 'BDGP01')
+                       AND (NTC.CLEARANCE_DATE >=
+                            (DATE_FORMAT(CONVERT_TZ(CURRENT_TIMESTAMP, 'UTC', 'Europe/London'), '%Y-%m-%dy')) OR
+                            NTC.CLEARANCE_DATE IS NULL)
+                       AND NTC.NOTICE_STATUS = 'A'
+                       AND NTC.IN_FORCE_DATE &lt;=
+                           (DATE_FORMAT(CONVERT_TZ(CURRENT_TIMESTAMP, 'UTC', 'Europe/London'), '%Y-%m-%d'))
+                       THEN 'Y'
+                   ELSE 'N'
+                   END                          AS PROHIBITION_OUTSTANDING
+        FROM MC_NOTICE NTC
+                 LEFT JOIN MC_NOTICE_TYPE NTY
+                           ON NTC.FK_NTY_CODE = NTY.CODE
+                               AND NTY.CURRENT_CODE = 'Y'
+        WHERE NTC.FK_VEN_GENERATED_NUMBER = #{id}
+          AND NTC.NOTICE_STATUS != 'W'
+        ORDER BY NTC.INPUT_DATE DESC
+    </select>
+
+    <select id="getEncounterDefectsById">
+        select ADF.FK_VEN_GENERATED_NUMBER,
+               CASE
+                   WHEN ADF.SIG_MNTNC_FAILURE in ('Y', 'A', 'O')
+                       THEN 'S'
+                   ELSE NULL
+                   END                        AS S_MARK,
+               CASE
+                   WHEN SUBSTR(#{noticeType}, 1, 3) in ('BOP', 'BWP')
+                       THEN
+                       CASE
+                           WHEN #{noticeType} = 'BWPZ01'
+                               THEN 'O/L'
+                           ELSE null END
+                   WHEN SUBSTR(#{noticeType}, 1, 3) = 'BMP'
+                       THEN
+                       CASE
+                           WHEN SDF.FK_DNU_DSU_DSE_SECTION_NUM is NOT NULL
+                               THEN
+                               CASE
+                                   WHEN #{noticeType} = 'BMPZ01'
+                                       THEN
+                                       CONCAT(CAST(SDF.FK_DNU_DSU_DSE_SECTION_NUM AS CHAR), ' ',
+                                              CASE
+                                                  WHEN ADF.SIG_MNTNC_FAILURE in ('Y', 'A', 'O')
+                                                      THEN 'S'
+                                                  ELSE ' ' END)
+                                   ELSE ' ' END
+                           ELSE CASE
+                                    WHEN (SUBSTR(#{noticeType}, 2, 1) = 'M' AND
+                                          #{noticeType} NOT IN ('BMRZ01', 'BMXZ01'))
+                                        THEN 'U'
+                                    ELSE ' ' END
+                           END
+                   ELSE ' '
+                   END                        AS DEFECT_CODE,
+               SDF.FK_DNU_DSU_DSE_SECTION_NUM AS IM_NUM,
+               SDF.ACTION                     AS SEVERITY,
+               ADF.ACTUAL_ACTION              AS ACTUAL_ACTION,
+               ADF.MAKE                       AS PART_MAKE,
+               ADF.ADE_SIZE                   AS ADF_SIZE,
+               ADF.SERIAL_NUMBER              AS SERIAL_NUMBER,
+               ADF.AXLE_NUMBER                AS AXLE_NUMBER,
+               CASE
+                   WHEN ADF.SIDE = 'N' THEN 'Nearside'
+                   WHEN ADF.SIDE = 'O' THEN 'Offside'
+                   ELSE NULL
+                   END                        AS ADF_SIDE,
+               ADF.POSITION_ON_AXLE           AS POSITION_ON_AXLE,
+               CASE
+                   WHEN ADF.ADE_END = 'F' THEN 'Front'
+                   WHEN ADF.ADE_END = 'R' THEN 'Rear'
+                   ELSE NULL
+                   END                        AS ADF_END,
+               ADF.VERTICAL_POSITION          AS VERTICAL_POSITION,
+               ADF.ADDITIONAL_TEXT            AS ADDITIONAL_TEXT,
+               DSU.DESC_TEXT                  AS DESC_TEXT,
+               SDF.SOD_DESCRIPTION            AS DESCRIPTION,
+               TRIM(CONCAT(coalesce(DSU.DESC_TEXT, ''), ' ', coalesce(SDF.SOD_DESCRIPTION, ''),
+                           CASE
+                               WHEN ADF.SIDE = 'N' THEN 'Nearside '
+                               WHEN ADF.SIDE = 'O' THEN 'Offside '
+                               ELSE ''
+                               END,
+                           CASE
+                               WHEN ADF.ADE_END = 'F' THEN 'Front '
+                               WHEN ADF.ADE_END = 'R' THEN 'Rear '
+                               ELSE ''
+                               END,
+                           CASE
+                               WHEN ADF.AXLE_NUMBER != 0 THEN CONCAT('Axle ', CAST(ADF.AXLE_NUMBER AS CHAR))
+                               ELSE ''
+                               END))          AS DETAILED_DESCRIPTION
+        FROM MC_ACTUAL_DEFECT ADF
+                 LEFT JOIN MC_SEVERITY_OF_DEFECT SDF
+                           ON SDF.GENERATED_NUMBER = ADF.SOD_GENERATED_NUMBER
+                 LEFT JOIN MC_DEFECT_SUB_DESC DSU
+                           ON DSU.GEN_NUM = ADF.DUD_GEN_NUM
+        WHERE ADF.FK_VEN_GENERATED_NUMBER = #{genNum}
+          AND #{noticeType} != 'PG35EC'
+          AND #{noticeType} NOT IN (SELECT AON.FK_NOT_NTY_CODE
+                                    FROM MC_ACTUAL_OFFENCE_NOTICE_XREF AON
+                                    WHERE AON.FK_NOT_FK_VEN_GENERATED_NUMBER = #{genNum}
+                                      AND AON.FK_NOT_NTY_CODE = #{noticeType})
+        ORDER BY 1 ASC
+    </select>
+
+    <select id="getEncounterOffencesById">
+        SELECT OFF.CODE                    as OFFENCE_CODE,
+               OFF.DESCRIPTION             as OFFENCE_DESCRIPTION,
+               OFF.DESCRIPTION_WELSH       as OFFENCE_WELSH_DESCRIPTION,
+               AOF.OFFENCE_DATE            as OFFENCE_DATE,
+               OFF.EFFECTIVE_FROM_DATE     as EFFECTIVE_FROM,
+               OFF.EFFECTIVE_TO_DATE       as EFFECTIVE_TO,
+               AOF.ADDITIONAL_TEXT         as ADDITIONAL_TEXT,
+               OBD.DRIVER_TYPE             as DRIVER_TYPE,
+               OBD.FORENAME                as DRIVER_FORENAME,
+               OBD.SURNAME                 as DRIVER_SURNAME,
+               OBD.DATE_OF_BIRTH           as DATE_OF_BIRTH,
+               OBD.DRIVER_LIC_NUM          as DRIVER_LICENCE_NUMBER,
+               OBD.ADDR_1                  as ADDRESS_LINE_1,
+               OBD.ADDR_2                  as ADDRESS_LINE_2,
+               OBD.ADDR_3                  as ADDRESS_LINE_3,
+               OBD.ADDR_4                  as ADDRESS_LINE_4,
+               OBD.POSTOWN                 as POST_TOWN,
+               OBD.POSTCODE                as POST_CODE,
+               AOF.EXEMPT_FROM_PROHIBITION as EXEMPTION_DETAILS,
+               PNO.DRIVER_TYPE             as PNO_DRIVER_TYPE,
+               PNO.DRIVER_FORENAME         as PNO_DRIVER_FORENAME,
+               PNO.DRIVER_SURNAME          as PNO_DRIVER_SURNAME,
+               PNO.DRIVER_LICENCE_NUMBER   as PNO_DRIVER_LICENCE_NUM,
+               PNO.REFERENCE_NUMBER        as PNO_REFERENCE_NUM,
+               AOF.ENDORSABLE_FLAG         as ENDORSABLE_IND,
+               PNO.AMOUNT                  as PNO_AMOUNT,
+               PNO.PAYMENT_DUE_DATE        as PNO_PAYMENT_DUE_DATE,
+               PNO.REFERRED_DATE           as PNO_REFERRED_DATE,
+               OFF.HAZCHEM_RISK            as MOF_HAZCHEM_RISK,
+               OFF.HAZCHEM_REASON          as MOF_HAZCHEM_REASON
+        FROM MC_ACTUAL_OFFENCE_NOTICE_XREF AON
+                 LEFT JOIN MC_ACTUAL_OFFENCE AOF
+                           ON AON.FK_AOF_GENERATED_NUMBER = AOF.GENERATED_NUMBER
+                               AND AON.FK_NOT_FK_VEN_GENERATED_NUMBER = AOF.FK_VEN_GENERATED_NUMBER
+                 LEFT JOIN MC_OFFENCE OFF
+                           ON OFF.CODE = AOF.FK_OFF_CODE
+                               AND OFF.VERSION = AOF.FK_OFF_VERSION
+                               AND OFF.UK_MARKER = AOF.FK_OFF_UK_MARKER
+                 LEFT JOIN MC_OBSERVED_DRIVER OBD
+                           ON OBD.GENERATED_NUMBER = AOF.ODR_GENERATED_NUMBER
+                 LEFT JOIN MC_PENALTY_NOTICE PNO
+                           ON OBD.GENERATED_NUMBER = PNO.FK_ODR_GENERATED_NUMBER
+                               AND CONCAT(DATE_FORMAT(PNO.FK_NOT_INPUT_DATE, '%Y-%m-%d'), 'T',
+                                          TIME_FORMAT(PNO.FK_NOT_INPUT_DATE, '%H:%i:%s')) = #{noticeInputDate}
+        WHERE AON.FK_NOT_FK_VEN_GENERATED_NUMBER = #{genNum}
+          AND CONCAT(DATE_FORMAT(AON.FK_NOT_INPUT_DATE, '%Y-%m-%d'), 'T',
+                     TIME_FORMAT(AON.FK_NOT_INPUT_DATE, '%H:%i:%s')) = #{noticeInputDate}
+        ORDER BY 1 ASC
+    </select>
+
+    <select id="getOtherOffencesById">
+        SELECT OFF.CODE                    as OFFENCE_CODE,
+               OFF.DESCRIPTION             as OFFENCE_DESCRIPTION,
+               OFF.DESCRIPTION_WELSH       as OFFENCE_WELSH_DESCRIPTION,
+               AOF.OFFENCE_DATE            as OFFENCE_DATE,
+               OFF.EFFECTIVE_FROM_DATE     as EFFECTIVE_FROM,
+               OFF.EFFECTIVE_TO_DATE       as EFFECTIVE_TO,
+               AOF.ADDITIONAL_TEXT         as ADDITIONAL_TEXT,
+               OBD.DRIVER_TYPE             as DRIVER_TYPE,
+               OBD.FORENAME                as DRIVER_FORENAME,
+               OBD.SURNAME                 as DRIVER_SURNAME,
+               OBD.DATE_OF_BIRTH           as DATE_OF_BIRTH,
+               OBD.DRIVER_LIC_NUM          as DRIVER_LICENCE_NUMBER,
+               OBD.ADDR_1                  as ADDRESS_LINE_1,
+               OBD.ADDR_2                  as ADDRESS_LINE_2,
+               OBD.ADDR_3                  as ADDRESS_LINE_3,
+               OBD.ADDR_4                  as ADDRESS_LINE_4,
+               OBD.POSTOWN                 as POST_TOWN,
+               OBD.POSTCODE                as POST_CODE,
+               AOF.EXEMPT_FROM_PROHIBITION as EXEMPTION_DETAILS,
+               NULL                        as PNO_DRIVER_TYPE,
+               NULL                        as PNO_DRIVER_FORENAME,
+               NULL                        as PNO_DRIVER_SURNAME,
+               NULL                        as PNO_DRIVER_LICENCE_NUM,
+               NULL                        as PNO_REFERENCE_NUM,
+               AOF.ENDORSABLE_FLAG         as ENDORSABLE_IND,
+               NULL                        as PNO_AMOUNT,
+               NULL                        as PNO_PAYMENT_DUE_DATE,
+               NULL                        as PNO_REFERRED_DATE,
+               OFF.HAZCHEM_RISK            as MOF_HAZCHEM_RISK,
+               OFF.HAZCHEM_REASON          as MOF_HAZCHEM_REASON
+        FROM MC_ACTUAL_OFFENCE AOF
+                 LEFT JOIN MC_OFFENCE OFF
+                           ON OFF.CODE = AOF.FK_OFF_CODE
+                               AND OFF.VERSION = AOF.FK_OFF_VERSION
+                               AND OFF.UK_MARKER = AOF.FK_OFF_UK_MARKER
+                 LEFT JOIN MC_OBSERVED_DRIVER OBD
+                           ON OBD.GENERATED_NUMBER = AOF.ODR_GENERATED_NUMBER
+                 LEFT JOIN MC_ACTUAL_OFFENCE_NOTICE_XREF AON
+                           ON AON.FK_AOF_GENERATED_NUMBER = AOF.GENERATED_NUMBER
+                               AND AON.FK_NOT_FK_VEN_GENERATED_NUMBER = AOF.FK_VEN_GENERATED_NUMBER
+        WHERE AOF.FK_VEN_GENERATED_NUMBER = #{id}
+          AND AON.FK_NOT_FK_VEN_GENERATED_NUMBER IS NULL
+        ORDER BY 1 ASC
+    </select>
+</mapper>

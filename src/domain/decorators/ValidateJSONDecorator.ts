@@ -6,7 +6,7 @@ export function ValidateJSON<T>(validate: (body: T) => { valid: boolean; error?:
 	return function (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) {
 		const originalMethod = descriptor.value;
 
-		descriptor.value = async function (body: T, res: Response, next: NextFunction) {
+		descriptor.value = async function (body: object | Buffer, res: Response, next: NextFunction) {
 			// just to be safe, check the bodies existence before attempting to validate it
 			if (!body) {
 				return res.status(400).json({ message: 'No request body provided.' });

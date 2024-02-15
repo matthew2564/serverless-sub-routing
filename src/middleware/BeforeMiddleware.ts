@@ -15,57 +15,70 @@ import { BodyParser } from '../domain/helpers/body-parser';
 @Service()
 @Middleware({ type: 'before', priority: Priority.HIGHEST })
 export class BeforeMiddleware implements ExpressMiddlewareInterface {
-	private readonly logger: Logger = new Logger({
-		serviceName: name,
-		logLevel: (process.env.LOG_LEVEL as LogLevel) || 'debug',
-	});
-
-	async use(_req: Request, _res: Response, next: NextFunction) {
-		this.logger.debug('BeforeMiddleware: Starting.');
-
-		// if the request has a body, then parse it into JSON
-		if (_req.body) {
-			_req.body = BodyParser(_req.body);
-		}
+	async use(req: Request, _res: Response, next: NextFunction) {
+		const logger = new Logger({
+			serviceName: name,
+			logLevel: (process.env.LOG_LEVEL as LogLevel) || 'debug',
+		});
 
 		// store logger instance in container
-		this.initLogger();
+		Container.set(LOGGER, logger);
 
-		// don't set up secrets or connection if hitting `/version` endpoint
-		// if (!req.path.endsWith('/version')) {
+		logger.debug('BeforeMiddleware: Starting.');
+
+		// if the request has a body, then parse it into JSON
+		if (req.body && (req.method === 'POST' || req.method === 'PUT')) {
+			req.body = BodyParser(req.body);
+		}
+
 		// store secret in container
-		await this.initSecrets();
+		const secret = await this.initSecrets();
+
+		// validate secret is populated as expected
+		try {
+			this.validateSecret(secret);
+		} catch (err) {
+			logger.error(`BeforeMiddleware: ${(err as Error).message}.`);
+			throw err;
+		}
 
 		// store the connection in container
-		this.initConnection(Container.get(SECRET) as Secret);
-		// }
+		this.initConnection(secret);
 
-		this.logger.debug('BeforeMiddleware: Finished.');
+		logger.debug('BeforeMiddleware: Finished.');
 
 		next();
-	}
-
-	private initLogger() {
-		Container.set(LOGGER, this.logger);
 	}
 
 	private async initSecrets() {
 		const secret = await SecretsManager.get<Secret>({
 			SecretId: EnvironmentVariables.get('secretkey'),
 		});
+
 		Container.set(SECRET, secret);
+
+		return secret;
 	}
 
 	private initConnection(secret: Secret) {
-		// @TODO: Ask SMC to create a `host` key in secrets manager
+		Container.set(
+			CONNECTION,
+			createConnection({
+				// host: secret.host,
+				// @TODO: Ask SMC to create a `host` key in secrets manager
+				host: 'bastion.dev-ctrl.smc.dvsacloud.uk',
+				database: secret.target,
+				user: secret.username,
+				password: secret.password,
+				charset: 'UTF8_GENERAL_CI',
+			})
+		);
+	}
 
-		const connection = createConnection({
-			host: secret.host,
-			database: secret.target,
-			user: secret.username,
-			password: secret.password,
-			charset: 'UTF8_GENERAL_CI',
-		});
-		Container.set(CONNECTION, connection);
+	private validateSecret(secret: Secret) {
+		if (!secret.host) throw new Error('Secret is missing `host`');
+		if (!secret.username) throw new Error('Secret is missing `username`');
+		if (!secret.password) throw new Error('Secret is missing `password`');
+		if (!secret.target) throw new Error('Secret is missing `target`');
 	}
 }

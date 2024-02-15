@@ -38,7 +38,7 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 		}
 
 		if (error instanceof Error) {
-			logger.error(`[ERROR]: CustomErrorMiddleware - instanceof Error`, { error });
+			logger.error(`[ERROR]: CustomErrorMiddleware - instanceof Error`, error);
 
 			return response.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
 				message: ErrorEnum.INTERNAL_SERVER_ERROR,
@@ -48,7 +48,7 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 
 		// This is log for anything that falls through the cracks. This should never in theory run, although would
 		// give visibility of errors that are not being caught correctly.
-		logger.error(`[ERROR]: CustomErrorMiddleware - Uncaught error`, { error });
+		logger.error(`[ERROR]: CustomErrorMiddleware - Uncaught error`, error as Error);
 
 		next();
 	}

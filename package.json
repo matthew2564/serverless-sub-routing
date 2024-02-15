@@ -1,6 +1,7 @@
 {
   "name": "serverless-sub-routing",
   "version": "1.0.0",
+  "friendlyName": "Serverless Sub-Routing",
   "description": "Serverless Sub Routing with DI",
   "main": "./src/index.ts",
   "author": "matthew2564",

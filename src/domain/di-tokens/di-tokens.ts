@@ -1,6 +1,7 @@
 import { Token } from 'typedi';
 import { Logger } from '@aws-lambda-powertools/logger';
-import { SecretsManager } from '@dvsa/cvs-microservice-common/classes/aws/secrets-manager-client';
-export const CONNECTION = new Token('CONNECTION');
+import { Connection } from 'mysql2';
+import { Secret } from '../models/Secret';
+export const CONNECTION = new Token<Connection>('CONNECTION');
 export const LOGGER = new Token<Logger>('LOGGER');
-export const SECRET = new Token<SecretsManager>('SECRET');
+export const SECRET = new Token<Secret>('SECRET');

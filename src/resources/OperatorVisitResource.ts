@@ -1,4 +1,4 @@
-import { Body, Get, JsonController, Post, Res } from 'routing-controllers';
+import { Body, JsonController, Post, Res } from 'routing-controllers';
 import { Response } from 'express';
 import { Inject, Service } from 'typedi';
 import { Logger } from '@aws-lambda-powertools/logger';
@@ -8,22 +8,14 @@ import { ErrorEnum } from '../domain/enums/Error.enum';
 import { LOGGER } from '../domain/di-tokens/di-tokens';
 import { ValidateJSON } from '../domain/decorators/ValidateJSONDecorator';
 import { operatorVisitPayloadValidator } from '../domain/validators/OperatorVisitPayloadValidator';
-import { VersionService } from '../services/VersionService';
 
 @Service()
 @JsonController('/1.0/operator')
 export class OperatorVisitResource {
 	constructor(
 		@Inject() private operatorVisitService: OperatorVisitService,
-		@Inject() private versionService: VersionService,
 		@Inject(LOGGER) private logger: Logger
 	) {}
-
-	@Get('/version')
-	getVersion(@Res() response: Response) {
-		const versionData = this.versionService.getVersion();
-		return response.status(200).json(versionData);
-	}
 
 	@Post('/visit')
 	@ValidateJSON<OperatorVisitRequest>(operatorVisitPayloadValidator)

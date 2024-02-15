@@ -8,6 +8,7 @@ import { OperatorVisitResource } from './resources/OperatorVisitResource';
 import { NotFoundMiddleware } from './middleware/NotFoundMiddleware';
 import { CustomErrorMiddleware } from './middleware/CustomErrorMiddleware';
 import { BeforeMiddleware } from './middleware/BeforeMiddleware';
+import { VersionResource } from './resources/VersionResource';
 
 // This line tells routing-controllers to use typedi container
 useContainer(Container);
@@ -15,7 +16,7 @@ useContainer(Container);
 const app = createExpressServer({
 	cors: true,
 	defaultErrorHandler: false,
-	controllers: [OperatorVisitResource],
+	controllers: [OperatorVisitResource, VersionResource],
 	middlewares: [BeforeMiddleware, CustomErrorMiddleware, NotFoundMiddleware],
 	authorizationChecker: ({ request }: Action, roles: string | string[]) => {
 		// if running locally, skip the auth check

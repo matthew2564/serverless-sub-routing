@@ -1,4 +1,4 @@
-import { OperatorVisitRequest } from '../models/McModel';
+import { OperatorVisitRequest } from '../models/operator/OperatorVisitRequest';
 
 export function operatorVisitPayloadValidator(data: OperatorVisitRequest): { valid: boolean; error?: string } {
 	const neitherGuidOrLicenceNumber = data.clientGuid === null && data.operatorLicenceNumber === null;

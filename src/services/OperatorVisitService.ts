@@ -1,11 +1,11 @@
 import { Inject, Service } from 'typedi';
 import { OperatorVisitProvider } from '../providers/OperatorVisitProvider';
-import { OperatorVisitRequest } from '../domain/models/McModel';
-import { OperatorVisitMap } from '../domain/models/OperatorVistitMapModel';
-import { OperatorVisitResponseModel } from '../domain/models/OperatorVisitResponseModel';
+import { OperatorVisitRequest } from '../domain/models/operator/OperatorVisitRequest';
+import { OperatorVisitData } from '../domain/models/operator/OperatorVisitData';
+import { OperatorVisitResponse } from '../domain/models/response/OperatorVisitResponse';
 import { LOGGER } from '../domain/di-tokens/di-tokens';
 import { Logger } from '@aws-lambda-powertools/logger';
-import { OperatorVehicleEncounterMap } from '../domain/models/OperatorVehicleEncounterMapModel';
+import { OperatorVisitVehicleEncounter } from '../domain/models/operator/OperatorVisitVehicleEncounter';
 import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 
 @Service()
@@ -15,12 +15,12 @@ export class OperatorVisitService {
 		@Inject(LOGGER) private logger: Logger
 	) {}
 
-	async getOperatorVisit(operatorVisitRequest: OperatorVisitRequest): Promise<OperatorVisitResponseModel> {
+	async getOperatorVisit(operatorVisitRequest: OperatorVisitRequest): Promise<OperatorVisitResponse> {
 		const operatorVisits = await this.operatorVisitProvider.getOperatorVisit(operatorVisitRequest);
 
-		const opVisitsWithEncounters: OperatorVisitMap[] = await Promise.all(
+		const opVisitsWithEncounters: OperatorVisitData[] = await Promise.all(
 			operatorVisits.map(async (opVisit) => {
-				let opVehicleEncounters: OperatorVehicleEncounterMap[] = [];
+				let opVehicleEncounters: OperatorVisitVehicleEncounter[] = [];
 
 				try {
 					// Attempt to get vehicle encounters for each visit

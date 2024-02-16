@@ -1,83 +1,13 @@
 import { Exclude, Expose, Transform, plainToInstance, ClassConstructor } from 'class-transformer';
 import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
+import { TeHoursResult } from './TeHoursResult';
+import { Examiner } from './Examiner';
+import { InitiatingReason } from './InitiatingReason';
+import { VeVisitResult } from './VeVisitResult';
+import { TeOtherResult } from './TeOtherResult';
 
 @Exclude()
-class Examiner {
-	@Expose({ name: 'FIRST_NAME' })
-	firstName!: string;
-
-	@Expose({ name: 'SURNAME' })
-	surname!: string;
-
-	@Expose({ name: 'USER_ID' })
-	userId!: string;
-}
-
-@Exclude()
-class InitiatingReason {
-	@Expose({ name: 'IRE_GEN_NUM' })
-	generatedNumber!: number;
-
-	@Expose({ name: 'IRE_DESC' })
-	description!: string;
-
-	@Expose({ name: 'IRE_DEL_IND' })
-	deletionMarker!: string;
-
-	@Expose({ name: 'IRE_SEQ_NUM' })
-	sequenceNumber!: number;
-
-	@Expose({ name: 'IRE_USAGE' })
-	usage!: string;
-}
-
-@Exclude()
-class VeVisitResult {
-	@Expose({ name: 'VVR_CODE' })
-	code!: string;
-
-	@Expose({ name: 'VVR_DESC' })
-	description!: string;
-
-	@Expose({ name: 'VVR_DEL_IND' })
-	deletionMarker!: string;
-
-	@Expose({ name: 'VVR_SEQ_NUM' })
-	sequenceNumber!: number;
-}
-
-@Exclude()
-class TeHoursResult {
-	@Expose({ name: 'THR_CODE' })
-	code!: string;
-
-	@Expose({ name: 'THR_DESC' })
-	description!: string;
-
-	@Expose({ name: 'THR_DEL_IND' })
-	deletionMarker!: string;
-
-	@Expose({ name: 'THR_SEQ_NUM' })
-	sequenceNumber!: number;
-}
-
-@Exclude()
-class TeOtherResult {
-	@Expose({ name: 'TOR_CODE' })
-	code!: string;
-
-	@Expose({ name: 'TOR_DESC' })
-	description!: string;
-
-	@Expose({ name: 'TOR_DEL_IND' })
-	deletionMarker!: string;
-
-	@Expose({ name: 'TOR_SEQ_NUM' })
-	sequenceNumber!: number;
-}
-
-@Exclude()
-export class OperatorVisitMap {
+export class OperatorVisitData {
 	@Expose({ name: 'GENERATED_NUMBER' })
 	generatedNumber!: string;
 

@@ -3,7 +3,7 @@ import { Response } from 'express';
 import { Inject, Service } from 'typedi';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { OperatorVisitService } from '../services/OperatorVisitService';
-import { OperatorVisitRequest } from '../domain/models/McModel';
+import { OperatorVisitRequest } from '../domain/models/operator/OperatorVisitRequest';
 import { ErrorEnum } from '../domain/enums/Error.enum';
 import { LOGGER } from '../domain/di-tokens/di-tokens';
 import { ValidateJSON } from '../domain/decorators/ValidateJSONDecorator';
@@ -28,15 +28,15 @@ export class OperatorVisitResource {
 				operatorLicenceNumber: body.operatorLicenceNumber,
 			});
 
-			const operatorVisitResponse = await this.operatorVisitService.getOperatorVisit(body);
+			const resp = await this.operatorVisitService.getOperatorVisit(body);
 
-			this.logger.info(`${operatorVisitResponse.count} operator visits found.`);
+			this.logger.info(`${resp.count} operator visits found.`);
 
-			if (!operatorVisitResponse?.operatorVisitsData.length) {
+			if (!resp?.operatorVisitsData.length) {
 				return response.status(204).json({});
 			}
 
-			return response.status(200).json(operatorVisitResponse);
+			return response.status(200).json(resp);
 		} catch (err) {
 			this.logger.error('[ERROR]: getOperatorVisit', { err });
 

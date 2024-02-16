@@ -76,7 +76,8 @@ export class BeforeMiddleware implements ExpressMiddlewareInterface {
 	}
 
 	private validateSecret(secret: Secret) {
-		if (!secret.host) throw new Error('Secret is missing `host`');
+		// @TODO: Re-enable
+		// if (!secret.host) throw new Error('Secret is missing `host`');
 		if (!secret.username) throw new Error('Secret is missing `username`');
 		if (!secret.password) throw new Error('Secret is missing `password`');
 		if (!secret.target) throw new Error('Secret is missing `target`');

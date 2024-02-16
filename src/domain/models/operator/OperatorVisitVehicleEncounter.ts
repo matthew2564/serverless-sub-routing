@@ -1,6 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 
-export class OperatorVehicleEncounterMap {
+export class OperatorVisitVehicleEncounter {
 	@Expose({ name: 'GENERATED_NUMBER' })
 	generatedNumber!: string;
 

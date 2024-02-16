@@ -13,12 +13,12 @@ export class VersionResource {
 		@Inject(LOGGER) private logger: Logger
 	) {}
 
-	@Get()
+	@Get('')
 	getVersion(@Res() response: Response) {
-		const versionData = this.versionService.getVersion();
+		const resp = this.versionService.getVersion();
 
-		this.logger.debug(`Calling \`getVersion\``, { versionData });
+		this.logger.debug(`Calling \`getVersion\``, { versionData: resp });
 
-		return response.status(200).json(versionData);
+		return response.status(200).json(resp);
 	}
 }

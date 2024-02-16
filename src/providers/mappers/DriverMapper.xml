@@ -265,7 +265,7 @@
         VEN.JOB_COMPLETE = 'Y'
         AND VEN.ACTION_CODE != 'T'
         AND OBD.GENERATED_NUMBER IN
-        <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+        <foreach collection="list" item="item" index="index" open="(" separator="," close=")">
             #{item.generatedNo}
         </foreach>
         ORDER BY OBD.GENERATED_NUMBER DESC LIMIT 25
@@ -317,7 +317,7 @@
         WHERE VEN.JOB_COMPLETE = 'Y'
         AND VEN.ACTION_CODE != 'T'
         AND VEN.GENERATED_NUMBER IN
-        <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+        <foreach collection="list" item="item" index="index" open="(" separator="," close=")">
             #{item.enforcementId}
         </foreach>
         ORDER BY VEN.ENCNTR_START_DATE DESC, VEN.GENERATED_NUMBER DESC

@@ -6,6 +6,5 @@ export interface Secret {
 	encounterRole: string;
 	driverEncounterRole: string;
 	closeProhibitionRole: string;
-
 	host?: string;
 }

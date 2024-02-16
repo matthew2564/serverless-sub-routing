@@ -1,10 +1,11 @@
 import { Inject, Service } from 'typedi';
-import { Get, JsonController, QueryParam, Res } from 'routing-controllers';
+import { Get, JsonController, Res } from 'routing-controllers';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { Response } from 'express';
 import { LOGGER } from '../domain/di-tokens/di-tokens';
 import { AuditHistoryService } from '../services/AuditHistoryService';
 import { ErrorEnum } from '../domain/enums/Error.enum';
+import { NotNullQueryParam } from '../domain/decorators/NotNullQueryParam';
 
 @Service()
 @JsonController('/1.0/audithistory')
@@ -15,7 +16,7 @@ export class AuditResource {
 	) {}
 
 	@Get('')
-	async getAuditHistory(@QueryParam('identifier') identifier: string, @Res() response: Response) {
+	async getAuditHistory(@NotNullQueryParam('identifier') identifier: string, @Res() response: Response) {
 		try {
 			this.logger.addPersistentLogAttributes({ identifier });
 

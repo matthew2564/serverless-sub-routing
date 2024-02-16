@@ -6,6 +6,7 @@ import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes'
 import { ErrorEnum } from '../domain/enums/Error.enum';
 import { Priority } from '../domain/enums/MiddlewarePriority.enum';
 import { LOGGER } from '../domain/di-tokens/di-tokens';
+import { CustomError } from '../domain/models/CustomError';
 
 @Service()
 @Middleware({ type: 'after', priority: Priority.MEDIUM })
@@ -33,7 +34,16 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 
 			return response.status(requestError.httpCode).send({
 				message: ErrorEnum.VALIDATION,
-				errors: requestError.errors.map((item) => Object.values(item.constraints!)).flat(),
+				errors: requestError.errors?.map((item) => Object.values(item.constraints!)).flat(),
+			});
+		}
+
+		if (error instanceof CustomError) {
+			logger.error(`[ERROR]: CustomErrorMiddleware - instanceof CustomError`, { error });
+
+			return response.status(error.statusCode).send({
+				message: ErrorEnum.VALIDATION,
+				detail: error.message,
 			});
 		}
 

@@ -6,7 +6,7 @@ import { OperatorVisitService } from '../services/OperatorVisitService';
 import { OperatorVisitRequest } from '../domain/models/operator/OperatorVisitRequest';
 import { ErrorEnum } from '../domain/enums/Error.enum';
 import { LOGGER } from '../domain/di-tokens/di-tokens';
-import { ValidateJSON } from '../domain/decorators/ValidateJSONDecorator';
+import { ValidateBody } from '../domain/decorators/ValidateBodyDecorator';
 import { operatorVisitPayloadValidator } from '../domain/validators/OperatorVisitPayloadValidator';
 
 @Service()
@@ -18,7 +18,7 @@ export class OperatorVisitResource {
 	) {}
 
 	@Post('/visit')
-	@ValidateJSON<OperatorVisitRequest>(operatorVisitPayloadValidator)
+	@ValidateBody(operatorVisitPayloadValidator)
 	async getOperatorVisit(@Body() body: OperatorVisitRequest, @Res() response: Response) {
 		try {
 			this.logger.debug(`Calling \`getOperatorVisit\``, { body });

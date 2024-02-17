@@ -2,7 +2,7 @@ import { NextFunction, Response } from 'express';
 import { ErrorEnum } from '../enums/Error.enum';
 import { BodyParser } from '../helpers/body-parser';
 
-export function ValidateJSON<T>(validate: (body: T) => { valid: boolean; error?: string }) {
+export function ValidateBody<T>(validate: (body: T) => { valid: boolean; error?: string }) {
 	return function (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) {
 		const originalMethod = descriptor.value;
 

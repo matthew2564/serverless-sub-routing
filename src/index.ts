@@ -1,3 +1,4 @@
+/* eslint-disable */
 import 'reflect-metadata';
 import 'source-map-support/register';
 import serverless from 'serverless-http';
@@ -11,6 +12,7 @@ import { BeforeMiddleware } from './middleware/BeforeMiddleware';
 import { VersionResource } from './resources/VersionResource';
 import { AuditResource } from './resources/AuditResource';
 import { DriverEncounterResource } from './resources/DriverEncounterResource';
+import { OperatorScoresResource } from './resources/OperatorScoresResource';
 
 // This line tells routing-controllers to use typedi container
 useContainer(Container);
@@ -18,7 +20,7 @@ useContainer(Container);
 const app = createExpressServer({
 	cors: true,
 	defaultErrorHandler: false,
-	controllers: [AuditResource, DriverEncounterResource, OperatorVisitResource, VersionResource],
+	controllers: [AuditResource, DriverEncounterResource, OperatorScoresResource, OperatorVisitResource, VersionResource],
 	middlewares: [BeforeMiddleware, CustomErrorMiddleware, NotFoundMiddleware],
 	authorizationChecker: ({ request }: Action, roles: string | string[]) => {
 		// if running locally, skip the auth check

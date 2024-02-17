@@ -11,7 +11,7 @@ import { OperatorScoreService } from '../services/OperatorScoreService';
 
 @Service()
 @JsonController('/1.0/operator/scores')
-export class AuditResource {
+export class OperatorScoresResource {
 	constructor(
 		@Inject() private operatorScoreService: OperatorScoreService,
 		@Inject(LOGGER) private logger: Logger

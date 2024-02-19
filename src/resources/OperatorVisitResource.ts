@@ -6,7 +6,7 @@ import { OperatorVisitService } from '../services/OperatorVisitService';
 import { OperatorVisitRequest } from '../domain/models/operator/OperatorVisitRequest';
 import { ErrorEnum } from '../domain/enums/Error.enum';
 import { LOGGER } from '../domain/di-tokens/di-tokens';
-import { ValidateBody } from '../domain/decorators/ValidateBodyDecorator';
+import { ValidateBody } from '../domain/decorators/ValidateBody';
 import { operatorVisitPayloadValidator } from '../domain/validators/OperatorVisitPayloadValidator';
 
 @Service()
@@ -21,12 +21,12 @@ export class OperatorVisitResource {
 	@ValidateBody(operatorVisitPayloadValidator)
 	async getOperatorVisit(@Body() body: OperatorVisitRequest, @Res() response: Response) {
 		try {
-			this.logger.debug(`Calling \`getOperatorVisit\``, { body });
-
 			this.logger.addPersistentLogAttributes({
 				guid: body.clientGuid,
 				operatorLicenceNumber: body.operatorLicenceNumber,
 			});
+
+			this.logger.debug(`Calling \`getOperatorVisit\``);
 
 			const resp = await this.operatorVisitService.getOperatorVisit(body);
 

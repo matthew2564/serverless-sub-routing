@@ -5,7 +5,7 @@ import { Response } from 'express';
 import { LOGGER } from '../domain/di-tokens/di-tokens';
 import { ErrorEnum } from '../domain/enums/Error.enum';
 import { OperatorScoreRequest } from '../domain/models/operator/OperatorScoreRequest';
-import { ValidateBody } from '../domain/decorators/ValidateBodyDecorator';
+import { ValidateBody } from '../domain/decorators/ValidateBody';
 import { operatorScoresPayloadValidator } from '../domain/validators/OperatorScoresPayloadValidator';
 import { OperatorScoreService } from '../services/OperatorScoreService';
 

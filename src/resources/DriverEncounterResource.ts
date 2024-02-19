@@ -6,6 +6,7 @@ import { LOGGER } from '../domain/di-tokens/di-tokens';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { DriverEncounterService } from '../services/DriverEncounterService';
 import { ErrorEnum } from '../domain/enums/Error.enum';
+import {obfuscate} from "../domain/helpers/ObfuscateValue";
 
 @Service()
 @JsonController('/1.0/driver')
@@ -18,9 +19,13 @@ export class DriverEncounterResource {
 	@Post('/encounter')
 	async getDriverEncounter(@Body({ validate: true }) driverRequest: DriverRequest, @Res() response: Response) {
 		try {
-			this.logger.debug(`Calling \`getDriverEncounter\``, { driverRequest });
+			this.logger.addPersistentLogAttributes({ licenceNo: obfuscate(driverRequest.licenceNo) });
+
+			this.logger.debug(`Calling \`getDriverEncounter\``);
 
 			const resp = await this.driverEncounterService.getDriverEncounter(driverRequest);
+
+			this.logger.info(`${resp.drivers?.length} driver encounters found.`);
 
 			if (!resp.drivers?.length) {
 				return response.status(204).json({});

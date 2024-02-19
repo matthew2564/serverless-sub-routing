@@ -10,7 +10,7 @@ import { CONNECTION, LOGGER, SECRET } from '../domain/di-tokens/di-tokens';
 import { name } from '../../package.json';
 import { Secret } from '../domain/models/Secret';
 import { Priority } from '../domain/enums/MiddlewarePriority.enum';
-import { BodyParser } from '../domain/helpers/body-parser';
+import { BodyParser } from '../domain/helpers/BodyParser';
 
 @Service()
 @Middleware({ type: 'before', priority: Priority.HIGHEST })

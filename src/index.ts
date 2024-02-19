@@ -13,6 +13,7 @@ import { VersionResource } from './resources/VersionResource';
 import { AuditResource } from './resources/AuditResource';
 import { DriverEncounterResource } from './resources/DriverEncounterResource';
 import { OperatorScoresResource } from './resources/OperatorScoresResource';
+import {EncounterResource} from "./resources/EncounterResource";
 
 // This line tells routing-controllers to use typedi container
 useContainer(Container);
@@ -20,7 +21,7 @@ useContainer(Container);
 const app = createExpressServer({
 	cors: true,
 	defaultErrorHandler: false,
-	controllers: [AuditResource, DriverEncounterResource, OperatorScoresResource, OperatorVisitResource, VersionResource],
+	controllers: [AuditResource, DriverEncounterResource, EncounterResource, OperatorScoresResource, OperatorVisitResource, VersionResource],
 	middlewares: [BeforeMiddleware, CustomErrorMiddleware, NotFoundMiddleware],
 	authorizationChecker: ({ request }: Action, roles: string | string[]) => {
 		// if running locally, skip the auth check

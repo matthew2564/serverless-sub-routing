@@ -1,4 +1,4 @@
-import { Response, NextFunction } from 'express';
+import type { Response, NextFunction } from 'express';
 import { ObjectSchema, ValidationErrorItem } from 'joi';
 import { ErrorEnum } from '../enums/Error.enum';
 

@@ -11,17 +11,15 @@ export class OperatorScoreProvider extends QueryProvider {
 	private static readonly MAPPER_PATHS = [path.resolve(__dirname, './mappers/OperatorScoresMapper.xml')];
 
 	constructor(@Inject(CONNECTION) connection: Connection) {
-		super(connection, OperatorScoreProvider.MAPPER_PATHS);
+		super(connection, 'dvsa.mc', OperatorScoreProvider.MAPPER_PATHS);
 	}
 
 	async getOperatorScore(operatorRequest: OperatorScoreRequest): Promise<OperatorScoreData[]> {
 		// @TODO: Role check - getAllowEncounter
 
-		return this.queryAndMapTo(
+		return this.session.selectList(
 			'getOperatorScores',
-			{
-				list: operatorRequest.operatorRequestList,
-			},
+			{ list: operatorRequest.operatorRequestList },
 			OperatorScoreData
 		);
 	}

@@ -12,16 +12,16 @@ export class OperatorVisitProvider extends QueryProvider {
 	private static readonly MAPPER_PATHS = [path.resolve(__dirname, './mappers/OperatorVisitMapper.xml')];
 
 	constructor(@Inject(CONNECTION) connection: Connection) {
-		super(connection, OperatorVisitProvider.MAPPER_PATHS);
+		super(connection, 'dvsa.mc', OperatorVisitProvider.MAPPER_PATHS);
 	}
 
 	async getOperatorVisit(operatorVisitRequest: OperatorVisitRequest): Promise<OperatorVisitData[]> {
-		return this.queryAndMapTo('getOperatorVisit', { ...operatorVisitRequest }, OperatorVisitData);
+		return this.session.selectList('getOperatorVisit', { ...operatorVisitRequest }, OperatorVisitData);
 	}
 
 	async getOperatorVehicleEncounter(operatorVisit: OperatorVisitData): Promise<OperatorVisitVehicleEncounter[]> {
 		if (operatorVisit.generatedNumber !== null) {
-			return this.queryAndMapTo(
+			return this.session.selectList(
 				'getOperatorVehicleEncounter',
 				{ generatedNumber: operatorVisit.generatedNumber },
 				OperatorVisitVehicleEncounter

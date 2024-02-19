@@ -15,28 +15,29 @@ export class DriverEncounterProvider extends QueryProvider {
 	private static readonly MAPPER_PATHS = [path.resolve(__dirname, './mappers/DriverMapper.xml')];
 
 	constructor(@Inject(CONNECTION) connection: Connection) {
-		super(connection, DriverEncounterProvider.MAPPER_PATHS);
+		super(connection, 'dvsa.mc', DriverEncounterProvider.MAPPER_PATHS);
 	}
 
 	async getObservedDriverByName(driverRequest: DriverRequest): Promise<ObservedDriverData[]> {
-		// @TODO: Role check - getAllowDriverEncounter
-
-		return this.queryAndMapTo('getObservedDriverByName', { ...driverRequest }, ObservedDriverData);
+		return this.session.selectList('getObservedDriverByName', { ...driverRequest }, ObservedDriverData);
 	}
 
 	async getObservedDriverByLicenceNo(driverRequest: DriverRequest): Promise<ObservedDriverData[]> {
 		// @TODO: Role check - getAllowDriverEncounter
 
-		return this.queryAndMapTo('getObservedDriverByLicNo', { ...driverRequest }, ObservedDriverData);
+		return this.session.selectList('getObservedDriverByLicNo', { ...driverRequest }, ObservedDriverData);
 	}
 
 	async getObservedDriverByNameAndAddress(driverRequest: DriverRequest): Promise<ObservedDriverData[]> {
 		// @TODO: Role check - getAllowDriverEncounter
 
-		return this.queryAndMapTo('getIdentifiedDriverByNameAndAddress', { ...driverRequest }, ObservedDriverData);
+		return this.session.selectList('getIdentifiedDriverByNameAndAddress', { ...driverRequest }, ObservedDriverData);
 	}
 
 	async getObservedEncountersByDriver(driverRequest: DriverRequest, type: string): Promise<ObservedEncounterData[]> {
+		// @TODO: Role check - getAllowDriverEncounter
+
+
 		let mapperID: string = '';
 
 		switch (type) {
@@ -47,12 +48,11 @@ export class DriverEncounterProvider extends QueryProvider {
 				mapperID = 'getEncounterIDsByName';
 				break;
 			default:
+				// if not one of the expected mapperID's, then return empty for function
 				return [];
 		}
 
-		// @TODO: Role check - getAllowDriverEncounter
-
-		return this.queryAndMapTo(mapperID, { ...driverRequest }, ObservedEncounterData);
+		return this.session.selectList(mapperID, { ...driverRequest }, ObservedEncounterData);
 	}
 
 	async getDriverEnforcementByName(driverRequest: DriverRequest): Promise<EncounterData[]> {
@@ -70,16 +70,12 @@ export class DriverEncounterProvider extends QueryProvider {
 		// @TODO: We could replace this with a subquery using the `include` tag
 		// The <foreach> can be replaced with an `in` clause in the subquery, to eliminate a DB visit
 
-		const observedIDsList = await this.query(observedDriverMapperID, { ...driverRequest });
+		const observedIDsList = await this.session.selectList(observedDriverMapperID, { ...driverRequest }, ObservedIDs);
 
 		if (observedIDsList.length === 0) {
 			return [];
 		}
 
-		return this.queryAndMapTo(
-			'getDriverEncounterData',
-			{ list: observedIDsList.map((row) => plainToInstance(ObservedIDs, row)) },
-			EncounterData
-		);
+		return this.session.selectList('getDriverEncounterData', { list: observedIDsList }, EncounterData);
 	}
 }

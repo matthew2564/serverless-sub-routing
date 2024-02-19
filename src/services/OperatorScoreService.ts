@@ -16,7 +16,7 @@ export class OperatorScoreService {
 				: [];
 
 		return {
-			timeStamp: new DateTime().format('DD/MM/YYYY HH:mm'),
+			timeStamp: new DateTime().format('DD/MM/YYYY HH:mm:ss'),
 			operatorScores,
 			count: operatorScores.length,
 		};

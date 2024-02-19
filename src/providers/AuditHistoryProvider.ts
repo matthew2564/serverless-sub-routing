@@ -11,16 +11,16 @@ export class AuditHistoryProvider extends QueryProvider {
 	private static readonly MAPPER_PATHS = [path.resolve(__dirname, './mappers/AuditHistoryMapper.xml')];
 
 	constructor(@Inject(CONNECTION) connection: Connection) {
-		super(connection, AuditHistoryProvider.MAPPER_PATHS);
+		super(connection, 'dvsa.mc', AuditHistoryProvider.MAPPER_PATHS);
 	}
 
 	async getAuditHistory(identifier: string): Promise<AuditEvent[]> {
 		// @TODO: Role check - getAllowEncounter
 
-		return this.queryAndMapTo('getAuditHistory', { identifier }, AuditEvent);
+		return this.session.selectList('getAuditHistory', { identifier }, AuditEvent);
 	}
 
 	async getFkAevEvent(fkAevEventCode: string): Promise<AevEventCode> {
-		return this.queryAndMapGetFirst('getAevEventCode', { fkAevEventCode }, AevEventCode);
+		return this.session.selectFirst('getAevEventCode', { fkAevEventCode }, AevEventCode);
 	}
 }

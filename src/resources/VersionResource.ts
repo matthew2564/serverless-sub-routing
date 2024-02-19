@@ -15,10 +15,10 @@ export class VersionResource {
 
 	@Get('')
 	getVersion(@Res() response: Response) {
-		const resp = this.versionService.getVersion();
+		const versionData = this.versionService.getVersion();
 
-		this.logger.debug(`Calling \`getVersion\``, { versionData: resp });
+		this.logger.debug(`Called \`getVersion\``, { versionData });
 
-		return response.status(200).json(resp);
+		return response.status(200).json(versionData);
 	}
 }

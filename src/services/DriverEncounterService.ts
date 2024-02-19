@@ -29,8 +29,11 @@ export class DriverEncounterService {
 		this.logger.info(`Found ${observedDriverList.length} observed drivers.`);
 
 		const [observedEncounters, encounters] =
+			// If there are multiple observed drivers, we don't want to return any encounter data
 			observedDriverList.length > 1
 				? [[], []]
+
+				// otherwise, we want to return the encounter data for the requested driver
 				: await Promise.all([
 						this.getAssociatedObservedEncounterData(driverRequest),
 						this.getAssociatedEncounterData(driverRequest),

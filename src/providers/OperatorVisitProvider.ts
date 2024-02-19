@@ -1,19 +1,13 @@
 import { Inject, Service } from 'typedi';
-import * as path from 'path';
-import { Connection } from 'mysql2';
+import { default as Session } from 'mybatis-mapper/create-session';
 import { OperatorVisitRequest } from '../domain/models/operator/OperatorVisitRequest';
-import { CONNECTION } from '../domain/di-tokens/di-tokens';
+import { SESSION } from '../domain/di-tokens/di-tokens';
 import { OperatorVisitData } from '../domain/models/operator/OperatorVisitData';
 import { OperatorVisitVehicleEncounter } from '../domain/models/operator/OperatorVisitVehicleEncounter';
-import { QueryProvider } from './QueryProvider';
 
 @Service()
-export class OperatorVisitProvider extends QueryProvider {
-	private static readonly MAPPER_PATHS = [path.resolve(__dirname, './mappers/OperatorVisitMapper.xml')];
-
-	constructor(@Inject(CONNECTION) connection: Connection) {
-		super(connection, 'dvsa.mc', OperatorVisitProvider.MAPPER_PATHS);
-	}
+export class OperatorVisitProvider {
+	constructor(@Inject(SESSION) private session: Session) {}
 
 	async getOperatorVisit(operatorVisitRequest: OperatorVisitRequest): Promise<OperatorVisitData[]> {
 		return this.session.selectList('getOperatorVisit', { ...operatorVisitRequest }, OperatorVisitData);

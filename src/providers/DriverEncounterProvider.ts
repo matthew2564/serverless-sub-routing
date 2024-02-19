@@ -1,22 +1,15 @@
 import { Inject, Service } from 'typedi';
-import { CONNECTION } from '../domain/di-tokens/di-tokens';
-import { Connection } from 'mysql2';
-import path from 'path';
-import { plainToInstance } from 'class-transformer';
+import { SESSION } from '../domain/di-tokens/di-tokens';
 import { DriverRequest } from '../domain/models/driver/DriverRequest';
 import { ObservedDriverData } from '../domain/models/driver/ObservedDriverData';
 import { EncounterData } from '../domain/models/encounter/EncounterData';
 import { ObservedEncounterData } from '../domain/models/driver/ObservedEncounterData';
-import { QueryProvider } from './QueryProvider';
 import { ObservedIDs } from '../domain/models/driver/ObservedID';
+import { default as Session } from 'mybatis-mapper/create-session';
 
 @Service()
-export class DriverEncounterProvider extends QueryProvider {
-	private static readonly MAPPER_PATHS = [path.resolve(__dirname, './mappers/DriverMapper.xml')];
-
-	constructor(@Inject(CONNECTION) connection: Connection) {
-		super(connection, 'dvsa.mc', DriverEncounterProvider.MAPPER_PATHS);
-	}
+export class DriverEncounterProvider {
+	constructor(@Inject(SESSION) private session: Session) {}
 
 	async getObservedDriverByName(driverRequest: DriverRequest): Promise<ObservedDriverData[]> {
 		return this.session.selectList('getObservedDriverByName', { ...driverRequest }, ObservedDriverData);
@@ -36,7 +29,6 @@ export class DriverEncounterProvider extends QueryProvider {
 
 	async getObservedEncountersByDriver(driverRequest: DriverRequest, type: string): Promise<ObservedEncounterData[]> {
 		// @TODO: Role check - getAllowDriverEncounter
-
 
 		let mapperID: string = '';
 

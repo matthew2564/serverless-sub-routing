@@ -1,26 +1,21 @@
 import { Inject, Service } from 'typedi';
-import { CONNECTION } from '../domain/di-tokens/di-tokens';
-import { Connection } from 'mysql2';
-import path from 'path';
+import { default as Session } from 'mybatis-mapper/create-session';
+import { SESSION } from '../domain/di-tokens/di-tokens';
 import { AevEventCode } from '../domain/models/audit/AevEventCode';
 import { AuditEvent } from '../domain/models/audit/AuditEvent';
-import { QueryProvider } from './QueryProvider';
 
 @Service()
-export class AuditHistoryProvider extends QueryProvider {
-	private static readonly MAPPER_PATHS = [path.resolve(__dirname, './mappers/AuditHistoryMapper.xml')];
-
-	constructor(@Inject(CONNECTION) connection: Connection) {
-		super(connection, 'dvsa.mc', AuditHistoryProvider.MAPPER_PATHS);
-	}
+export class AuditHistoryProvider {
+	constructor(@Inject(SESSION) private session: Session) {}
 
 	async getAuditHistory(identifier: string): Promise<AuditEvent[]> {
 		// @TODO: Role check - getAllowEncounter
+		console.log('getAuditHistory', identifier, this.session);
 
 		return this.session.selectList('getAuditHistory', { identifier }, AuditEvent);
 	}
 
-	async getFkAevEvent(fkAevEventCode: string): Promise<AevEventCode> {
+	async getFkAevEvent(fkAevEventCode: string): Promise<AevEventCode | undefined> {
 		return this.session.selectFirst('getAevEventCode', { fkAevEventCode }, AevEventCode);
 	}
 }

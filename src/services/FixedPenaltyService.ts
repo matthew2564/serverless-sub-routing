@@ -1,12 +1,11 @@
-import {Inject, Service} from "typedi";
-import {AuditHistoryProvider} from "../providers/AuditHistoryProvider";
+import { Inject, Service } from 'typedi';
+import { FixedPenaltyProvider } from '../providers/FixedPenaltyProvider';
 
 @Service()
 export class FixedPenaltyService {
+	constructor(@Inject() private fixedPenaltyProvider: FixedPenaltyProvider) {}
 
-    constructor(@Inject() private auditHistoryProvider: AuditHistoryProvider) {}
-
-    async search(identifier: string) {
-
-    }
+	async search(identifier: string) {
+		console.log(identifier);
+	}
 }

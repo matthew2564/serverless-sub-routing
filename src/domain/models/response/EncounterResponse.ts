@@ -1,6 +1,6 @@
-import {EncounterData} from "../encounter/EncounterData";
+import { EncounterData } from '../encounter/EncounterData';
 
 export class EncounterResponse {
-    timeStamp!: string;
-    encounters!: EncounterData[];
+	timeStamp!: string;
+	encounters!: EncounterData[];
 }

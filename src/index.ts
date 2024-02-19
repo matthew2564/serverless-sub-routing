@@ -13,7 +13,8 @@ import { VersionResource } from './resources/VersionResource';
 import { AuditResource } from './resources/AuditResource';
 import { DriverEncounterResource } from './resources/DriverEncounterResource';
 import { OperatorScoresResource } from './resources/OperatorScoresResource';
-import {EncounterResource} from "./resources/EncounterResource";
+import { EncounterResource } from './resources/EncounterResource';
+import { AfterMiddleware } from './middleware/AfterMiddleware';
 
 // This line tells routing-controllers to use typedi container
 useContainer(Container);
@@ -21,8 +22,15 @@ useContainer(Container);
 const app = createExpressServer({
 	cors: true,
 	defaultErrorHandler: false,
-	controllers: [AuditResource, DriverEncounterResource, EncounterResource, OperatorScoresResource, OperatorVisitResource, VersionResource],
-	middlewares: [BeforeMiddleware, CustomErrorMiddleware, NotFoundMiddleware],
+	controllers: [
+		AuditResource,
+		DriverEncounterResource,
+		EncounterResource,
+		OperatorScoresResource,
+		OperatorVisitResource,
+		VersionResource,
+	],
+	middlewares: [AfterMiddleware, BeforeMiddleware, CustomErrorMiddleware, NotFoundMiddleware],
 	authorizationChecker: ({ request }: Action, roles: string | string[]) => {
 		// if running locally, skip the auth check
 		if (process.env.IS_OFFLINE === 'true') return true;

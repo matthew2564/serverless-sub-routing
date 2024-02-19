@@ -2,15 +2,18 @@ import { ExpressMiddlewareInterface, Middleware } from 'routing-controllers';
 import { NextFunction, Request, Response } from 'express';
 import { Container, Service } from 'typedi';
 import { createConnection } from 'mysql2';
+import { readdirSync } from 'fs';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { LogLevel } from '@aws-lambda-powertools/logger/lib/types';
 import { SecretsManager } from '@dvsa/cvs-microservice-common/classes/aws/secrets-manager-client';
 import { EnvironmentVariables } from '@dvsa/cvs-microservice-common/classes/misc/env-vars';
-import { CONNECTION, LOGGER, SECRET } from '../domain/di-tokens/di-tokens';
+import { default as Session } from 'mybatis-mapper/create-session';
+import { LOGGER, SECRET, SESSION } from '../domain/di-tokens/di-tokens';
 import { name } from '../../package.json';
 import { Secret } from '../domain/models/Secret';
 import { Priority } from '../domain/enums/MiddlewarePriority.enum';
 import { BodyParser } from '../domain/helpers/BodyParser';
+import path from 'path';
 
 @Service()
 @Middleware({ type: 'before', priority: Priority.HIGHEST })
@@ -42,11 +45,10 @@ export class BeforeMiddleware implements ExpressMiddlewareInterface {
 			throw err;
 		}
 
-		// store the connection in container
-		this.initConnection(secret);
+		// store the connection session in the container
+		this.initSession(secret);
 
 		logger.debug('BeforeMiddleware: Finished.');
-
 		next();
 	}
 
@@ -60,19 +62,24 @@ export class BeforeMiddleware implements ExpressMiddlewareInterface {
 		return secret;
 	}
 
-	private initConnection(secret: Secret) {
-		Container.set(
-			CONNECTION,
-			createConnection({
-				// host: secret.host,
-				// @TODO: Ask SMC to create a `host` key in secrets manager
-				host: 'bastion.dev-ctrl.smc.dvsacloud.uk',
-				database: secret.target,
-				user: secret.username,
-				password: secret.password,
-				charset: 'UTF8_GENERAL_CI',
-			})
-		);
+	private initSession(secret: Secret) {
+		const connection = createConnection({
+			// host: secret.host,
+			// @TODO: Ask SMC to create a `host` key in secrets manager
+			host: 'bastion.dev-ctrl.smc.dvsacloud.uk',
+			database: secret.target,
+			user: secret.username,
+			password: secret.password,
+			charset: 'UTF8_GENERAL_CI',
+		});
+
+		// scan the mappers dir and construct the full relative path of each
+		const mapperPaths = readdirSync(path.resolve(__dirname, './mappers'), { withFileTypes: true })
+			.filter((item) => !item.isDirectory())
+			.map((file) => path.resolve(__dirname, './mappers/', file.name));
+
+		// initialise the session and store it in the container
+		Container.set(SESSION, new Session(connection, 'dvsa.mc', mapperPaths));
 	}
 
 	private validateSecret(secret: Secret) {

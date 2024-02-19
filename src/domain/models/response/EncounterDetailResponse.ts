@@ -1,6 +1,6 @@
-import {EncounterDetail} from "../encounter/EncounterDetail";
+import { EncounterDetail } from '../encounter/EncounterDetail';
 
 export class EncounterDetailResponse {
-    timeStamp!: string;
-    encounterDetail!: EncounterDetail[];
+	timeStamp!: string;
+	encounterDetail!: EncounterDetail[];
 }

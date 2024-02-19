@@ -1,18 +1,12 @@
 import { Inject, Service } from 'typedi';
+import { default as Session } from 'mybatis-mapper/create-session';
 import { OperatorScoreRequest } from '../domain/models/operator/OperatorScoreRequest';
-import { QueryProvider } from './QueryProvider';
-import path from 'path';
-import { CONNECTION } from '../domain/di-tokens/di-tokens';
-import { Connection } from 'mysql2';
+import { SESSION } from '../domain/di-tokens/di-tokens';
 import { OperatorScoreData } from '../domain/models/operator/OperatorScoreData';
 
 @Service()
-export class OperatorScoreProvider extends QueryProvider {
-	private static readonly MAPPER_PATHS = [path.resolve(__dirname, './mappers/OperatorScoresMapper.xml')];
-
-	constructor(@Inject(CONNECTION) connection: Connection) {
-		super(connection, 'dvsa.mc', OperatorScoreProvider.MAPPER_PATHS);
-	}
+export class OperatorScoreProvider {
+	constructor(@Inject(SESSION) private session: Session) {}
 
 	async getOperatorScore(operatorRequest: OperatorScoreRequest): Promise<OperatorScoreData[]> {
 		// @TODO: Role check - getAllowEncounter

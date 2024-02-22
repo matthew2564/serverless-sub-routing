@@ -1,4 +1,5 @@
-import { Expose } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
+import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 
 export class EncounterData {
 	@Expose({ name: 'ENCOUNTER_ID' })
@@ -22,6 +23,7 @@ export class EncounterData {
 	@Expose({ name: 'CHECKSITE_COUNTY' })
 	checksiteCounty!: string;
 
+	@Transform(({ value }) => DateTime.at(value).format('DD/MM/YYYY HH:mm:ss'))
 	@Expose({ name: 'ENCOUNTER_DATE' })
 	encounterDate!: string;
 

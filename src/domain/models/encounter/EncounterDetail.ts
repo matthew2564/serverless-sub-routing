@@ -1,8 +1,10 @@
-import { Expose } from 'class-transformer';
+import {Exclude, Expose, plainToInstance, Transform, Type} from 'class-transformer';
 import { EncounterAxle } from './EncounterAxle';
 import { EncounterOffence } from './EncounterOffence';
 import { EncounterNotice } from './EncounterNotice';
+import {DateTime} from "@dvsa/cvs-microservice-common/classes/utils/date";
 
+@Exclude()
 export class EncounterDetail {
 	@Expose({ name: 'ENCOUNTER_ID' })
 	encounterIdentifier!: string;
@@ -88,8 +90,9 @@ export class EncounterDetail {
 	@Expose({ name: 'INSPECTION_LEVEL' })
 	inspectionLevel!: string;
 
+	@Transform(({ value }) => DateTime.at(value).format('DD/MM/YYYY HH:mm:ss'))
 	@Expose({ name: 'ENCOUNTER_DATE' })
-	encounterDate!: Date;
+	encounterDate!: string;
 
 	@Expose({ name: 'EXAM_OFFICER_TYPE' })
 	examOfficerType!: string;
@@ -154,7 +157,13 @@ export class EncounterDetail {
 	@Expose({ name: 'WEIGHT_PADS_MARKER' })
 	weighPadUse!: boolean;
 
+	// @Type(() => EncounterAxle)
 	encounterAxles!: EncounterAxle[];
+
+	// @Type(() => EncounterNotice)
+	// @Transform((obj) => plainToInstance(EncounterNotice, obj))
 	encounterNotices!: EncounterNotice[];
+
+	// @Type(() => EncounterOffence)
 	otherOffences!: EncounterOffence[];
 }

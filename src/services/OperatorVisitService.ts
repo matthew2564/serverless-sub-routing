@@ -39,12 +39,12 @@ export class OperatorVisitService {
 						encounterStartDate: DateTime.at(encounter.encounterStartDate).format('DD/MM/YYYY HH:mm:ss'),
 						clientGuid: opVisit.clientGuid as string,
 					})),
-				};
+				} satisfies OperatorVisitData;
 			})
 		);
 
 		return {
-			timeStamp: new Date().toISOString(),
+			timeStamp: new DateTime().format('DD/MM/YYYY HH:mm:ss'),
 			count: opVisitsWithEncounters.length,
 			operatorVisitsData: opVisitsWithEncounters,
 		};

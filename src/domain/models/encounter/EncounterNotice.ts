@@ -1,6 +1,7 @@
-import { Expose, Type } from 'class-transformer';
+import {Expose, Transform, Type} from 'class-transformer';
 import { EncounterDefect } from './EncounterDefect';
 import { EncounterOffence } from './EncounterOffence';
+import {DateTime} from "@dvsa/cvs-microservice-common/classes/utils/date";
 
 export class EncounterNotice {
 	@Expose({ name: 'PROHIBITION_NOTICE' })
@@ -55,9 +56,9 @@ export class EncounterNotice {
 	@Expose({ name: 'NOTICE_VEH_GEN_NUM' })
 	noticeGeneratedNumber!: string;
 
+	@Transform(({ value }) => DateTime.at(value).format('DD/MM/YYYY HH:mm:ss'))
 	@Expose({ name: 'NOTICE_INPUT_DATE' })
-	@Type(() => Date)
-	noticeInputDate!: Date;
+	noticeInputDate!: string;
 
 	@Type(() => EncounterDefect)
 	encounterDefects!: EncounterDefect[];

@@ -1,12 +1,13 @@
-import { Exclude, Expose, Transform, plainToInstance, ClassConstructor } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 import { TeHoursResult } from './TeHoursResult';
 import { Examiner } from './Examiner';
 import { InitiatingReason } from './InitiatingReason';
 import { VeVisitResult } from './VeVisitResult';
 import { TeOtherResult } from './TeOtherResult';
+import { OperatorVisitVehicleEncounter } from './OperatorVisitVehicleEncounter';
+import {plainToInstanceOrNull} from "../../helpers/MapModelOrNull";
 
-@Exclude()
 export class OperatorVisitData {
 	@Expose({ name: 'GENERATED_NUMBER' })
 	generatedNumber!: string;
@@ -26,7 +27,7 @@ export class OperatorVisitData {
 	operatorLicenceNumber!: string;
 
 	@Expose({ name: 'CLIENT_GUID' })
-	clientGuid?: string; // Optional property
+	clientGuid?: string;
 
 	@Transform(({ value }) => DateTime.at(value).format('DD/MM/YYYY HH:mm:ss'))
 	@Expose({ name: 'LAST_UPDATE' })
@@ -40,28 +41,28 @@ export class OperatorVisitData {
 	inputTime!: Date;
 
 	@Expose({ name: 'CHR_NUMBER' })
-	chrNumber?: string; // Optional property
+	chrNumber?: string;
 
 	@Expose({ name: 'OPERATOR_NAME' })
-	operatorName?: string; // Optional property
+	operatorName?: string;
 
 	@Expose({ name: 'ADDR_1' })
-	addressLine1?: string; // Optional property
+	addressLine1?: string;
 
 	@Expose({ name: 'ADDR_2' })
-	addressLine2?: string; // Optional property
+	addressLine2?: string;
 
 	@Expose({ name: 'ADDR_3' })
-	addressLine3?: string; // Optional property
+	addressLine3?: string;
 
 	@Expose({ name: 'ADDR_4' })
-	addressLine4?: string; // Optional property
+	addressLine4?: string;
 
 	@Expose({ name: 'POSTCODE' })
-	postcode?: string; // Optional property
+	postcode?: string;
 
 	@Expose({ name: 'POST_TOWN' })
-	postTown?: string; // Optional property
+	postTown?: string;
 
 	@Expose({ name: 'DIGITAL_TACHO_QTY' })
 	digitalTachoQty!: number;
@@ -85,14 +86,9 @@ export class OperatorVisitData {
 	@Transform(({ obj }) => plainToInstanceOrNull(TeOtherResult, obj), { toClassOnly: true })
 	teOtherResult!: TeOtherResult;
 
-	@Expose({ name: '' })
 	@Transform(({ obj }) => plainToInstanceOrNull(Examiner, obj), { toClassOnly: true })
+	@Type(() => Examiner)
 	examiner!: Examiner;
+
+	vehicleEncounters!: OperatorVisitVehicleEncounter[];
 }
-
-const isEmpty = (val: object) => Object.values(val).every((x) => !x);
-
-const plainToInstanceOrNull = <T>(classObject: ClassConstructor<T>, data: unknown): T | null => {
-	const result = plainToInstance(classObject, data) as object;
-	return isEmpty(result) ? null : (result as T);
-};

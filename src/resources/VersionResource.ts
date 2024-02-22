@@ -6,7 +6,7 @@ import { Logger } from '@aws-lambda-powertools/logger';
 import { Response } from 'express';
 
 @Service()
-@JsonController('/1.0/version')
+@JsonController('/2.0/version')
 export class VersionResource {
 	constructor(
 		@Inject() private versionService: VersionService,

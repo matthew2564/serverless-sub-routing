@@ -1,25 +1,30 @@
-import { Expose, Type } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
+import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 
+@Exclude()
 export class OutstandingProhibitionData {
 	@Expose({ name: 'ENCOUNTER_ID' })
 	encounterIdentifier!: string;
 
-	@Expose({ name: 'PROHIBITION_IND' }) // Assuming this maps to all three prohibition types; adjust if necessary
+	@Transform(({ obj }) => obj.PROHIBITION_IND) // workaround for mapping multiple DB cols to same field
+	@Expose()
 	outstandingMechanicalProhibition!: string;
 
-	@Expose({ name: 'PROHIBITION_IND' }) // Assuming reuse; if different columns are intended, need to adjust
+	@Transform(({ obj }) => obj.PROHIBITION_IND)
+	@Expose()
 	outstandingOffenceProhibition!: string;
 
-	@Expose({ name: 'PROHIBITION_IND' }) // Assuming reuse; if different columns are intended, need to adjust
+	@Transform(({ obj }) => obj.PROHIBITION_IND)
+	@Expose()
 	outstandingOverweightProhibition!: string;
 
+	@Transform(({ value }) => DateTime.at(value).format('DD/MM/YYYY HH:mm:ss'))
 	@Expose({ name: 'ISSUE_DATE' })
-	@Type(() => Date) // Convert to Date object
-	issueDate!: Date;
+	issueDate!: string;
 
+	@Transform(({ value }) => DateTime.at(value).format('DD/MM/YYYY HH:mm:ss'))
 	@Expose({ name: 'INPUT_DATE' })
-	@Type(() => Date)
-	inputDate!: Date;
+	inputDate!: string;
 
 	@Expose({ name: 'ISSUE_OFF_FNAME' })
 	examinerFirstName!: string;

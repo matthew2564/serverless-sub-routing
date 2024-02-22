@@ -1,5 +1,5 @@
 import { Inject, Service } from 'typedi';
-import { Get, JsonController, Param, Post, Res } from 'routing-controllers';
+import {Body, Get, JsonController, Param, Post, QueryParam, Res} from 'routing-controllers';
 import { Response } from 'express';
 import { LOGGER } from '../domain/di-tokens/di-tokens';
 import { Logger } from '@aws-lambda-powertools/logger';
@@ -8,20 +8,30 @@ import { NotNullQueryParam } from '../domain/decorators/NotNullQueryParam';
 import { EncounterService } from '../services/EncounterService';
 import { ErrorEnum } from '../domain/enums/Error.enum';
 import { OutstandingProhibitionService } from '../services/OutstandingProhibitionService';
+import { FixedPenaltyService } from '../services/FixedPenaltyService';
+import { originalProhibitionPayloadValidator } from '../domain/validators/OriginalProhibitionPayloadValidator';
+import { ValidateBody } from '../domain/decorators/ValidateBody';
+import { OriginalProhibitionRequest } from '../domain/models/prohibition/OriginalProhibitionRequest';
+import { OriginalProhibitionService } from '../services/OriginalProhibitionService';
+import { EncounterRequest } from '../domain/models/encounter/encounter-search/EncounterRequest';
+import { EncounterSearchService } from '../services/EncounterSearchService';
 
 @Service()
-@JsonController('/1.0/encounter')
+@JsonController('/2.0/encounter')
 export class EncounterResource {
 	constructor(
 		@Inject() private encounterService: EncounterService,
 		@Inject() private outstandingProhibitionService: OutstandingProhibitionService,
+		@Inject() private fixedPenaltyService: FixedPenaltyService,
+		@Inject() private originalProhibitionService: OriginalProhibitionService,
+		@Inject() private encounterSearchService: EncounterSearchService,
 		@Inject(LOGGER) private logger: Logger
 	) {}
 
 	@Get('')
 	async getEncounter(
 		@ValidQueryParam('identifier', /^[A-Za-z0-9]*$/) identifier: string,
-		@NotNullQueryParam('vin') vin: string,
+		@QueryParam('vin') vin: string,
 		@Res() response: Response
 	) {
 		try {
@@ -29,7 +39,7 @@ export class EncounterResource {
 
 			this.logger.debug('Calling `search`');
 
-			const resp = await this.encounterService.search(identifier, vin);
+			const resp = await this.encounterService.search(identifier, vin || null);
 
 			this.logger.info(`${resp.encounters.length} encounters found.`);
 
@@ -45,7 +55,7 @@ export class EncounterResource {
 		}
 	}
 
-	@Get('/{encounterid}/details')
+	@Get('/:encounterid/detail')
 	async getEncounterDetails(@Param('encounterid') encounterId: string, @Res() response: Response) {
 		try {
 			this.logger.addPersistentLogAttributes({ encounterId });
@@ -70,8 +80,20 @@ export class EncounterResource {
 	}
 
 	@Post('/search')
-	async getSearchEncounter(@Res() response: Response) {
+	async getSearchEncounter(@Body({ validate: true }) body: EncounterRequest, @Res() response: Response) {
 		try {
+			this.logger.addPersistentLogAttributes({ body });
+
+			this.logger.debug('Calling `getSearchEncounter`');
+
+			const resp = await this.encounterSearchService.getSearchEncounter(body);
+
+			this.logger.info(`${resp.encounters.length} encounters found.`);
+
+			if (resp.encounters.length === 0) {
+				return response.status(204).json({});
+			}
+			return response.status(200).json(resp);
 		} catch (err) {
 			this.logger.error('[ERROR]: getSearchEncounter', { err });
 
@@ -79,10 +101,12 @@ export class EncounterResource {
 		}
 	}
 
-	@Get('/{encounterid}/copy')
+	@Get('/:encounterid/copy')
 	async getEncounterCopy(@Param('encounterid') encounterId: string, @Res() response: Response) {
 		try {
 			this.logger.addPersistentLogAttributes({ encounterId });
+
+			this.logger.debug('Calling `getCopyEncounter`');
 		} catch (err) {
 			this.logger.error('[ERROR]: getEncounterCopy', { err });
 
@@ -90,10 +114,22 @@ export class EncounterResource {
 		}
 	}
 
-	@Get('/{fpnreference}/fixedpenalty')
+	@Get('/:fpnreference/fixedpenalty')
 	async getFixedPenalties(@Param('fpnreference') identifier: string, @Res() response: Response) {
 		try {
 			this.logger.addPersistentLogAttributes({ identifier });
+
+			this.logger.debug('Calling `search`');
+
+			const resp = await this.fixedPenaltyService.search(identifier);
+
+			this.logger.info(`${resp?.fixedPenaltyDetails.length} fixed pen objects found.`);
+
+			if (resp?.fixedPenaltyDetails.length === 0) {
+				return response.status(204).json({});
+			}
+
+			return response.status(200).json(resp);
 		} catch (err) {
 			this.logger.error('[ERROR]: getFixedPenalties', { err });
 
@@ -102,8 +138,21 @@ export class EncounterResource {
 	}
 
 	@Post('/originalprohibition')
-	async getOriginalProhibitionDateTime(@Res() response: Response) {
+	@ValidateBody(originalProhibitionPayloadValidator)
+	async getOriginalProhibitionDateTime(@Body() body: OriginalProhibitionRequest, @Res() response: Response) {
 		try {
+			this.logger.addPersistentLogAttributes({ body });
+
+			this.logger.debug('Calling `processRequest`');
+
+			const resp = await this.originalProhibitionService.processRequest(body);
+
+			this.logger.info(`Original prohibition response ${!!resp ? 'found' : 'not found'}.`);
+
+			if (!resp) {
+				return response.status(204).json({});
+			}
+			return response.status(200).json(resp);
 		} catch (err) {
 			this.logger.error('[ERROR]: getOriginalProhibitionDateTime', { err });
 

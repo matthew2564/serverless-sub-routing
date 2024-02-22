@@ -8,7 +8,7 @@ import { Priority } from '../domain/enums/MiddlewarePriority.enum';
 import { LOGGER } from '../domain/di-tokens/di-tokens';
 import { CustomError } from '../domain/models/CustomError';
 
-@Service()
+@Service({ transient: true })
 @Middleware({ type: 'after', priority: Priority.MEDIUM })
 export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 	private static ValueSanitiserRegExp = /\(.*?\)/g;
@@ -56,10 +56,10 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 			});
 		}
 
-		// This is log for anything that falls through the cracks. This should never in theory run, although would
+		// This is log for anything that falls through the cracks. This should never in theory run, although it would
 		// give visibility of errors that are not being caught correctly.
 		logger.error(`[ERROR]: CustomErrorMiddleware - Uncaught error`, error as Error);
 
-		next();
+		next(error);
 	}
 }

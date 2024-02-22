@@ -1,19 +1,20 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
 
-@Exclude()
 export class OperatorScoreData {
-	@Expose({ name: 'OPERATORIDENTIFIER' })
+	@Expose({ name: 'operatorIdentifier' })
 	operatorIdentifier!: string;
 
-	@Expose({ name: 'NATIONALITY' })
+	@Expose({ name: 'nationality' })
 	nationality!: string;
 
-	@Expose({ name: 'SCORETYPE' })
+	@Expose({ name: 'scoreType' })
 	scoreType!: string;
 
-	@Expose({ name: 'OCRSNUMERICBAND' })
-	ocrsNumericBand!: number;
+	// number -> string to drop preceding zeros
+	@Transform(({ value }) => (typeof value === 'string' ? Number(value).toString() : null))
+	@Expose({ name: 'ocrsNumericBand' })
+	ocrsNumericBand!: string;
 
-	@Expose({ name: 'OCRSBAND' })
+	@Expose({ name: 'ocrsBand' })
 	ocrsBand!: string;
 }

@@ -1,4 +1,4 @@
-import { Inject, Service } from 'typedi';
+import { Container, Inject, Service } from 'typedi';
 import { default as Session } from 'mybatis-mapper/create-session';
 import { SESSION } from '../domain/di-tokens/di-tokens';
 import { OutstandingProhibitionData } from '../domain/models/prohibition/OutstandingProhibitionData';
@@ -9,7 +9,9 @@ export class OutstandingProhibitionProvider {
 	private static readonly OFF_PROHIB = /BOPA01|FOPA01/;
 	private static readonly WEIGHT_PROHIB = /BWPZ01|FWPZ01/;
 
-	constructor(@Inject(SESSION) private session: Session) {}
+	get session() {
+		return Container.get(SESSION);
+	}
 
 	async getOutstandingProhibitions(identifier: string): Promise<OutstandingProhibitionData[]> {
 		// @TODO: Role check - getAllowCloseProhibition
@@ -19,6 +21,8 @@ export class OutstandingProhibitionProvider {
 			{ identifier },
 			OutstandingProhibitionData
 		);
+
+		console.log(outstandingProhibitionData);
 
 		return outstandingProhibitionData.map((outstandingProhibition) => {
 			const prohibitionKey = this.getProhibitionKey(outstandingProhibition.noticeCode);

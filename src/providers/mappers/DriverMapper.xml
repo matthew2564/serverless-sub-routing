@@ -187,7 +187,7 @@
     </select>
 
     <select id="getEncounterIDsByName">
-        SELECT *
+        SELECT *, OBD.GENERATED_NUMBER AS GEN_NUMBER -- Aliasing due to GENERATED_NUMBER existing in both tables
         FROM MC_OBSERVED_DRIVER OBD
         INNER JOIN MC_VEHICLE_ENCOUNTER VEN ON (OBD.FK_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
         <where>
@@ -209,7 +209,7 @@
     </select>
 
     <select id="getEncounterIDsByLicNo">
-        SELECT *
+        SELECT *, OBD.GENERATED_NUMBER AS GEN_NUMBER -- Aliasing due to GENERATED_NUMBER existing in both tables
         FROM MC_OBSERVED_DRIVER OBD
         INNER JOIN MC_VEHICLE_ENCOUNTER VEN ON (OBD.FK_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
         <where>

@@ -10,7 +10,7 @@ import { operatorScoresPayloadValidator } from '../domain/validators/OperatorSco
 import { OperatorScoreService } from '../services/OperatorScoreService';
 
 @Service()
-@JsonController('/1.0/operator/scores')
+@JsonController('/2.0/operator/scores')
 export class OperatorScoresResource {
 	constructor(
 		@Inject() private operatorScoreService: OperatorScoreService,
@@ -27,7 +27,7 @@ export class OperatorScoresResource {
 
 			this.logger.info(`${resp.count} operator score objects found.`);
 
-			if (!resp?.count) {
+			if (resp?.count === 0) {
 				return response.status(204).json({});
 			}
 

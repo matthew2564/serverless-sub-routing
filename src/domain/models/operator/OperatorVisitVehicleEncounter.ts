@@ -11,8 +11,7 @@ export class OperatorVisitVehicleEncounter {
 	rteVehicleId!: string;
 
 	@Expose({ name: 'ENCNTR_START_DATE' })
-	@Type(() => Date)
-	encounterStartDate!: Date;
+	encounterStartDate!: string;
 
 	@Expose({ name: 'FAS_GENERATED_NUMBER' })
 	fasGeneratedNumber!: string;

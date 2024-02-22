@@ -1,4 +1,4 @@
-import { Inject, Service } from 'typedi';
+import { Container, Service } from 'typedi';
 import { SESSION } from '../domain/di-tokens/di-tokens';
 import { EncounterData } from '../domain/models/encounter/EncounterData';
 import { EncounterDetail } from '../domain/models/encounter/EncounterDetail';
@@ -7,13 +7,15 @@ import { Params } from 'mybatis-mapper';
 import { EncounterNotice } from '../domain/models/encounter/EncounterNotice';
 import { EncounterOffence } from '../domain/models/encounter/EncounterOffence';
 import { EncounterDefect } from '../domain/models/encounter/EncounterDefect';
-import { default as Session } from 'mybatis-mapper/create-session';
+import {DateTime} from "@dvsa/cvs-microservice-common/classes/utils/date";
 
 @Service()
 export class EncounterProvider {
-	constructor(@Inject(SESSION) private session: Session) {}
+	get session() {
+		return Container.get(SESSION);
+	}
 
-	async getEncounter(identifier: string, vin: string): Promise<EncounterData[]> {
+	async getEncounter(identifier: string, vin: string | null): Promise<EncounterData[]> {
 		// @TODO: Role check - getAllowEncounter
 
 		return this.session.selectList('getEncounterData', { identifier, vin }, EncounterData);
@@ -23,7 +25,7 @@ export class EncounterProvider {
 		// @TODO: Role check - getAllowEncounter
 
 		return await this.getEncounterDetails(
-			await this.session.selectFirst('getEncounterDetailData', { identifier }, EncounterDetail)
+			await this.session.selectOne('getEncounterDetailData', { identifier }, EncounterDetail)
 		);
 	}
 
@@ -31,14 +33,14 @@ export class EncounterProvider {
 		// @TODO: Role check - getAllowEncounter
 
 		return await this.getEncounterDetails(
-			await this.session.selectFirst('getEncounterTrailer', { identifier }, EncounterDetail)
+			await this.session.selectOne('getEncounterTrailer', { identifier }, EncounterDetail)
 		);
 	}
 
 	private async getEncounterDetails(encounterDetail: EncounterDetail | undefined): Promise<EncounterDetail | null> {
 		if (!encounterDetail) return null;
 
-		const params = { ...encounterDetail } as unknown as Params;
+		const idParam = { id: encounterDetail.encounterIdentifier };
 
 		// Use Promise.all to run all the top-level queries in parallel as they are not dependent on each other
 		// i.e. 'getEncounterAxlesById', 'getEncounterNoticesById', 'getOtherOffencesById'
@@ -49,15 +51,17 @@ export class EncounterProvider {
 		// 3. For `getEncounterNoticesById`, if the query is successful, we use Promise.all to run another
 		// set of queries in parallel for defects and offences
 		const [encounterAxles, encounterNotices, otherOffences] = await Promise.all([
-			this.session.selectAndCatchSilently('getEncounterAxlesById', params, EncounterAxle),
+			this.session.selectAndCatchSilently('getEncounterAxlesById', idParam, EncounterAxle),
 
-			this.session.selectAndCatchSilently('getEncounterNoticesById', params, EncounterNotice).then((notices) =>
+			this.session.selectAndCatchSilently('getEncounterNoticesById', idParam, EncounterNotice).then((notices) =>
 				Promise.all(
 					notices.map(async (notice) => {
 						const noticeParams = {
 							genNum: notice.noticeGeneratedNumber,
 							noticeType: notice.noticeType,
-							noticeInputDate: notice.noticeInputDate.toString(),
+							noticeInputDate: DateTime.at(
+								notice.noticeInputDate, 'DD/MM/YYYY HH:mm:ss'
+							).format('YYYY-MM-DDTHH:mm:ss'),
 						};
 
 						const [encounterDefects, encounterOffences] = await Promise.all([
@@ -70,7 +74,7 @@ export class EncounterProvider {
 				)
 			),
 
-			this.session.selectAndCatchSilently('getOtherOffencesById', params, EncounterOffence),
+			this.session.selectAndCatchSilently('getOtherOffencesById', idParam, EncounterOffence),
 		]);
 
 		return {

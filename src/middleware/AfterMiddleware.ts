@@ -7,12 +7,12 @@ import { LOGGER, SESSION } from '../domain/di-tokens/di-tokens';
 @Service()
 @Middleware({ type: 'after', priority: Priority.LOW })
 export class AfterMiddleware implements ExpressMiddlewareInterface {
-	async use(_req: Request, _res: Response, next: NextFunction) {
+	use(_req: Request, _res: Response, next: NextFunction) {
 		const session = Container.get(SESSION);
 
 		if (session) {
-			Container.get(LOGGER).info('AfterMiddleware: Ending session.');
-			// session.end();
+			Container.get(LOGGER).debug('AfterMiddleware: Ending session.');
+			session.end();
 		}
 
 		next();

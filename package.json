@@ -14,7 +14,6 @@
     "test": "jest",
     "test:coverage": "jest --coverage",
     "prepare": "husky install",
-    "setup": "sls dynamodb install",
     "build": "npm run clean && ts-node compile-service.ts",
     "start": "npm run build -- --source-map && serverless offline start",
     "package": "npm run build && zip -r lambda.zip dist/* && mkdir -p artifacts && mv lambda.zip artifacts/lambda.zip"

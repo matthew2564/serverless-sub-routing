@@ -1,5 +1,7 @@
-import { Expose, Type } from 'class-transformer';
+import {Exclude, Expose, Transform, Type} from 'class-transformer';
+import {DateTime} from "@dvsa/cvs-microservice-common/classes/utils/date";
 
+@Exclude()
 export class EncounterOffence {
 	@Expose({ name: 'OFFENCE_CODE' })
 	offenceType!: string;
@@ -10,17 +12,17 @@ export class EncounterOffence {
 	@Expose({ name: 'OFFENCE_WELSH_DESCRIPTION' })
 	offenceWelshDescription!: string;
 
+	@Transform(({ value }) => DateTime.at(value).format('DD/MM/YYYY'))
 	@Expose({ name: 'OFFENCE_DATE' })
-	@Type(() => Date)
-	offenceDate!: Date;
+	offenceDate!: string;
 
+	@Transform(({ value }) => DateTime.at(value).format('DD/MM/YYYY'))
 	@Expose({ name: 'EFFECTIVE_FROM' })
-	@Type(() => Date)
-	effectiveFrom!: Date;
+	effectiveFrom!: string;
 
+	@Transform(({ value }) => DateTime.at(value).format('DD/MM/YYYY'))
 	@Expose({ name: 'EFFECTIVE_TO' })
-	@Type(() => Date)
-	effectiveToDate!: Date;
+	effectiveToDate!: string;
 
 	@Expose({ name: 'ADDITIONAL_TEXT' })
 	additionalText!: string;
@@ -40,9 +42,9 @@ export class EncounterOffence {
 	@Expose({ name: 'DRIVER_SURNAME' })
 	driverSurname!: string;
 
+	@Transform(({ value }) => DateTime.at(value).format('DD/MM/YYYY'))
 	@Expose({ name: 'DATE_OF_BIRTH' })
-	@Type(() => Date)
-	driverDateOfBirth!: Date;
+	driverDateOfBirth!: string;
 
 	@Expose({ name: 'DRIVER_LICENCE_NUMBER' })
 	driverLicenceNumber!: string;

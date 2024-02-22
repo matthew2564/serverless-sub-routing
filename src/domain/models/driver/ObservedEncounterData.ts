@@ -1,4 +1,5 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
+import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 
 @Exclude()
 export class ObservedEncounterData {
@@ -11,6 +12,7 @@ export class ObservedEncounterData {
 	@Expose({ name: 'SURNAME' })
 	surname!: string;
 
+	@Transform(({ value }) => DateTime.at(value).format('DD/MM/YYYY'))
 	@Expose({ name: 'DATE_OF_BIRTH' })
 	dateOfBirth!: string;
 
@@ -68,6 +70,6 @@ export class ObservedEncounterData {
 	@Expose({ name: 'SEX' })
 	sex!: string;
 
-	@Expose({ name: 'GENERATED_NUMBER' })
+	// @Expose({ name: 'GENERATED_NUMBER' })
 	generatedNo!: string;
 }

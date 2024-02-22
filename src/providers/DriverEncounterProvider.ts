@@ -1,15 +1,16 @@
-import { Inject, Service } from 'typedi';
+import { Container, Inject, Service } from 'typedi';
 import { SESSION } from '../domain/di-tokens/di-tokens';
 import { DriverRequest } from '../domain/models/driver/DriverRequest';
 import { ObservedDriverData } from '../domain/models/driver/ObservedDriverData';
 import { EncounterData } from '../domain/models/encounter/EncounterData';
 import { ObservedEncounterData } from '../domain/models/driver/ObservedEncounterData';
 import { ObservedIDs } from '../domain/models/driver/ObservedID';
-import { default as Session } from 'mybatis-mapper/create-session';
 
 @Service()
 export class DriverEncounterProvider {
-	constructor(@Inject(SESSION) private session: Session) {}
+	get session() {
+		return Container.get(SESSION);
+	}
 
 	async getObservedDriverByName(driverRequest: DriverRequest): Promise<ObservedDriverData[]> {
 		return this.session.selectList('getObservedDriverByName', { ...driverRequest }, ObservedDriverData);
@@ -44,7 +45,13 @@ export class DriverEncounterProvider {
 				return [];
 		}
 
-		return this.session.selectList(mapperID, { ...driverRequest }, ObservedEncounterData);
+		const observedIDsList: ObservedIDs[] = await this.session.selectList(mapperID, { ...driverRequest }, ObservedIDs);
+
+		if (!observedIDsList || observedIDsList.length === 0) {
+			return [];
+		}
+
+		return this.session.selectList('getObservedEncountersByDriver', { list: observedIDsList }, ObservedEncounterData);
 	}
 
 	async getDriverEnforcementByName(driverRequest: DriverRequest): Promise<EncounterData[]> {

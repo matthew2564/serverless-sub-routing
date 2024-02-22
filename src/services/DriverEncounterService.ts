@@ -7,6 +7,7 @@ import { EncounterData } from '../domain/models/encounter/EncounterData';
 import { ObservedEncounterData } from '../domain/models/driver/ObservedEncounterData';
 import { ObservedDriverData } from '../domain/models/driver/ObservedDriverData';
 import { DriverEncounterResponse } from '../domain/models/response/DriverEncounterResponse';
+import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 
 @Service()
 export class DriverEncounterService {
@@ -39,7 +40,7 @@ export class DriverEncounterService {
 				  ]);
 
 		return {
-			timeStamp: new Date().toISOString(),
+			timeStamp: new DateTime().format('DD-MM-YYYY HH:mm:ss'),
 			count: observedDriverList.length,
 			drivers: observedDriverList,
 			encounters,

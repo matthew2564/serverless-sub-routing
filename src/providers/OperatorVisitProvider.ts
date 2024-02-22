@@ -1,5 +1,4 @@
-import { Inject, Service } from 'typedi';
-import { default as Session } from 'mybatis-mapper/create-session';
+import { Container, Service } from 'typedi';
 import { OperatorVisitRequest } from '../domain/models/operator/OperatorVisitRequest';
 import { SESSION } from '../domain/di-tokens/di-tokens';
 import { OperatorVisitData } from '../domain/models/operator/OperatorVisitData';
@@ -7,7 +6,9 @@ import { OperatorVisitVehicleEncounter } from '../domain/models/operator/Operato
 
 @Service()
 export class OperatorVisitProvider {
-	constructor(@Inject(SESSION) private session: Session) {}
+	get session() {
+		return Container.get(SESSION);
+	}
 
 	async getOperatorVisit(operatorVisitRequest: OperatorVisitRequest): Promise<OperatorVisitData[]> {
 		return this.session.selectList('getOperatorVisit', { ...operatorVisitRequest }, OperatorVisitData);

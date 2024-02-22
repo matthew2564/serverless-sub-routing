@@ -9,7 +9,7 @@ import { EncounterDetailResponse } from '../domain/models/response/EncounterDeta
 export class EncounterService {
 	constructor(@Inject() private encounterProvider: EncounterProvider) {}
 
-	async search(identifier: string, vin: string): Promise<EncounterResponse> {
+	async search(identifier: string, vin: string | null): Promise<EncounterResponse> {
 		const encounters = await this.encounterProvider.getEncounter(identifier, vin);
 
 		return {

@@ -4,7 +4,7 @@ import { Container, Service } from 'typedi';
 import { Priority } from '../domain/enums/MiddlewarePriority.enum';
 import { LOGGER } from '../domain/di-tokens/di-tokens';
 
-@Service()
+@Service({ transient: true })
 @Middleware({ type: 'after', priority: Priority.LOWEST })
 export class NotFoundMiddleware implements ExpressMiddlewareInterface {
 	use({ method, path }: Request, res: Response, next: NextFunction) {

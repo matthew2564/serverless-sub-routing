@@ -79,7 +79,7 @@ export class BeforeMiddleware implements ExpressMiddlewareInterface {
 			.map((file) => path.resolve(__dirname, './mappers/', file.name));
 
 		// initialise the session and store it in the container
-		Container.set(SESSION, new Session(connection, 'dvsa.mc', mapperPaths));
+		Container.set(SESSION, new Session(connection, 'dvsa.mc', mapperPaths, false));
 	}
 
 	private validateSecret(secret: Secret) {

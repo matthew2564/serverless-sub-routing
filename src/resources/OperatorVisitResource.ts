@@ -10,7 +10,7 @@ import { ValidateBody } from '../domain/decorators/ValidateBody';
 import { operatorVisitPayloadValidator } from '../domain/validators/OperatorVisitPayloadValidator';
 
 @Service()
-@JsonController('/1.0/operator')
+@JsonController('/2.0/operator')
 export class OperatorVisitResource {
 	constructor(
 		@Inject() private operatorVisitService: OperatorVisitService,
@@ -32,7 +32,7 @@ export class OperatorVisitResource {
 
 			this.logger.info(`${resp.count} operator visits found.`);
 
-			if (!resp?.operatorVisitsData.length) {
+			if (resp?.operatorVisitsData.length === 0) {
 				return response.status(204).json({});
 			}
 

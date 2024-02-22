@@ -25,7 +25,7 @@ export class AuditHistoryService {
 				fkAevEventCode: undefined, // set as undefined to remove from payload
 				aevEventCode: (await this.auditHistoryProvider.getFkAevEvent(
 					auditEvent.fkAevEventCode as string
-				)) as AevEventCode,
+				)) satisfies AevEventCode,
 			}))
 		);
 

@@ -50,10 +50,10 @@
         VEN.JOB_COMPLETE = 'Y'
         AND VEN.ACTION_CODE != 'T'
         AND (
-        <if test="searchQuery != null">
-            VEN.RTE_VEH_ID = UPPER(#{searchQuery})
+        <if test="identifier != null">
+            VEN.RTE_VEH_ID = UPPER(#{identifier})
         </if>
-        <if test="searchQuery != null and vin != null">
+        <if test="identifier != null and vin != null">
             OR
         </if>
         <if test="vin != null">

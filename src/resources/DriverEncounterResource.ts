@@ -9,7 +9,7 @@ import { ErrorEnum } from '../domain/enums/Error.enum';
 import { obfuscate } from '../domain/helpers/ObfuscateValue';
 
 @Service()
-@JsonController('/1.0/driver')
+@JsonController('/2.0/driver')
 export class DriverEncounterResource {
 	constructor(
 		@Inject() private driverEncounterService: DriverEncounterService,
@@ -27,7 +27,7 @@ export class DriverEncounterResource {
 
 			this.logger.info(`${resp.drivers?.length} driver encounters found.`);
 
-			if (!resp.drivers?.length) {
+			if (resp?.drivers.length === 0) {
 				return response.status(204).json({});
 			}
 

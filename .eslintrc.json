@@ -16,6 +16,7 @@
     "import/prefer-default-export": "off",
     "class-methods-use-this": "off",
     "security/detect-non-literal-fs-filename": "off",
-    "max-len": ["error", { "code": 120 }]
+    "no-mixed-spaces-and-tabs": "off",
+    "max-len": ["error", { "code": 140 }]
   }
 }

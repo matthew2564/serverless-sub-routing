@@ -1,11 +1,20 @@
+/* eslint-disable */
 import 'reflect-metadata';
+import 'source-map-support/register';
 import serverless from 'serverless-http';
 import { Action, createExpressServer, useContainer } from 'routing-controllers';
 import { Container } from 'typedi';
 import { APIGatewayProxyEvent } from 'aws-lambda';
-import { UserResource } from './resources/UserResource';
+import { OperatorVisitResource } from './resources/OperatorVisitResource';
 import { NotFoundMiddleware } from './middleware/NotFoundMiddleware';
 import { CustomErrorMiddleware } from './middleware/CustomErrorMiddleware';
+import { BeforeMiddleware } from './middleware/BeforeMiddleware';
+import { VersionResource } from './resources/VersionResource';
+import { AuditResource } from './resources/AuditResource';
+import { DriverEncounterResource } from './resources/DriverEncounterResource';
+import { OperatorScoresResource } from './resources/OperatorScoresResource';
+import { EncounterResource } from './resources/EncounterResource';
+import { AfterMiddleware } from './middleware/AfterMiddleware';
 
 // This line tells routing-controllers to use typedi container
 useContainer(Container);
@@ -13,8 +22,15 @@ useContainer(Container);
 const app = createExpressServer({
 	cors: true,
 	defaultErrorHandler: false,
-	controllers: [UserResource],
-	middlewares: [CustomErrorMiddleware, NotFoundMiddleware],
+	controllers: [
+		AuditResource,
+		DriverEncounterResource,
+		EncounterResource,
+		OperatorScoresResource,
+		OperatorVisitResource,
+		VersionResource,
+	],
+	middlewares: [AfterMiddleware, BeforeMiddleware, CustomErrorMiddleware, NotFoundMiddleware],
 	authorizationChecker: ({ request }: Action, roles: string | string[]) => {
 		// if running locally, skip the auth check
 		if (process.env.IS_OFFLINE === 'true') return true;

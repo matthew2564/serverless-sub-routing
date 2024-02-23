@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--suppress ALL -->
+
+<mapper namespace="dvsa.mc">
+    <select id="getOutstandingProhibition">
+        SELECT NTC.FK_VEN_GENERATED_NUMBER AS ENCOUNTER_ID,
+               NTC.RTE_VEH_ID              AS VEHICLE_IDENTIFIER,
+               NTC.ISSUE_DATE,
+               NTC.INPUT_DATE,
+               NTC.ISSUE_OFF_FNAME,
+               NTC.ISSUE_OFF_SNAME,
+               NTC.FK_NTY_CODE,
+               NTC.FK_VIT_CODE,
+               'N'                         AS PROHIBITION_IND,
+               VEN.CLIENT_GUID             AS VEN_CLIENT_GUID
+        FROM MC_NOTICE NTC
+                 INNER JOIN MC_VEHICLE_ENCOUNTER VEN ON (NTC.FK_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
+        WHERE NTC.RTE_VEH_ID = UPPER(#{identifier})
+          AND NTC.FK_NTY_CODE IN ('BMVZ01', 'BMFZ01', 'BMPZ01', 'BOPA01', 'FOPA01', 'BWPZ01', 'FWPZ01')
+          AND (
+            NTC.CLEARANCE_DATE >= ((DATE_FORMAT(CONVERT_TZ(CURRENT_TIMESTAMP, 'UTC', 'Europe/London'), '%Y-%m-%d'))) OR
+            NTC.CLEARANCE_DATE IS NULL)
+          AND NTC.NOTICE_STATUS = 'A'
+          AND NTC.IN_FORCE_DATE &lt;= (DATE_FORMAT(CONVERT_TZ(CURRENT_TIMESTAMP, 'UTC', 'Europe/London'), '%Y-%m-%d'))
+        ORDER BY NTC.ISSUE_DATE DESC, NTC.INPUT_DATE
+    </select>
+</mapper>

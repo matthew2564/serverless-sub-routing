@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--suppress ALL -->
+
+<mapper namespace="dvsa.mc">
+    <select id="getEncounterData">
+        SELECT
+        VEN.GENERATED_NUMBER AS ENCOUNTER_ID,
+        VEN.RTE_VEH_ID AS VEHICLE_IDENTIFIER,
+        VEN.ODT_OLI_LICENCE_NUMBER AS ENCOUNTER_OPERATOR_LICENCE_NO,
+        CHS.CSI_NAME AS CHECKSITE_NAME,
+        CHS.ROAD AS CHECKSITE_ROAD,
+        CHS.TOWN_OR_VILLAGE AS CHECKSITE_TOWN,
+        CHS.COU_DESCRIPTION AS CHECKSITE_COUNTY,
+        VEN.ENCNTR_START_DATE AS ENCOUNTER_DATE,
+        VEN.EXAM_OFFICER_TYPE AS EXAM_OFFICER_TYPE,
+        RVT.DESCRIPTION AS ROADSIDE_VEHICLE_TYPE,
+        VEN.VEHICLE_MAKE AS MAKE,
+        VEN.VEHICLE_MODEL AS MODEL,
+        VEN.VEN_GENERATED_NUMBER AS TOWING_VEHICLE_ENCOUNTER_ID,
+        CASE WHEN (SELECT COUNT(*)
+        FROM MC_NOTICE
+        WHERE MC_NOTICE.FK_NTY_CODE
+        IN
+        ('BMPZ01', 'BMVZ01', 'BMFZ01', 'FMPZ01', 'BWPZ01', 'FWPZ01', 'FOPA01', 'BOPA01', 'FOPB01', 'BOPB01', 'BDGP01')
+        AND VEN.GENERATED_NUMBER = MC_NOTICE.FK_VEN_GENERATED_NUMBER AND MC_NOTICE.NOTICE_STATUS != 'W') > 0
+        THEN 'Y'
+        ELSE 'N'
+        END AS PROHIBITION_NOTICE,
+        CASE WHEN (SELECT COUNT(*)
+        FROM MC_NOTICE
+        WHERE MC_NOTICE.FK_NTY_CODE
+        IN
+        ('BMPZ01', 'BMVZ01', 'BMFZ01', 'FMPZ01', 'BWPZ01', 'FWPZ01', 'FOPA01', 'BOPA01', 'FOPB01', 'BOPB01', 'BDGP01')
+        AND (MC_NOTICE.CLEARANCE_DATE >= (DATE_FORMAT(CONVERT_TZ(CURRENT_TIMESTAMP, 'UTC', 'Europe/London'),
+        '%Y-%m-%d')) OR MC_NOTICE.CLEARANCE_DATE IS NULL)
+        AND MC_NOTICE.NOTICE_STATUS = 'A'
+        AND MC_NOTICE.IN_FORCE_DATE &lt;= (DATE_FORMAT(CONVERT_TZ(CURRENT_TIMESTAMP, 'UTC', 'Europe/London'),
+        '%Y-%m-%d'))
+        AND VEN.GENERATED_NUMBER = MC_NOTICE.FK_VEN_GENERATED_NUMBER) > 0
+        THEN 'Y'
+        ELSE 'N'
+        END AS PROHIBITION_OUTSTANDING
+        FROM MC_VEHICLE_ENCOUNTER VEN
+        LEFT JOIN MC_CHECK_SITE CHS
+        ON CHS.GENERATED_NUMBER = VEN.CSI_GENERATED_NUMBER
+        LEFT JOIN MC_ROADSIDE_VEH_TYPE RVT
+        ON VEN.RVT_NUMBER = RVT.RVT_NUMBER
+        WHERE
+        VEN.JOB_COMPLETE = 'Y'
+        AND VEN.ACTION_CODE != 'T'
+        AND (
+        <if test="identifier != null">
+            VEN.RTE_VEH_ID = UPPER(#{identifier})
+        </if>
+        <if test="identifier != null and vin != null">
+            OR
+        </if>
+        <if test="vin != null">
+            VEN.RTE_VEH_ID = UPPER(#{vin})
+        </if>
+        )
+        ORDER BY VEN.ENCNTR_START_DATE DESC, VEN.GENERATED_NUMBER DESC
+    </select>
+
+    <select id="getEncounterDetailData">
+        SELECT *
+        FROM (SELECT VEN.GENERATED_NUMBER                                  AS ENCOUNTER_ID,
+                     VEN.ODT_OLI_LICENCE_NUMBER                            AS ENCOUNTER_OPERATOR_LICENCE_NO,
+                     COALESCE(ODT.NAME, OBO.OOP_NAME)                      AS ENCOUNTER_OPERATOR_NAME,
+                     COALESCE(ODT.ADDR_1, OBO.ADDR_1)                      AS ENCOUNTER_OPERATOR_ADDR_1,
+                     COALESCE(ODT.ADDR_2, OBO.ADDR_2)                      AS ENCOUNTER_OPERATOR_ADDR_2,
+                     COALESCE(ODT.ADDR_3, OBO.ADDR_3)                      AS ENCOUNTER_OPERATOR_ADDR_3,
+                     COALESCE(ODT.ADDR_4, OBO.ADDR_4)                      AS ENCOUNTER_OPERATOR_ADDR_4,
+                     COALESCE(ODT.POST_TOWN, OBO.POST_TOWN)                AS ENCOUNTER_OPERATOR_POST_TOWN,
+                     COALESCE(ODT.POSTCODE, OBO.POST_CODE)                 AS ENCOUNTER_OPERATOR_POST_CODE,
+                     VEN.RTE_VEH_ID                                        AS VEHICLE_IDENTIFIER,
+                     RVT.DESCRIPTION                                       AS ROADSIDE_VEHICLE_TYPE,
+                     VEN.VEHICLE_MAKE                                      AS MAKE,
+                     VEN.VEHICLE_MODEL                                     AS MODEL,
+                     VEN.ODOMETER_COUNT                                    AS ODOMETER_COUNT,
+                     VEN.VEN_GENERATED_NUMBER                              AS TOWING_VEHICLE_ENCOUNTER_ID,
+                     IRL.IRL_COUNTRY                                       AS COUNTRY_NAME,
+                     VEN.IRI_IRL_CODE                                      AS COUNTRY_CODE,
+                     (SELECT f.RTE_VEH_ID
+                      FROM MC_VEHICLE_ENCOUNTER f
+                      WHERE VEN.VEN_GENERATED_NUMBER = f.GENERATED_NUMBER) AS TOWING_VEHICLE_IDENTIFIER,
+                     CHS.CSI_NAME                                          AS CHECKSITE_NAME,
+                     CHS.ROAD                                              AS CHECKSITE_ROAD,
+                     CHS.TOWN_OR_VILLAGE                                   AS CHECKSITE_TOWN,
+                     CHS.COU_DESCRIPTION                                   AS CHECKSITE_COUNTY,
+                     VEN.JOURNEY_START_LCTN                                AS JOURNEY_START,
+                     VEN.JOURNEY_END_LOCATN                                AS JOURNEY_END,
+                     VEN.GOODS_CARRIED                                     AS GOODS_CARRIED,
+                     CASE
+                         WHEN CHT.CHECK_TYPE is not null THEN CHT.CHECK_TYPE_DESCRIPTION
+                         ELSE VEN.CHECK_TYPE
+                         END                                               AS ENCOUNTER_TYPE,
+                     (SELECT DESCRIPTION
+                      FROM MC_ENCOUNTER_REASON MER
+                      WHERE VEN.ERE_CODE = MER.CODE
+                        AND VEN.ERE_VERSION = MER.VERSION)                 AS ENCOUNTER_REASON,
+                     CASE
+                         WHEN ILE.INSPECTION_LEVEL is not null THEN ILE.DESCRIPTION
+                         ELSE CAST(VEN.ILE_INSPECTION_LEVEL AS CHAR)
+                         END                                               AS INSPECTION_LEVEL,
+                     VEN.ENCNTR_START_DATE                                 AS ENCOUNTER_DATE,
+                     VEN.EXAM_OFFICER_TYPE                                 AS EXAM_OFFICER_TYPE,
+                     COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0)                  AS PERMITTED_WEIGHT1,
+                     COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0)                  AS PERMITTED_WEIGHT2,
+                     COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0)                  AS PERMITTED_WEIGHT3,
+                     COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0)                   AS ACTUAL_WEIGHT1,
+                     COALESCE(VEN.ACT_GROSS_WEIGHT_2, 0)                   AS ACTUAL_WEIGHT2,
+                     COALESCE(VEN.ACT_GROSS_WEIGHT_3, 0)                   AS ACTUAL_WEIGHT3,
+                     CASE
+                         WHEN COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0) = 0
+                             THEN 0
+                         WHEN
+                             (COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0)) > 0
+                             THEN
+                             (COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0))
+                         ELSE 0
+                         END                                               AS EXCESS_WEIGHT1,
+                     CASE
+                         WHEN COALESCE(VEN.ACT_GROSS_WEIGHT_2, 0) = 0
+                             THEN 0
+                         WHEN
+                             (COALESCE(VEN.ACT_GROSS_WEIGHT_2, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0)) > 0
+                             THEN
+                             (COALESCE(VEN.ACT_GROSS_WEIGHT_2, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0))
+                         ELSE 0
+                         END                                               AS EXCESS_WEIGHT2,
+                     CASE
+                         WHEN COALESCE(VEN.ACT_GROSS_WEIGHT_3, 0) = 0
+                             THEN 0
+                         WHEN
+                             (COALESCE(VEN.ACT_GROSS_WEIGHT_3, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0)) > 0
+                             THEN
+                             (COALESCE(VEN.ACT_GROSS_WEIGHT_3, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0))
+                         ELSE 0
+                         END                                               AS EXCESS_WEIGHT3,
+                     ROUND(CASE
+                               WHEN COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0) = 0
+                                   THEN 0
+                               WHEN ((COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0)) > 0)
+                                   THEN
+                                   (COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0)) /
+                                   COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0)
+                               ELSE 0
+                               END, 4)                                     AS EXCESS_WEIGHT1_PERC,
+                     ROUND(CASE
+                               WHEN COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0) = 0
+                                   THEN 0
+                               WHEN ((COALESCE(VEN.ACT_GROSS_WEIGHT_2, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0)) > 0)
+                                   THEN
+                                   (COALESCE(VEN.ACT_GROSS_WEIGHT_2, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0)) /
+                                   COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0)
+                               ELSE 0
+                               END, 4)                                     AS EXCESS_WEIGHT2_PERC,
+                     ROUND(CASE
+                               WHEN COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0) = 0
+                                   THEN 0
+                               WHEN ((COALESCE(VEN.ACT_GROSS_WEIGHT_3, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0)) > 0)
+                                   THEN
+                                   (COALESCE(VEN.ACT_GROSS_WEIGHT_3, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0)) /
+                                   COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0)
+                               ELSE 0
+                               END, 4)                                     AS EXCESS_WEIGHT3_PERC,
+                     COALESCE(VEN.ACTUAL_TRAIN_WGHT, 0)                    AS ACTUAL_TRAIN_WEIGHT,
+                     COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0)                   AS PERMITTED_TRAIN_WEIGHT,
+                     CASE
+                         WHEN
+                             (COALESCE(VEN.ACTUAL_TRAIN_WGHT, 0) - COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0)) > 0
+                             THEN
+                             (COALESCE(VEN.ACTUAL_TRAIN_WGHT, 0) - COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0))
+                         ELSE 0
+                         END                                               AS EXCESS_TRAIN_WEIGHT,
+                     ROUND(CASE
+                               WHEN COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0) = 0
+                                   THEN 0
+                               WHEN ((COALESCE(VEN.ACTUAL_TRAIN_WGHT, 0) - COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0)) > 0)
+                                   THEN
+                                   (COALESCE(VEN.ACTUAL_TRAIN_WGHT, 0) - COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0)) /
+                                   COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0)
+                               ELSE 0
+                               END, 4)                                     AS EXCESS_TRAIN_WEIGHT_PERC,
+                     COALESCE(VEN.SEATING_CAPACITY, 0)                     AS SEATING_CAPACITY,
+                     CASE
+                         WHEN (SELECT COUNT(*)
+                               FROM MC_NOTICE
+                               WHERE MC_NOTICE.FK_NTY_CODE
+                                   IN
+                                     ('BMPZ01', 'BMVZ01', 'BMFZ01', 'FMPZ01', 'BWPZ01', 'FWPZ01', 'FOPA01', 'BOPA01',
+                                      'FOPB01', 'BOPB01', 'BDGP01')
+                                 AND VEN.GENERATED_NUMBER = MC_NOTICE.FK_VEN_GENERATED_NUMBER
+                                 AND MC_NOTICE.NOTICE_STATUS != 'W') > 0
+                             THEN 'Y'
+                         ELSE 'N'
+                         END                                               AS PROHIBITION_NOTICE,
+                     CASE
+                         WHEN (SELECT COUNT(*)
+                               FROM MC_NOTICE
+                               WHERE MC_NOTICE.FK_NTY_CODE
+                                   IN
+                                     ('BMPZ01', 'BMVZ01', 'BMFZ01', 'FMPZ01', 'BWPZ01', 'FWPZ01', 'FOPA01', 'BOPA01',
+                                      'FOPB01', 'BOPB01', 'BDGP01')
+                                 AND (MC_NOTICE.CLEARANCE_DATE >=
+                                      (DATE_FORMAT(CONVERT_TZ(CURRENT_TIMESTAMP, 'UTC', 'Europe/London'),
+                                                   '%Y-%m-%d')) OR MC_NOTICE.CLEARANCE_DATE IS NULL)
+                                 AND MC_NOTICE.NOTICE_STATUS = 'A'
+                                 AND MC_NOTICE.IN_FORCE_DATE &lt;=
+                                     (DATE_FORMAT(CONVERT_TZ(CURRENT_TIMESTAMP, 'UTC', 'Europe/London'), '%Y-%m-%d'))
+                                 AND VEN.GENERATED_NUMBER = MC_NOTICE.FK_VEN_GENERATED_NUMBER) > 0
+                             THEN 'Y'
+                         ELSE 'N'
+                         END                                               AS PROHIBITION_OUTSTANDING,
+                     VEN.WEIGHT_PADS_MARKER                                AS WEIGHT_PADS_MARKER
+              FROM MC_VEHICLE_ENCOUNTER VEN
+                       LEFT JOIN MC_CHECK_SITE CHS
+                                 ON CHS.GENERATED_NUMBER = VEN.CSI_GENERATED_NUMBER
+                       LEFT JOIN MC_ROADSIDE_VEH_TYPE RVT
+                                 ON VEN.RVT_NUMBER = RVT.RVT_NUMBER
+                       LEFT JOIN MC_OPERATOR_DETAIL ODT
+                                 ON VEN.ODT_OLI_LICENCE_NUMBER = ODT.OLI_LICENCE_NUMBER
+                                     AND ODT.CURRENT_RECORD_IND = 'C'
+                       LEFT JOIN MC_OBSERVED_OPERATOR OBO
+                                 ON OBO.VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER
+                       LEFT JOIN MC_INTRNTNL_REG_ID IRL
+                                 ON VEN.IRI_IRL_CODE = IRL.IRL_CODE
+                       LEFT JOIN MC_INSPECTION_LEVEL ILE
+                                 ON VEN.ILE_INSPECTION_LEVEL = ILE.INSPECTION_LEVEL
+                                     AND ILE.DELETION_IND = 'N'
+                       LEFT JOIN MC_CHECK_TYPE CHT
+                                 ON VEN.CHECK_TYPE = CHT.CHECK_TYPE
+              WHERE VEN.JOB_COMPLETE = 'Y'
+                AND VEN.ACTION_CODE != 'T'
+                AND VEN.GENERATED_NUMBER = #{identifier}) AS ENCOUNTER_DETAILS
+        LIMIT 1
+    </select>
+
+    <select id="getEncounterTrailer">
+        SELECT *
+        FROM (SELECT VEN.GENERATED_NUMBER                                  AS ENCOUNTER_ID,
+                     VEN.ODT_OLI_LICENCE_NUMBER                            AS ENCOUNTER_OPERATOR_LICENCE_NO,
+                     COALESCE(ODT.NAME, OBO.OOP_NAME)                      AS ENCOUNTER_OPERATOR_NAME,
+                     COALESCE(ODT.ADDR_1, OBO.ADDR_1)                      AS ENCOUNTER_OPERATOR_ADDR_1,
+                     COALESCE(ODT.ADDR_2, OBO.ADDR_2)                      AS ENCOUNTER_OPERATOR_ADDR_2,
+                     COALESCE(ODT.ADDR_3, OBO.ADDR_3)                      AS ENCOUNTER_OPERATOR_ADDR_3,
+                     COALESCE(ODT.ADDR_4, OBO.ADDR_4)                      AS ENCOUNTER_OPERATOR_ADDR_4,
+                     COALESCE(ODT.POST_TOWN, OBO.POST_TOWN)                AS ENCOUNTER_OPERATOR_POST_TOWN,
+                     COALESCE(ODT.POSTCODE, OBO.POST_CODE)                 AS ENCOUNTER_OPERATOR_POST_CODE,
+                     VEN.RTE_VEH_ID                                        AS VEHICLE_IDENTIFIER,
+                     RVT.DESCRIPTION                                       AS ROADSIDE_VEHICLE_TYPE,
+                     VEN.VEHICLE_MAKE                                      AS MAKE,
+                     VEN.VEHICLE_MODEL                                     AS MODEL,
+                     VEN.ODOMETER_COUNT                                    AS ODOMETER_COUNT,
+                     VEN.VEN_GENERATED_NUMBER                              AS TOWING_VEHICLE_ENCOUNTER_ID,
+                     IRL.IRL_COUNTRY                                       AS COUNTRY_NAME,
+                     VEN.IRI_IRL_CODE                                      AS COUNTRY_CODE,
+                     (SELECT f.RTE_VEH_ID
+                      FROM MC_VEHICLE_ENCOUNTER f
+                      WHERE VEN.JOB_COMPLETE = 'Y'
+                        AND VEN.ACTION_CODE != 'T'
+                        AND VEN.VEN_GENERATED_NUMBER = f.GENERATED_NUMBER) AS TOWING_VEHICLE_IDENTIFIER,
+                     CHS.CSI_NAME                                          AS CHECKSITE_NAME,
+                     CHS.ROAD                                              AS CHECKSITE_ROAD,
+                     CHS.TOWN_OR_VILLAGE                                   AS CHECKSITE_TOWN,
+                     CHS.COU_DESCRIPTION                                   AS CHECKSITE_COUNTY,
+                     VEN.JOURNEY_START_LCTN                                AS JOURNEY_START,
+                     VEN.JOURNEY_END_LOCATN                                AS JOURNEY_END,
+                     VEN.GOODS_CARRIED                                     AS GOODS_CARRIED,
+                     CASE
+                         WHEN CHT.CHECK_TYPE is not null THEN CHT.CHECK_TYPE_DESCRIPTION
+                         ELSE VEN.CHECK_TYPE
+                         END                                               AS ENCOUNTER_TYPE,
+                     (SELECT DESCRIPTION
+                      FROM MC_ENCOUNTER_REASON MER
+                      WHERE VEN.ERE_CODE = MER.CODE
+                        AND VEN.ERE_VERSION = MER.VERSION)                 AS ENCOUNTER_REASON,
+                     CASE
+                         WHEN ILE.INSPECTION_LEVEL is not null THEN ILE.DESCRIPTION
+                         ELSE CAST(VEN.ILE_INSPECTION_LEVEL AS CHAR)
+                         END                                               AS INSPECTION_LEVEL,
+                     VEN.ENCNTR_START_DATE                                 AS ENCOUNTER_DATE,
+                     VEN.EXAM_OFFICER_TYPE                                 AS EXAM_OFFICER_TYPE,
+                     COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0)                  AS PERMITTED_WEIGHT1,
+                     COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0)                  AS PERMITTED_WEIGHT2,
+                     COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0)                  AS PERMITTED_WEIGHT3,
+                     COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0) + COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0) +
+                     COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0)                  AS TOTAL_PERMITTED_WEIGHT,
+                     COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0)                   AS ACTUAL_WEIGHT1,
+                     COALESCE(VEN.ACT_GROSS_WEIGHT_2, 0)                   AS ACTUAL_WEIGHT2,
+                     COALESCE(VEN.ACT_GROSS_WEIGHT_3, 0)                   AS ACTUAL_WEIGHT3,
+                     COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0) + COALESCE(VEN.ACT_GROSS_WEIGHT_2, 0) +
+                     COALESCE(VEN.ACT_GROSS_WEIGHT_3, 0)                   AS TOTAL_ACTUAL_WEIGHT,
+                     CASE
+                         WHEN COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0) = 0
+                             THEN 0
+                         WHEN
+                             (COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0)) > 0
+                             THEN
+                             (COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0))
+                         ELSE 0
+                         END                                               AS EXCESS_WEIGHT1,
+                     CASE
+                         WHEN COALESCE(VEN.ACT_GROSS_WEIGHT_2, 0) = 0
+                             THEN 0
+                         WHEN
+                             (COALESCE(VEN.ACT_GROSS_WEIGHT_2, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0)) > 0
+                             THEN
+                             (COALESCE(VEN.ACT_GROSS_WEIGHT_2, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0))
+                         ELSE 0
+                         END                                               AS EXCESS_WEIGHT2,
+                     CASE
+                         WHEN COALESCE(VEN.ACT_GROSS_WEIGHT_3, 0) = 0
+                             THEN 0
+                         WHEN
+                             (COALESCE(VEN.ACT_GROSS_WEIGHT_3, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0)) > 0
+                             THEN
+                             (COALESCE(VEN.ACT_GROSS_WEIGHT_3, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0))
+                         ELSE 0
+                         END                                               AS EXCESS_WEIGHT3,
+                     ROUND(CASE
+                               WHEN COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0) = 0
+                                   THEN 0
+                               WHEN ((COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0)) > 0)
+                                   THEN
+                                   (COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0)) /
+                                   COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0)
+                               ELSE 0
+                               END, 4)                                     AS EXCESS_WEIGHT1_PERC,
+                     ROUND(CASE
+                               WHEN COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0) = 0
+                                   THEN 0
+                               WHEN ((COALESCE(VEN.ACT_GROSS_WEIGHT_2, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0)) > 0)
+                                   THEN
+                                   (COALESCE(VEN.ACT_GROSS_WEIGHT_2, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0)) /
+                                   COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0)
+                               ELSE 0
+                               END, 4)                                     AS EXCESS_WEIGHT2_PERC,
+                     ROUND(CASE
+                               WHEN COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0) = 0
+                                   THEN 0
+                               WHEN ((COALESCE(VEN.ACT_GROSS_WEIGHT_3, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0)) > 0)
+                                   THEN
+                                   (COALESCE(VEN.ACT_GROSS_WEIGHT_3, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0)) /
+                                   COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0)
+                               ELSE 0
+                               END, 4)                                     AS EXCESS_WEIGHT3_PERC,
+                     COALESCE(VEN.ACTUAL_TRAIN_WGHT, 0)                    AS ACTUAL_TRAIN_WEIGHT,
+                     COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0)                   AS PERMITTED_TRAIN_WEIGHT,
+                     CASE
+                         WHEN
+                             (COALESCE(VEN.ACTUAL_TRAIN_WGHT, 0) - COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0)) > 0
+                             THEN
+                             (COALESCE(VEN.ACTUAL_TRAIN_WGHT, 0) - COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0))
+                         ELSE 0
+                         END                                               AS EXCESS_TRAIN_WEIGHT,
+                     ROUND(CASE
+                               WHEN COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0) = 0
+                                   THEN 0
+                               WHEN ((COALESCE(VEN.ACTUAL_TRAIN_WGHT, 0) - COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0)) > 0)
+                                   THEN
+                                   (COALESCE(VEN.ACTUAL_TRAIN_WGHT, 0) - COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0)) /
+                                   COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0)
+                               ELSE 0
+                               END, 4)                                     AS EXCESS_TRAIN_WEIGHT_PERC,
+                     COALESCE(VEN.SEATING_CAPACITY, 0)                     AS SEATING_CAPACITY,
+                     CASE
+                         WHEN (SELECT COUNT(*)
+                               FROM MC_NOTICE
+                               WHERE MC_NOTICE.FK_NTY_CODE
+                                   in
+                                     ('BMPZ01', 'BMVZ01', 'BMFZ01', 'FMPZ01', 'BWPZ01', 'FWPZ01', 'FOPA01', 'BOPA01',
+                                      'FOPB01', 'BOPB01', 'BDGP01')
+                                 AND VEN.GENERATED_NUMBER = MC_NOTICE.FK_VEN_GENERATED_NUMBER
+                                 AND MC_NOTICE.NOTICE_STATUS != 'W') > 0
+                             THEN 'Y'
+                         ELSE 'N'
+                         END                                               AS PROHIBITION_NOTICE,
+                     CASE
+                         WHEN (SELECT COUNT(*)
+                               FROM MC_NOTICE
+                               WHERE MC_NOTICE.FK_NTY_CODE
+                                   in
+                                     ('BMPZ01', 'BMVZ01', 'BMFZ01', 'FMPZ01', 'BWPZ01', 'FWPZ01', 'FOPA01', 'BOPA01',
+                                      'FOPB01', 'BOPB01', 'BDGP01')
+                                 AND (MC_NOTICE.CLEARANCE_DATE >=
+                                      (DATE_FORMAT(CONVERT_TZ(CURRENT_TIMESTAMP, 'UTC', 'Europe/London'),
+                                                   '%Y-%m-%d')) OR MC_NOTICE.CLEARANCE_DATE IS NULL)
+                                 and MC_NOTICE.NOTICE_STATUS = 'A'
+                                 and MC_NOTICE.IN_FORCE_DATE &lt;=
+                                     (DATE_FORMAT(CONVERT_TZ(CURRENT_TIMESTAMP, 'UTC', 'Europe/London'), '%Y-%m-%d'))
+                                 AND VEN.GENERATED_NUMBER = MC_NOTICE.FK_VEN_GENERATED_NUMBER) > 0
+                             THEN 'Y'
+                         ELSE 'N'
+                         END                                               AS PROHIBITION_OUTSTANDING,
+                     VEN.WEIGHT_PADS_MARKER                                AS WEIGHT_PADS_MARKER
+              FROM MC_VEHICLE_ENCOUNTER VEN
+                       left join MC_CHECK_SITE CHS
+                                 on CHS.GENERATED_NUMBER = VEN.CSI_GENERATED_NUMBER
+                       left join MC_ROADSIDE_VEH_TYPE RVT
+                                 on VEN.RVT_NUMBER = RVT.RVT_NUMBER
+                       left join MC_OPERATOR_DETAIL ODT
+                                 on VEN.ODT_OLI_LICENCE_NUMBER = ODT.OLI_LICENCE_NUMBER
+                                     AND ODT.CURRENT_RECORD_IND = 'C'
+                       left join MC_OBSERVED_OPERATOR OBO
+                                 on OBO.VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER
+                       left join MC_INTRNTNL_REG_ID IRL
+                                 on VEN.IRI_IRL_CODE = IRL.IRL_CODE
+                       LEFT JOIN MC_INSPECTION_LEVEL ILE
+                                 ON VEN.ILE_INSPECTION_LEVEL = ILE.INSPECTION_LEVEL
+                                     AND ILE.DELETION_IND = 'N'
+                       LEFT JOIN MC_CHECK_TYPE CHT
+                                 ON VEN.CHECK_TYPE = CHT.CHECK_TYPE
+              WHERE VEN.JOB_COMPLETE = 'Y'
+                AND VEN.ACTION_CODE != 'T'
+                AND VEN.VEN_GENERATED_NUMBER = #{identifier}) AS ENCOUNTER_TRAILER
+        LIMIT 1
+    </select>
+</mapper>

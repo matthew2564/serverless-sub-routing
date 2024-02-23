@@ -1,0 +1,1216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--suppress ALL -->
+
+<mapper namespace="dvsa.mc">
+    <select id="getEncounterIds">
+        SELECT
+            VEN1.GENERATED_NUMBER as ENCOUNTER_ID1,
+            VEN2.GENERATED_NUMBER as ENCOUNTER_ID2,
+            VEN3.GENERATED_NUMBER as ENCOUNTER_ID3
+        FROM
+            MC_VEHICLE_ENCOUNTER VEN1
+                LEFT JOIN MC_VEHICLE_ENCOUNTER VEN2 ON (VEN1.GENERATED_NUMBER = VEN2.VEN_GENERATED_NUMBER)
+                LEFT JOIN MC_VEHICLE_ENCOUNTER VEN3 ON (VEN2.GENERATED_NUMBER = VEN3.VEN_GENERATED_NUMBER)
+        WHERE
+            VEN1.GENERATED_NUMBER = #{vehicleEncounterId}
+    </select>
+
+    <select id="getGeneralDetails">
+        SELECT *
+        FROM (SELECT VEN.GENERATED_NUMBER                       AS ENCOUNTER_ID,
+                     MVI.SHORT_CODE                             AS MVI_SHORT_CODE,
+                     MVI.DESCRIPTION                            AS MVI_DESCRIPTION,
+                     MVI.SEQUENCE_NUMBER                        AS MVI_SEQUENCE_NUMBER,
+                     MVI.VEHICLE_TRAILER_INDICATOR              AS MVI_VEH_TRAIL,
+                     MVI.DELETION_IND                           AS MVI_DELETION_IND,
+                     MVI.CODE                                   AS MVI_CODE,
+                     VEN.RTE_VEH_ID,
+                     RVT.RVT_NUMBER                             AS RVT_NUMBER,
+                     RVT.FK_VEHICLE_TYPE                        AS RVT_VEH_TYPE,
+                     RVT.DELETION_IND                           AS RVT_DELETION,
+                     RVT.TRACTOR_IND                            AS RVT_TRACTOR,
+                     RVT.DESCRIPTION                            AS RVT_DESCRIPTION,
+                     RVT.RANK                                   AS RVT_RANK,
+                     RVT.DCA_DCA_PART                           AS RVT_DCA_PART,
+                     RVT.USE_OFFENCE_FLOW                       AS RVT_OFFENCE_FLOW,
+                     IRL.IRL_CODE                               AS IRL_CODE,
+                     IRL.IRL_COUNTRY                            AS IRL_COUNTRY,
+                     IRL.DELETION_IND                           AS IRL_DELETION_IND,
+                     IRL.VEHICLE_INDICATOR                      AS IRL_VEH_IND,
+                     IRL.INT_REG_NUMBER_CODE                    AS IRL_INT_NUM_REG_CODE,
+                     IRL.CARD_ISSUING_AUTHORITY_IND             AS IRL_CARD_ISS_AUTH,
+                     IRL.DRIVING_LICENCE_AUTHORITY              AS IRL_DRIV_LIC_AUTH,
+                     IRL.INTELLIGENCE_SUBJECT_IND               AS IRL_INTELL_SUB_IND,
+                     IRL.NON_VOSA                               AS IRL_NON_VOSA,
+                     IRL.FOREIGN_OP_NATIONALITY_IND             AS IRL_FOR_OP_NAT_IND,
+                     ENCNTR_START_DATE                          AS ENC_DATE,
+                     TIME_FORMAT(ENCNTR_START_DATE, '%H:%i:%s') AS ENC_TIME,
+                     (SELECT DISTINCT CONCAT(MC1.FIRST_NAME, ' ', MC1.LAST_NAME)
+                      FROM MC_REQUEST_USER MC1
+                      WHERE VEN.USE_EHR_EMPLOYEE_ID_EXAMINER = MC1.EMPLOYEE_ID
+                      LIMIT 1)                                  AS EMP_NAME,
+                     VEN.USE_EHR_EMPLOYEE_ID_EXAMINER           AS EXAMINER_ID,
+                     (SELECT EMAIL_ADDRESS
+                      FROM (SELECT EMAIL_ADDRESS
+                            FROM MC_REQUEST_USER
+                            WHERE EMPLOYEE_ID = VEN.USE_EHR_EMPLOYEE_ID_EXAMINER) MRU_EMAIL
+                      LIMIT 1)                                  AS EXAMINER_EMAIL,
+                     VEN.EXAM_OFFICER_TYPE,
+                     ERE.CODE                                   AS ERE_CODE,
+                     ERE.VERSION                                AS ERE_VERSION,
+                     ERE.DELETION_MARKER                        AS ERE_DELETION,
+                     ERE.SEQUENCE_NUMBER                        AS ERE_SEQUENCE,
+                     ERE.FK_CTP_CHECK_TYPE                      AS ERE_CHECK_TYPE,
+                     ERE.NAME                                   AS ERE_NAME,
+                     ERE.DESCRIPTION                            AS ERE_DESCRIPTION,
+                     ERE.SHORT_CODE                             AS ERE_SHORT_CODE,
+                     ERE.PG_3_5_EC_REQUIRED                     AS ERE_PG35,
+                     ERE.USE_OFFENCE_FLOW                       AS ERE_OFF_FLOW,
+                     VEN.VEN_GENERATED_NUMBER                   AS TOWING_VEHICLE_ENCOUNTER_ID,
+                     VEN.CSI_GENERATED_NUMBER,
+                     VEN.CLIENT_GUID                            AS CLIENT_GUID,
+                     VEN.ACTION_CODE,
+                     VEN.LAST_UPDATE                            AS VEN_LAST_UPDATED
+            FROM MC_VEHICLE_ENCOUNTER VEN
+               LEFT JOIN MC_ROADSIDE_VEH_TYPE RVT
+        ON VEN.RVT_NUMBER = RVT.RVT_NUMBER
+            LEFT JOIN MC_INTRNTNL_REG_ID IRL
+            ON VEN.IRI_IRL_CODE = IRL.IRL_CODE
+            LEFT JOIN MC_VEHICLE_IDENTIFIER_TYPE MVI
+            ON (VEN.FK_VIT_CODE = MVI.CODE)
+            LEFT JOIN MC_ENCOUNTER_REASON ERE
+            ON (VEN.ERE_CODE = ERE.CODE AND VEN.ERE_VERSION = ERE.VERSION)
+        WHERE VEN.GENERATED_NUMBER = #{vehicleEncounterId}) AS GENERAL_DETAILS
+            LIMIT 1
+    </select>
+
+    <select id="getCheckSiteLocation" >
+        SELECT CHS.ROAD,
+               CHS.GENERATED_NUMBER,
+               CHS.CSI_TYPE,
+               CHS.LAST_UPDATE,
+               CHS.USE_EHR_EMPLOYEE_ID_SETUP,
+               CHS.COU_DESCRIPTION,
+               CHS.TOWN_OR_VILLAGE,
+               CHS.CSI_NAME,
+               CHS.DELETION_MARKER,
+               CHS.DIRECTION,
+               CHS.RAR_CODE,
+               CHS.FK_CST_CODE,
+               CHS.CLIENT_GUID
+        FROM MC_CHECK_SITE CHS
+        WHERE CHS.GENERATED_NUMBER = #{csiId}
+    </select>
+
+    <select id="getOperator">
+        SELECT * FROM (
+        SELECT COALESCE(OBO.GENERATED_NUMBER,ODT.OLI_LICENCE_NUMBER)     AS GEN_NUM,
+               COALESCE(OBO.FK_IRI_IRL_CODE, 'GB')                       AS NATIONALITY_CODE,
+               COALESCE(OBO.OOP_NAME, SUBSTR(ODT.NAME,1,70))             AS OPERATOR_NAME,
+               COALESCE(OBO.ADDR_1, ODT.ADDR_1)                          AS OPERATOR_ADDR_1,
+               COALESCE(OBO.ADDR_2, ODT.ADDR_2)                          AS OPERATOR_ADDR_2,
+               COALESCE(OBO.ADDR_3, ODT.ADDR_3)                          AS OPERATOR_ADDR_3,
+               COALESCE(OBO.ADDR_4, ODT.ADDR_4)                          AS OPERATOR_ADDR_4,
+               COALESCE(OBO.POST_TOWN, ODT.POST_TOWN)                    AS OPERATOR_POST_TOWN,
+               TRIM(COALESCE(OBO.POST_CODE, ODT.POSTCODE))               AS OPERATOR_POST_CODE,
+               OBO.TRADING_AS                                            AS OPERATOR_TRADING_AS,
+               COALESCE(OBO.OLI_LICENCE_NUMBER, ODT.OLI_LICENCE_NUMBER)  AS OPERATOR_LICENCE_NUMBER,
+               OBO.SERIAL_NUMBER,
+               COALESCE(OBO.EXPIRY_DATE, ODT.LICENCE_REVIEW)             AS OPERATOR_EXPIRY_DATE,
+               OLT.LICENCE_TYPE_CODE                                     AS OLT_CODE,
+               OLT.LICENCE_TYPE_DESCRIPTION                              AS OLT_DESCRIPTION,
+               OLT.DELETION_IND                                          AS OLT_DELETION_IND,
+               LDS.LICENCE_DISC_TYPE                                     AS LDS_DISC_TYPE,
+               LDS.LICENCE_DISC_DESCRIPTION                              AS LDS_DISC_DESCRIPTION,
+               LDS.DELETION_IND                                          AS LDS_DELETION_IND
+        FROM MC_VEHICLE_ENCOUNTER VEN
+                 LEFT JOIN MC_OPERATOR_DETAIL ODT
+                           ON (VEN.ODT_OLI_LICENCE_NUMBER = ODT.OLI_LICENCE_NUMBER AND ODT.CURRENT_RECORD_IND = 'C')
+                 LEFT JOIN MC_OBSERVED_OPERATOR OBO ON (OBO.VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
+                 LEFT JOIN MC_OPERATOR_LICENCE_TYPE OLT ON (COALESCE(TRIM(ODT.LICENCE_TYPE_CODE),OBO.LICENCE_TYPE_CODE) = OLT.LICENCE_TYPE_CODE)
+                 LEFT JOIN MC_OPERATOR_LICENCE_DSC_STATUS LDS ON (VEN.STATE_OF_OP_DISC = LDS.LICENCE_DISC_TYPE)
+        WHERE VEN.GENERATED_NUMBER = #{vehicleEncounterId}) AS OPERATOR_DETAILS
+        LIMIT 1
+    </select>
+
+    <select id="getNationality">
+        SELECT IRL.IRL_CODE                                 AS IRL_CODE,
+               IRL.IRL_COUNTRY                              AS IRL_COUNTRY,
+               IRL.DELETION_IND                             AS IRL_DELETION_IND,
+               IRL.VEHICLE_INDICATOR                        AS IRL_VEH_IND,
+               IRL.INT_REG_NUMBER_CODE                      AS IRL_INT_NUM_REG_CODE,
+               IRL.CARD_ISSUING_AUTHORITY_IND               AS IRL_CARD_ISS_AUTH,
+               IRL.DRIVING_LICENCE_AUTHORITY                AS IRL_DRIV_LIC_AUTH,
+               IRL.INTELLIGENCE_SUBJECT_IND                 AS IRL_INTELL_SUB_IND,
+               IRL.NON_VOSA                                 AS IRL_NON_VOSA,
+               IRL.FOREIGN_OP_NATIONALITY_IND               AS IRL_FOR_OP_NAT_IND
+        FROM MC_INTRNTNL_REG_ID IRL
+        WHERE IRL.IRL_CODE = #{vehicleEncounterId}
+    </select>
+
+    <select id="getVehicle">
+        SELECT * FROM (
+                          SELECT VEN.RTE_VEH_ID                               AS VEHICLE_IDENTIFIER,
+                                 MVI.SHORT_CODE                               AS MVI_SHORT_CODE,
+                                 MVI.DESCRIPTION                              AS MVI_DESCRIPTION,
+                                 MVI.SEQUENCE_NUMBER                          AS MVI_SEQUENCE_NUMBER,
+                                 MVI.VEHICLE_TRAILER_INDICATOR                AS MVI_VEH_TRAIL,
+                                 MVI.DELETION_IND                             AS MVI_DELETION_IND,
+                                 MVI.CODE                                     AS MVI_CODE,
+                                 RVT.RVT_NUMBER                               AS RVT_NUMBER,
+                                 RVT.FK_VEHICLE_TYPE                          AS RVT_VEH_TYPE,
+                                 RVT.DELETION_IND                             AS RVT_DELETION,
+                                 RVT.TRACTOR_IND                              AS RVT_TRACTOR,
+                                 RVT.DESCRIPTION                              AS RVT_DESCRIPTION,
+                                 RVT.RANK                                     AS RVT_RANK,
+                                 RVT.DCA_DCA_PART                             AS RVT_DCA_PART,
+                                 RVT.USE_OFFENCE_FLOW                         AS RVT_OFFENCE_FLOW,
+                                 IRL.IRL_CODE                                 AS IRL_CODE,
+                                 IRL.IRL_COUNTRY                              AS IRL_COUNTRY,
+                                 IRL.DELETION_IND                             AS IRL_DELETION_IND,
+                                 IRL.VEHICLE_INDICATOR                        AS IRL_VEH_IND,
+                                 IRL.INT_REG_NUMBER_CODE                      AS IRL_INT_NUM_REG_CODE,
+                                 IRL.CARD_ISSUING_AUTHORITY_IND               AS IRL_CARD_ISS_AUTH,
+                                 IRL.DRIVING_LICENCE_AUTHORITY                AS IRL_DRIV_LIC_AUTH,
+                                 IRL.INTELLIGENCE_SUBJECT_IND                 AS IRL_INTELL_SUB_IND,
+                                 IRL.NON_VOSA                                 AS IRL_NON_VOSA,
+                                 IRL.FOREIGN_OP_NATIONALITY_IND               AS IRL_FOR_OP_NAT_IND,
+                                 VEN.VEHICLE_MAKE                             AS CUSTOM_MAKE,
+                                 MAK.INTERNAL_NUMBER                          AS MAK_INT_NUM,
+                                 MAK.FK_RVT_NUMBER                            AS MAK_RVT_NUM,
+                                 MAK.VEHICLE_MAKE                             AS MAK_MAKE,
+                                 MAK.DELETION_IND                             AS MAK_DELETION_IND,
+                                 VEN.VEHICLE_MODEL                            AS MODEL,
+                                 VEN.CHASSIS_NUMBER                           AS VIN,
+                                 VEN.MINISTRY_PLATE_NUM                       AS MINISTRY_PLATE_NUM,
+                                 BTY.CODE                                     AS BTY_CODE,
+                                 BTY.VERSION                                  AS BTY_VERSION,
+                                 BTY.NAME                                     AS BTY_NAME,
+                                 BTY.DESCRIPTION                              AS BTY_BODY_TYPE,
+                                 BTY.APPLIC_IND                               AS BTY_APPLIC_IND,
+                                 BTY.DELETION_MARKER                          AS BTY_DELETION_IND,
+                                 BTY.SEQUENCE_NUM                             AS BTY_SEQ_NUM,
+                                 COALESCE(VEN.SEATING_CAPACITY, 0)            AS SEATING_CAPACITY,
+                                 VEN.ODOMETER_COUNT                           AS ODOMETER,
+                                 VEN.ODOMETER_TEXT                            AS ODOMETER_UNIT,
+                                 LIN.CODE                                     AS LIN_CODE,
+                                 LIN.DESCRIPTION                              AS LIN_DESC,
+                                 LIN.SEQUENCE_NUMBER                          AS LIN_SEQ_NUM,
+                                 LIN.DELETION_IND                             AS LIN_DELETION_IND
+                          FROM MC_VEHICLE_ENCOUNTER VEN
+                                   LEFT JOIN MC_VEHICLE_IDENTIFIER_TYPE MVI
+                                             ON (VEN.FK_VIT_CODE = MVI.CODE)
+                                   LEFT JOIN MC_ROADSIDE_VEH_TYPE RVT
+                                             ON (VEN.RVT_NUMBER = RVT.RVT_NUMBER)
+                                   LEFT JOIN MC_INTRNTNL_REG_ID IRL
+                                             ON (VEN.IRI_IRL_CODE = IRL.IRL_CODE)
+                                   LEFT JOIN MC_VEHICLE_MAKE MAK
+                                             ON ((VEN.VEHICLE_MAKE = MAK.VEHICLE_MAKE) AND (VEN.RVT_NUMBER = MAK.FK_RVT_NUMBER))
+                                   LEFT JOIN MC_BODY_TYPE BTY
+                                             ON ((VEN.BTY_CODE = BTY.CODE) AND (VEN.BTY_VERSION = BTY.VERSION))
+                                   LEFT JOIN MC_LADEN_INDICATOR LIN
+                                             ON (VEN.LIN_CODE = LIN.CODE)
+                          WHERE VEN.GENERATED_NUMBER = #{vehicleEncounterId}) AS VEHICLE
+            LIMIT 1;
+    </select>
+
+    <select id="getDriver">
+        SELECT OBD.DRIVER_TYPE,
+               OBD.FORENAME,
+               OBD.SURNAME,
+               OBD.DATE_OF_BIRTH,
+               OBD.BIRTH_PLACE,
+               DDO.DRIVER_DETAILS_ORIGIN_CODE               AS DDO_CODE,
+               DDO.ORIGIN_DESCRIPTION                       AS DDO_DESCRIPTION,
+               DDO.DELETION_IND                             AS DDO_DELETION_IND,
+               OBD.DRIVER_LIC_NUM,
+               OBD.REG_KEEPER_INDICTR,
+               OBD.SEX,
+               IRL.IRL_CODE                                 AS IRL_CODE,
+               IRL.IRL_COUNTRY                              AS IRL_COUNTRY,
+               IRL.DELETION_IND                             AS IRL_DELETION_IND,
+               IRL.VEHICLE_INDICATOR                        AS IRL_VEH_IND,
+               IRL.INT_REG_NUMBER_CODE                      AS IRL_INT_NUM_REG_CODE,
+               IRL.CARD_ISSUING_AUTHORITY_IND               AS IRL_CARD_ISS_AUTH,
+               IRL.DRIVING_LICENCE_AUTHORITY                AS IRL_DRIV_LIC_AUTH,
+               IRL.INTELLIGENCE_SUBJECT_IND                 AS IRL_INTELL_SUB_IND,
+               IRL.NON_VOSA                                 AS IRL_NON_VOSA,
+               IRL.FOREIGN_OP_NATIONALITY_IND               AS IRL_FOR_OP_NAT_IND,
+               DLC.CATEGORY_CODE                            AS DLC_CODE,
+               DLC.DELETION_IND                             AS DLC_DELETION_IND,
+               DLT.LICENCE_TYPE_CODE                        AS DLT_CODE,
+               DLT.LICENCE_TYPE_DESCRIPTION                 AS DLT_DESCRIPTION,
+               DLT.DELETION_IND                             AS DLT_DELETION_IND,
+               OBD.LICENCE_ISSUE_NO,
+               OBD.DRIVING_LICENCE_ISSUE_DATE,
+               REPLACE(OBD.PASSPORT_NUMBER, ' ', '')        AS PASSPORT_NUMBER,
+               OBD.ADDR_1,
+               OBD.ADDR_2,
+               OBD.ADDR_3,
+               OBD.ADDR_4,
+               OBD.POSTOWN,
+               TRIM(OBD.POSTCODE)                           AS OBD_POSTCODE,
+               OBD.UK_RESIDENT
+        FROM MC_OBSERVED_DRIVER OBD
+                 LEFT JOIN MC_DRIVER_DETAILS_ORIGIN DDO
+                     ON (OBD.DDO_DRIVER_DETAILS_ORIGIN_CODE = DDO.DRIVER_DETAILS_ORIGIN_CODE)
+                 LEFT JOIN MC_INTRNTNL_REG_ID IRL
+                     ON (OBD.IRI_IRL_CODE_DRIVING_LICENCE = IRL.IRL_CODE)
+                 LEFT JOIN MC_DRIVING_LICENCE_CATEGORY DLC
+                     ON (OBD.LICENCE_CATEGORY = DLC.CATEGORY_CODE)
+                 LEFT JOIN MC_DRIVING_LICENCE_TYPE DLT
+                    ON (OBD.LICENCE_TYPE = DLT.LICENCE_TYPE_CODE)
+        WHERE OBD.FK_VEN_GENERATED_NUMBER = #{vehicleEncounterId}
+    </select>
+
+    <select id="getTrailer">
+        SELECT * FROM (
+        SELECT IRL.IRL_CODE                                 AS IRL_CODE,
+               IRL.IRL_COUNTRY                              AS IRL_COUNTRY,
+               IRL.DELETION_IND                             AS IRL_DELETION_IND,
+               IRL.VEHICLE_INDICATOR                        AS IRL_VEH_IND,
+               IRL.INT_REG_NUMBER_CODE                      AS IRL_INT_NUM_REG_CODE,
+               IRL.CARD_ISSUING_AUTHORITY_IND               AS IRL_CARD_ISS_AUTH,
+               IRL.DRIVING_LICENCE_AUTHORITY                AS IRL_DRIV_LIC_AUTH,
+               IRL.INTELLIGENCE_SUBJECT_IND                 AS IRL_INTELL_SUB_IND,
+               IRL.NON_VOSA                                 AS IRL_NON_VOSA,
+               IRL.FOREIGN_OP_NATIONALITY_IND               AS IRL_FOR_OP_NAT_IND,
+               MVI.SHORT_CODE                               AS MVI_SHORT_CODE,
+               MVI.DESCRIPTION                              AS MVI_DESCRIPTION,
+               MVI.SEQUENCE_NUMBER                          AS MVI_SEQUENCE_NUMBER,
+               MVI.VEHICLE_TRAILER_INDICATOR                AS MVI_VEH_TRAIL,
+               MVI.DELETION_IND                             AS MVI_DELETION_IND,
+               MVI.CODE                                     AS MVI_CODE,
+               VEN.RTE_VEH_ID                               AS TRAILER_IDENTIFIER,
+               RVT.RVT_NUMBER                               AS RVT_NUMBER,
+               RVT.FK_VEHICLE_TYPE                          AS RVT_VEH_TYPE,
+               RVT.DELETION_IND                             AS RVT_DELETION,
+               RVT.TRACTOR_IND                              AS RVT_TRACTOR,
+               RVT.DESCRIPTION                              AS RVT_DESCRIPTION,
+               RVT.RANK                                     AS RVT_RANK,
+               RVT.DCA_DCA_PART                             AS RVT_DCA_PART,
+               RVT.USE_OFFENCE_FLOW                         AS RVT_OFFENCE_FLOW,
+               VEN.VEHICLE_MAKE                             AS CUSTOM_MAKE,
+               MAK.INTERNAL_NUMBER                          AS MAK_INT_NUM,
+               MAK.FK_RVT_NUMBER                            AS MAK_RVT_NUM,
+               MAK.VEHICLE_MAKE                             AS MAK_MAKE,
+               MAK.DELETION_IND                             AS MAK_DELETION_IND,
+               VEN.VEHICLE_MODEL                            AS MODEL,
+               VEN.CHASSIS_NUMBER                           AS CHASSIS,
+               VEN.MINISTRY_PLATE_NUM                       AS MINISTRY_PLATE_NUM,
+               LIN.CODE                                     AS LIN_CODE,
+               LIN.DESCRIPTION                              AS LIN_DESC,
+               LIN.SEQUENCE_NUMBER                          AS LIN_SEQ_NUM,
+               LIN.DELETION_IND                             AS LIN_DELETION_IND,
+               VEN.GENERATED_NUMBER                         AS ENCOUNTER_ID
+        FROM MC_VEHICLE_ENCOUNTER VEN
+                 LEFT JOIN MC_VEHICLE_IDENTIFIER_TYPE MVI
+                           ON (VEN.FK_VIT_CODE = MVI.CODE)
+                 LEFT JOIN MC_ROADSIDE_VEH_TYPE RVT
+                           ON (VEN.RVT_NUMBER = RVT.RVT_NUMBER)
+                 LEFT JOIN MC_INTRNTNL_REG_ID IRL
+                           ON (VEN.IRI_IRL_CODE = IRL.IRL_CODE)
+                 LEFT JOIN MC_VEHICLE_MAKE MAK
+                           ON ((VEN.VEHICLE_MAKE = MAK.VEHICLE_MAKE) AND (VEN.RVT_NUMBER = MAK.FK_RVT_NUMBER))
+                 LEFT JOIN MC_LADEN_INDICATOR LIN
+                           ON (VEN.LIN_CODE = LIN.CODE)
+        WHERE VEN.GENERATED_NUMBER = #{vehicleEncounterId}) AS TRAILER
+        LIMIT 1
+    </select>
+
+    <select id="getTrailerTwo">
+        SELECT * FROM (
+        SELECT IRL.IRL_CODE                                 AS IRL_CODE,
+               IRL.IRL_COUNTRY                              AS IRL_COUNTRY,
+               IRL.DELETION_IND                             AS IRL_DELETION_IND,
+               IRL.VEHICLE_INDICATOR                        AS IRL_VEH_IND,
+               IRL.INT_REG_NUMBER_CODE                      AS IRL_INT_NUM_REG_CODE,
+               IRL.CARD_ISSUING_AUTHORITY_IND               AS IRL_CARD_ISS_AUTH,
+               IRL.DRIVING_LICENCE_AUTHORITY                AS IRL_DRIV_LIC_AUTH,
+               IRL.INTELLIGENCE_SUBJECT_IND                 AS IRL_INTELL_SUB_IND,
+               IRL.NON_VOSA                                 AS IRL_NON_VOSA,
+               IRL.FOREIGN_OP_NATIONALITY_IND               AS IRL_FOR_OP_NAT_IND,
+               MVI.SHORT_CODE                               AS MVI_SHORT_CODE,
+               MVI.DESCRIPTION                              AS MVI_DESCRIPTION,
+               MVI.SEQUENCE_NUMBER                          AS MVI_SEQUENCE_NUMBER,
+               MVI.VEHICLE_TRAILER_INDICATOR                AS MVI_VEH_TRAIL,
+               MVI.DELETION_IND                             AS MVI_DELETION_IND,
+               MVI.CODE                                     AS MVI_CODE,
+               VEN.RTE_VEH_ID                               AS TRAILER_IDENTIFIER,
+               RVT.RVT_NUMBER                               AS RVT_NUMBER,
+               RVT.FK_VEHICLE_TYPE                          AS RVT_VEH_TYPE,
+               RVT.DELETION_IND                             AS RVT_DELETION,
+               RVT.TRACTOR_IND                              AS RVT_TRACTOR,
+               RVT.DESCRIPTION                              AS RVT_DESCRIPTION,
+               RVT.RANK                                     AS RVT_RANK,
+               RVT.DCA_DCA_PART                             AS RVT_DCA_PART,
+               RVT.USE_OFFENCE_FLOW                         AS RVT_OFFENCE_FLOW,
+               VEN.VEHICLE_MAKE                             AS CUSTOM_MAKE,
+               MAK.INTERNAL_NUMBER                          AS MAK_INT_NUM,
+               MAK.FK_RVT_NUMBER                            AS MAK_RVT_NUM,
+               MAK.VEHICLE_MAKE                             AS MAK_MAKE,
+               MAK.DELETION_IND                             AS MAK_DELETION_IND,
+               VEN.VEHICLE_MODEL                            AS MODEL,
+               VEN.CHASSIS_NUMBER                           AS CHASSIS,
+               VEN.MINISTRY_PLATE_NUM                       AS MINISTRY_PLATE_NUM,
+               LIN.CODE                                     AS LIN_CODE,
+               LIN.DESCRIPTION                              AS LIN_DESC,
+               LIN.SEQUENCE_NUMBER                          AS LIN_SEQ_NUM,
+               LIN.DELETION_IND                             AS LIN_DELETION_IND,
+               VEN.GENERATED_NUMBER                         AS ENCOUNTER_ID
+        FROM MC_VEHICLE_ENCOUNTER VEN
+                 LEFT JOIN MC_VEHICLE_IDENTIFIER_TYPE MVI
+                           ON (VEN.FK_VIT_CODE = MVI.CODE)
+                 LEFT JOIN MC_ROADSIDE_VEH_TYPE RVT
+                           ON (VEN.RVT_NUMBER = RVT.RVT_NUMBER)
+                 LEFT JOIN MC_INTRNTNL_REG_ID IRL
+                           ON (VEN.IRI_IRL_CODE = IRL.IRL_CODE)
+                 LEFT JOIN MC_VEHICLE_MAKE MAK
+                           ON ((VEN.VEHICLE_MAKE = MAK.VEHICLE_MAKE) AND (VEN.RVT_NUMBER = MAK.FK_RVT_NUMBER))
+                 LEFT JOIN MC_LADEN_INDICATOR LIN
+                           ON (VEN.LIN_CODE = LIN.CODE)
+        WHERE VEN.VEN_GENERATED_NUMBER = #{vehicleEncounterId}) as TRAILER_2
+        LIMIT 1
+    </select>
+
+    <select id="getJourney">
+        SELECT JTY.GENERATED_NUMBER                         AS JTY_GEN_NUM,
+               JTY.RANK                                     AS JTY_RANK,
+               JTY.DESCRIPTION                              AS JTY_DESCRIPTION,
+               JTY.DELETION_MARKER                          AS JTY_DELETION_IND,
+               VEN.JOURNEY_START_LCTN,
+               VEN.JOURNEY_END_LOCATN,
+               VEN.GOODS_CARRIED,
+               POR.PORT_CODE                                AS POR_CODE,
+               POR.PORT_DESCRIPTION                         AS POR_DESCRIPTION,
+               POR.DELETION_IND                             AS POR_DELETION_IND,
+               CON.FORENAME,
+               CON.SURNAME,
+               CON.TRADING_AS,
+               CON.ADDR_1,
+               CON.ADDR_2,
+               CON.ADDR_3,
+               CON.ADDR_4,
+               CON.POST_TOWN,
+               TRIM(CON.POSTCODE)                           AS CON_POSTCODE
+        FROM MC_VEHICLE_ENCOUNTER VEN
+                 LEFT JOIN MC_CONTACT CON
+                           ON (VEN.GENERATED_NUMBER = CON.FK_VEN_GENERATED_NUMBER AND CON.FK_CTY_GENERATED_NUMBER = 3)
+                 LEFT JOIN MC_JOURNEY_TYPE JTY
+                           ON (VEN.JTY_GENERATED_NUMBER = JTY.GENERATED_NUMBER)
+                 LEFT JOIN MC_PORT POR
+                           ON (VEN.PORT_OF_EXIT = POR.PORT_DESCRIPTION)
+        WHERE VEN.GENERATED_NUMBER = #{vehicleEncounterId}
+        LIMIT 1
+    </select>
+
+    <select id="getDangerousGoods">
+        SELECT CASE WHEN VEN.HAZARDOUS_MKR = 'Y' THEN 'hazardous'
+                    WHEN VEN.RADIOACTIVE_MKR = 'Y' THEN 'radioactive'
+                    ELSE ''
+                END                                                              AS DANGER_TYPE,
+            HCT.DESCRIPTION                                                      AS HCT_DESCRIPTION,
+            HCT.DELETION_IND                                                     AS HCT_DELETION_IND,
+            MHI.UN_NUMBER,
+            MHI.CATEGORY_OF_RISK,
+            MHI.TOT_QTY_DANGEROUS_GOODS,
+            MHI.LIMIT_EXCEEDED,
+            CON.TRADING_AS                                                       AS CONSIGNEE_TRADING_AS,
+            TRIM(CON.POSTCODE)                                                   AS CONSIGNEE_POSTCODE,
+            CON.ADDR_1                                                           AS CONSIGNEE_ADDR_1,
+            CON.ADDR_2                                                           AS CONSIGNEE_ADDR_2,
+            CON.ADDR_3                                                           AS CONSIGNEE_ADDR_3,
+            CON.ADDR_4                                                           AS CONSIGNEE_ADDR_4,
+            CON.POST_TOWN                                                        AS CONSIGNEE_POST_TOWN,
+            C3.TRADING_AS                                                        AS CONSIGNOR_TRADING_AS,
+            TRIM(C3.POSTCODE)                                                    AS CONSIGNOR_POSTCODE,
+            C3.ADDR_1                                                            AS CONSIGNOR_ADDR_1,
+            C3.ADDR_2                                                            AS CONSIGNOR_ADDR_2,
+            C3.ADDR_3                                                            AS CONSIGNOR_ADDR_3,
+            C3.ADDR_4                                                            AS CONSIGNOR_ADDR_4,
+            C3.POST_TOWN                                                         AS CONSIGNOR_POST_TOWN,
+            MHI.MISC_REMARKS
+        FROM MC_VEHICLE_ENCOUNTER VEN
+            LEFT JOIN MC_CONTACT CON
+                ON (VEN.GENERATED_NUMBER = CON.FK_VEN_GENERATED_NUMBER AND CON.FK_CTY_GENERATED_NUMBER = 9)
+            LEFT JOIN MC_HAZCHEM_INSPECTION MHI
+                ON (VEN.GENERATED_NUMBER = MHI.FK_VEN_GENERATED_NUMBER)
+            LEFT JOIN MC_CONTACT C3
+                ON (CON.FK_VEN_GENERATED_NUMBER = c3.FK_VEN_GENERATED_NUMBER AND C3.FK_CTY_GENERATED_NUMBER = 8)
+            LEFT JOIN MC_HAZCHEM_CONTAINER_TYPE HCT ON (MHI.MODE_OF_TRANSPORT = HCT.DESCRIPTION)
+        WHERE VEN.GENERATED_NUMBER = #{vehicleEncounterId}
+        LIMIT 1
+    </select>
+
+    <select id="getDangerousGoodsStatus">
+        SELECT FK_HCH_GENERATED_NUMBER,
+               STATUS_NAME
+        FROM MC_HAZCHEM_CHECKLIST_STATUS HCS
+        WHERE HCS.FK_HCI_VEN_GENERATED_NUMBER = #{vehicleEncounterId}
+        ORDER BY FK_HCH_GENERATED_NUMBER
+    </select>
+
+    <select id="getAdditionalInformation">
+        SELECT * FROM (
+        SELECT ILE.INSPECTION_LEVEL                                             AS ILE_INSPECTION_LEVEL,
+               ILE.DESCRIPTION                                                  AS ILE_DESCRIPTION,
+               ILE.DELETION_IND                                                 AS ILE_DELETION_IND,
+               VEN.WEIGHT_CHECK_IND,
+               VEN.SPEED_LIMITER_CHECKED,
+               DPR.CODE                                                         AS DPR_CODE,
+               DPR.PROSECUTION_CONSIDERED                                       AS DPR_PROS_COND,
+               DPR.DELETION_IND                                                 AS DPR_DELETION_IND,
+               DPR.DESCRIPTION                                                  AS DPR_DESCRIPTION,
+               DPR.SEQUENCE_NUMBER                                              AS DPR_SEQ_NUM,
+               SRE.EXERCISE_START_DATE                                          AS SRE_START_DATE,
+               SRE.EXERCISE_END_DATE                                            AS SRE_END_DATE,
+               SRE.RETURN_CODE_FLAG                                             AS SRE_RETURN_FLAG,
+               VEN.SRX_EXERCISE_CODE,
+               VEN.ACTUAL_DRIVER_PAPER_TACHO_QTY,
+               VEN.OTHER_DRIVER_PAPER_TACHO_QTY,
+               VEN.ACT_DRIVER_DIGITAL_TACHO_QTY,
+               VEN.OTHER_DRIVER_DIGITAL_TACHO_QTY,
+               VEN.TACHO_CHECK_QTY,
+               VEN.MIU,
+               VEN.SPECL_RETURN_CODE_1,
+               VEN.SPECL_RETURN_CODE_2,
+               VEN.SPECL_RETURN_CODE_3,
+               VEN.SPECL_RETURN_CODE_4,
+               VEN.SPECL_RETURN_CODE_5,
+               VEN.SPECL_RETURN_CODE_6,
+               VEN.SPECL_RETURN_CODE_7,
+               VEN.SPECL_RETURN_CODE_8
+        FROM MC_VEHICLE_ENCOUNTER VEN
+            LEFT JOIN MC_DEFECT_PROSECUTION DPR
+                ON (VEN.DPR_CODE = DPR.CODE)
+            LEFT JOIN MC_INSPECTION_LEVEL ILE
+                ON (VEN.ILE_INSPECTION_LEVEL = ILE.INSPECTION_LEVEL)
+            LEFT JOIN MC_SPECIAL_RETURN_EXERCISE SRE ON (VEN.SRX_EXERCISE_CODE = SRE.EXERCISE_CODE)
+        WHERE VEN.GENERATED_NUMBER = #{vehicleEncounterId}) as ADDITIONAL_INFORMATION
+        LIMIT 1
+    </select>
+
+    <select id="getAdditionalText">
+        SELECT MET.TEXT                                                 AS MET_TEXT,
+               ETT.CODE                                                 AS ETT_CODE,
+               ETT.DELETION_MARKER                                      AS ETT_DELETION_IND,
+               ETT.DESCRIPTION                                          AS ETT_DESCIPTION,
+               ETT.NAME                                                 AS ETT_NAME,
+               ETT.WITHIN_ENCOUNTER                                     AS ETT_WITHIN,
+               ETT.SORT_SEQUENCE                                        AS ETT_SORT_SEQ
+        FROM MC_ENCOUNTER_TEXT MET
+            LEFT JOIN MC_ENCOUNTER_TXT_TYPE ETT
+                ON (MET.ETT_CODE = ETT.CODE)
+        WHERE MET.FK_VEN_GENERATED_NUMBER = #{vehicleEncounterId}
+    </select>
+
+    <select id="getSpecialReturnFlag">
+        SELECT SRF.CODE_NUMBER                                          AS SRF_CODE_NUMBER,
+               SRF.CODE_DESCRIPTION                                     AS SRF_CODE_DESCRIPTION
+        FROM MC_SPECIAL_RETURN_CODE_FLAG SRF
+        WHERE SRF.FK_SRX_EXERCISE_CODE = #{vehicleEncounterId}
+    </select>
+
+    <select id="getAxles">
+        SELECT COALESCE(VEN.DESIGN_GROSS_WGT_1, 0)                      AS GROSS_DESIGN_WEIGHT1,
+               COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0)                     AS GROSS_PERMITTED_WEIGHT1,
+               COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0)                      AS GROSS_ACTUAL_WEIGHT1,
+               CASE
+                   WHEN COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0) = 0
+                       THEN 0
+                   WHEN
+                           (COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0) > COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0))
+                       THEN
+                       (COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0))
+                   ELSE 0
+                   END                                                  AS EXCESS_GROSS_WEIGHT1,
+               ROUND(CASE
+                         WHEN COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0) = 0
+                             THEN 0
+                         WHEN ((COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0)) > 0)
+                             THEN
+                                 ((COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0)) /
+                                 COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0)) * 100
+                         ELSE 0
+                         END, 2)                                        AS EXCESS_GROSS_WEIGHT1_PERC,
+               COALESCE(VEN.DESIGN_GROSS_WGT_2, 0)                      AS GROSS_DESIGN_WEIGHT2,
+               COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0)                     AS GROSS_PERMITTED_WEIGHT2,
+               COALESCE(VEN.ACT_GROSS_WEIGHT_2, 0)                      AS GROSS_ACTUAL_WEIGHT2,
+               CASE
+                   WHEN COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0) = 0
+                       THEN 0
+                   WHEN
+                           (COALESCE(VEN.ACT_GROSS_WEIGHT_2, 0) > COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0))
+                       THEN
+                       (COALESCE(VEN.ACT_GROSS_WEIGHT_2, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0))
+                   ELSE 0
+                   END                                                  AS EXCESS_GROSS_WEIGHT2,
+               ROUND(CASE
+                         WHEN COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0) = 0
+                             THEN 0
+                         WHEN ((COALESCE(VEN.ACT_GROSS_WEIGHT_2, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0)) > 0)
+                             THEN
+                                 ((COALESCE(VEN.ACT_GROSS_WEIGHT_2, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0)) /
+                                 COALESCE(VEN.PERM_GROSS_WEIGHT_2, 0)) * 100
+                         ELSE 0
+                         END, 2)                                        AS EXCESS_GROSS_WEIGHT2_PERC,
+               COALESCE(VEN.DESIGN_GROSS_WGT_3, 0)                      AS GROSS_DESIGN_WEIGHT3,
+               COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0)                     AS GROSS_PERMITTED_WEIGHT3,
+               COALESCE(VEN.ACT_GROSS_WEIGHT_3, 0)                      AS GROSS_ACTUAL_WEIGHT3,
+               CASE
+                   WHEN COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0) = 0
+                       THEN 0
+                   WHEN
+                           (COALESCE(VEN.ACT_GROSS_WEIGHT_3, 0) > COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0))
+                       THEN
+                       (COALESCE(VEN.ACT_GROSS_WEIGHT_3, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0))
+                   ELSE 0
+                   END                                                  AS EXCESS_GROSS_WEIGHT3,
+               ROUND(CASE
+                         WHEN COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0) = 0
+                             THEN 0
+                         WHEN ((COALESCE(VEN.ACT_GROSS_WEIGHT_3, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0)) > 0)
+                             THEN
+                                 ((COALESCE(VEN.ACT_GROSS_WEIGHT_3, 0) - COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0)) /
+                                 COALESCE(VEN.PERM_GROSS_WEIGHT_3, 0)) * 100
+                         ELSE 0
+                         END, 2)                                        AS EXCESS_GROSS_WEIGHT3_PERC,
+               COALESCE(VEN.ACTUAL_TRAIN_WGHT, 0)                       AS ACTUAL_TRAIN_WEIGHT,
+               COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0)                      AS PERMITTED_TRAIN_WEIGHT,
+               CASE
+                    WHEN COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0) = 0
+                        THEN 0
+                    WHEN
+                           (COALESCE(VEN.ACTUAL_TRAIN_WGHT, 0) > COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0))
+                       THEN
+                       (COALESCE(VEN.ACTUAL_TRAIN_WGHT, 0) - COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0))
+                   ELSE 0
+                   END                                                   AS EXCESS_TRAIN_WEIGHT,
+               ROUND(CASE
+                         WHEN COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0) = 0
+                             THEN 0
+                         WHEN ((COALESCE(VEN.ACTUAL_TRAIN_WGHT, 0) - COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0)) > 0)
+                             THEN
+                                 ((COALESCE(VEN.ACTUAL_TRAIN_WGHT, 0) - COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0)) /
+                                 COALESCE(VEN.PERMTTD_TRAIN_WGHT, 0)) * 100
+                         ELSE 0
+                         END, 2)                                         AS EXCESS_TRAIN_WEIGHT_PERC,
+               VEN.WEIGHT_PADS_MARKER                                    AS WEIGHT_PADS_MARKER
+        FROM MC_VEHICLE_ENCOUNTER VEN
+        WHERE VEN.GENERATED_NUMBER = #{vehicleEncounterId}
+    </select>
+
+    <select id="getAxleData">
+        SELECT
+            AXW.AXLE_NUMBER                         AS DB_AXLE_NUMBER,
+            AXW.PERMITTED_WEIGHT                    AS PERMITTED_WEIGHT,
+            AXW.ACTUAL_WGHT_AMOUNT                  AS ACTUAL_WEIGHT,
+            AXW.DESIGN_WEIGHT                       AS DESIGN_WEIGHT,
+            AXW.CMPNSTNG_AXLE_CODE                  AS COMPENSATING_CODE,
+            AXW.OFFSIDE_WEIGHT                      AS OFFSIDE_WEIGHT,
+            AXW.NEARSIDE_WEIGHT                     AS NEARSIDE_WEIGHT,
+            CASE
+                WHEN COALESCE(AXW.PERMITTED_WEIGHT, 0) = 0
+                    THEN 0
+                WHEN
+                     (COALESCE(AXW.ACTUAL_WGHT_AMOUNT, 0) > COALESCE(AXW.PERMITTED_WEIGHT, 0))
+                     THEN
+                     (COALESCE(AXW.ACTUAL_WGHT_AMOUNT, 0) - COALESCE(AXW.PERMITTED_WEIGHT, 0))
+                 ELSE 0
+                END                                  AS EXCESSWEIGHT,
+            ROUND(CASE WHEN COALESCE(AXW.PERMITTED_WEIGHT, 0) = 0
+                           THEN 0
+                       WHEN (COALESCE(AXW.ACTUAL_WGHT_AMOUNT, 0) > COALESCE(AXW.PERMITTED_WEIGHT, 0))
+                           THEN
+                               ((COALESCE(AXW.ACTUAL_WGHT_AMOUNT, 0) - COALESCE(AXW.PERMITTED_WEIGHT, 0)) /
+                               COALESCE(AXW.PERMITTED_WEIGHT, 0)) * 100
+                       ELSE 0
+                      END, 2)                        AS EXCESSWEIGHT_PERCENT,
+            CASE WHEN AXW.AXLE_NUMBER &lt;= COALESCE(VEN.TRACTOR_AXLES, 0) THEN 'Motor Vehicle'
+                 WHEN AXW.AXLE_NUMBER > COALESCE(VEN.TRACTOR_AXLES, 0) AND AXW.AXLE_NUMBER &lt;= (COALESCE(VEN.TRACTOR_AXLES, 0) +
+                                                                                                  COALESCE(VEN.TRAILER_1_AXLES, 0)) THEN 'Trailer 1'
+                 ELSE 'Trailer 2'
+                END                                  AS AXLE_VEH_TYPE,
+            CASE
+                WHEN AXW.AXLE_NUMBER &lt;= COALESCE(VEN.TRACTOR_AXLES, 0) THEN AXW.AXLE_NUMBER
+                WHEN (AXW.AXLE_NUMBER > COALESCE(VEN.TRACTOR_AXLES, 0) AND
+                      AXW.AXLE_NUMBER &lt;= (COALESCE(VEN.TRACTOR_AXLES, 0) + COALESCE(VEN.TRAILER_1_AXLES, 0)))
+                    THEN (AXW.AXLE_NUMBER - COALESCE(VEN.TRACTOR_AXLES, 0))
+                ELSE (AXW.AXLE_NUMBER - COALESCE(VEN.TRACTOR_AXLES, 0) - COALESCE(VEN.TRAILER_1_AXLES, 0))
+                END                                  AS AXLE_NUMBER
+        FROM MC_AXLE_WEIGHT AXW
+                 LEFT JOIN MC_VEHICLE_ENCOUNTER VEN ON (AXW.FK_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
+        WHERE AXW.FK_VEN_GENERATED_NUMBER = #{id}
+        UNION
+        SELECT
+            99                                                AS DB_AXLE_NUMBER,
+            SUM(AXW.PERMITTED_WEIGHT)                         AS PERMITTED_WEIGHT,
+            SUM(AXW.ACTUAL_WGHT_AMOUNT)                       AS ACTUAL_WEIGHT,
+            SUM(AXW.DESIGN_WEIGHT)                            AS DESIGN_WEIGHT,
+            CONCAT('Compensating Total ', CMPNSTNG_AXLE_CODE) AS COMPENSATING_CODE,
+            SUM(AXW.OFFSIDE_WEIGHT)                           AS OFFSIDE_WEIGHT,
+            SUM(AXW.NEARSIDE_WEIGHT)                          AS NEARSIDE_WEIGHT,
+            CASE
+                WHEN COALESCE(SUM(AXW.PERMITTED_WEIGHT), 0) = 0
+                    THEN 0
+                WHEN
+                     (COALESCE(SUM(AXW.ACTUAL_WGHT_AMOUNT), 0) > COALESCE(SUM(AXW.PERMITTED_WEIGHT), 0))
+                     THEN
+                     (COALESCE(SUM(AXW.ACTUAL_WGHT_AMOUNT), 0) - COALESCE(SUM(AXW.PERMITTED_WEIGHT), 0))
+                 ELSE 0
+                END                                           AS EXCESSWEIGHT,
+            ROUND(CASE WHEN COALESCE(SUM(AXW.PERMITTED_WEIGHT), 0) = 0
+                           THEN 0
+                       WHEN (COALESCE(SUM(AXW.ACTUAL_WGHT_AMOUNT), 0) > COALESCE(SUM(AXW.PERMITTED_WEIGHT), 0))
+                           THEN
+                               ((COALESCE(SUM(AXW.ACTUAL_WGHT_AMOUNT), 0) - COALESCE(SUM(AXW.PERMITTED_WEIGHT), 0)) /
+                               COALESCE(SUM(AXW.PERMITTED_WEIGHT), 0)) * 100
+                       ELSE 0
+                      END, 2)                                 AS EXCESSWEIGHT_PERCENT,
+            CASE WHEN AXW.AXLE_NUMBER &lt;= COALESCE(VEN.TRACTOR_AXLES, 0) THEN 'Motor Vehicle'
+                 WHEN AXW.AXLE_NUMBER > COALESCE(VEN.TRACTOR_AXLES, 0) AND AXW.AXLE_NUMBER &lt;= (COALESCE(VEN.TRACTOR_AXLES, 0) +
+                                                                                                  COALESCE(VEN.TRAILER_1_AXLES, 0)) THEN 'Trailer 1'
+                 ELSE 'Trailer 2'
+                END                                           AS AXLE_VEH_TYPE,
+            99                                                AS AXLE_NUMBER
+        FROM MC_AXLE_WEIGHT AXW
+                 LEFT JOIN MC_VEHICLE_ENCOUNTER VEN ON (AXW.FK_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
+        WHERE AXW.FK_VEN_GENERATED_NUMBER = #{id} and AXW.CMPNSTNG_AXLE_CODE IS NOT NULL
+        GROUP BY AXW.FK_VEN_GENERATED_NUMBER, DB_AXLE_NUMBER, CONCAT('Compensating Total ', CMPNSTNG_AXLE_CODE),
+                 (CASE WHEN AXW.AXLE_NUMBER &lt;= COALESCE(VEN.TRACTOR_AXLES, 0) THEN 'Motor Vehicle'
+                       WHEN AXW.AXLE_NUMBER > COALESCE(VEN.TRACTOR_AXLES, 0) AND AXW.AXLE_NUMBER &lt;= (COALESCE(VEN.TRACTOR_AXLES, 0) +
+                                                                                                        COALESCE(VEN.TRAILER_1_AXLES, 0)) THEN 'Trailer 1'
+                       ELSE 'Trailer 2'
+                     END), AXW.CMPNSTNG_AXLE_CODE
+        ORDER BY AXLE_VEH_TYPE, AXLE_NUMBER, COMPENSATING_CODE
+    </select>
+
+    <select id="getDefectsAll">
+        SELECT ADF.FK_VEN_GENERATED_NUMBER,
+        VEN.RTE_VEH_ID,
+        CASE DCD.FK_DCA_PART
+            WHEN 1 THEN CONCAT('IM', DSE.FK_DSE_SECTION_NUM, ' ', DSE.SECTION_DESC)
+            ELSE DSE.SECTION_DESC
+        END                                                             AS DEFECT_SECTION_VALUE,
+        SOD.SOD_DESCRIPTION                                             AS SOD_DESC,
+        MPM.INTERNAL_NUMBER                                             AS MPM_INT_NUM,
+        MPM.PART_MAKE                                                   AS MPM_PART_MAKE,
+        MPM.DELETION_IND                                                AS MPM_DELETION_IND,
+        ADF.MAKE                                                        AS ADF_MAKE,
+        ADF.ADE_SIZE,
+        ADF.SERIAL_NUMBER,
+        CASE
+            WHEN ADF.AXLE_NUMBER = 0 THEN NULL
+            ELSE ADF.AXLE_NUMBER
+        END                                                             AS AXLE_NUMBER,
+        ADF.SIDE,
+        ADF.POSITION_ON_AXLE,
+        ADF.ADE_END,
+        ADF.VERTICAL_POSITION,
+        CASE WHEN SOD.ACTION = 'I' THEN 'Immediate'
+             WHEN SOD.ACTION = 'D' THEN 'Delayed'
+             WHEN SOD.ACTION = 'IN' THEN 'Inspection Notice'
+             ELSE SOD.ACTION
+        END                                                             AS RECOMMENDED_ACTION,
+        ADF.ACTUAL_ACTION,
+        ADF.NON_CMPLNCE_RSN,
+        ADF.ADDITIONAL_TEXT,
+        CASE WHEN ADF.MECH_DEFCT_INDICTR = 'Y' THEN 'true'
+             WHEN ADF.MECH_DEFCT_INDICTR = 'N' THEN 'false'
+             ELSE ADF.MECH_DEFCT_INDICTR
+        END                                                             AS MECH_DEFECT_CHECK,
+        VED.SGNFCANCE_REASON,
+        ADF.DUD_GEN_NUM,
+        ADF.SOD_GENERATED_NUMBER,
+        CASE WHEN ADF.SIG_MNTNC_FAILURE = 'U' THEN 'ND'
+             WHEN ADF.SIG_MNTNC_FAILURE = 'Y' THEN 'SD'
+             WHEN ADF.SIG_MNTNC_FAILURE = 'A' THEN 'SD'
+             WHEN ADF.SIG_MNTNC_FAILURE = 'N' THEN 'N'
+             WHEN ADF.SIG_MNTNC_FAILURE = 'O' THEN 'SN'
+             ELSE 'ND'
+        END                                                             AS ADF_SIG_MAINT,
+        ADF.SEQUENCE_NUMBER                                             AS ADF_SEQUENCE_NUMBER,
+        DUD.FK_DDE_DNU_DSU_DSE_DCA_PART                                 AS PART_NUMBER,
+        DUD.FK_DDE_DNU_DSU_DSE_SECTION_NUM                              AS SECTION_NUMBER,
+        DCD.CAT_DESC                                                    AS DCD_DESC,
+        DCD.FK_DCA_PART                                                 AS DCD_PART,
+        DCD.FK_DCA_NUMBER                                               AS DCD_NUMBER,
+        DCD.DELETION_IND                                                AS DCD_DELETION_IND,
+        DSE.SECTION_DESC                                                AS DSE_DESC,
+        DSE.FK_DSE_SECTION_NUM                                          AS DSE_SECTION,
+        DSE.DELETION_IND                                                AS DSE_DELETION_IND,
+        DSD.SUB_DTL_DESC                                                AS DSD_DESC,
+        DSD.FK_DSU_SUBSEC_NUM                                           AS DSD_SUBSEC,
+        DSD.DELETION_IND                                                AS DSD_DELETION_IND,
+        DFD.DEFECT_DESC                                                 AS DFD_DESC,
+        DFD.FK_DNU_DEFECT_NUM                                           AS DFD_NUM,
+        DFD.POSITIONAL_INDICAT                                          AS DFD_POS_IND,
+        DFD.DELETION_IND                                                AS DFD_DELETION_IND,
+        DUD.DESC_TEXT                                                   AS DUD_DESC,
+        DUD.GEN_NUM                                                     AS DUD_NUM,
+        DUD.DELETION_IND                                                AS DUD_DELETION_IND,
+        SOD.SOD_NUMBER                                                  AS SOD_NUMBER,
+        SOD.GENERATED_NUMBER                                            AS SOD_GEN_NUMBER,
+        SOD.ACTION                                                      AS SOD_ACTION,
+        SOD.DELETION_IND                                                AS SOD_DELETION_IND
+        FROM MC_ACTUAL_DEFECT ADF
+        LEFT JOIN MC_VEHICLE_ENCOUNTER VEN ON (ADF.FK_VEN_GENERATED_NUMBER=VEN.GENERATED_NUMBER)
+        LEFT JOIN MC_OWNER.MC_SEVERITY_OF_DEFECT SOD ON (ADF.SOD_GENERATED_NUMBER = SOD.GENERATED_NUMBER)
+        LEFT JOIN MC_OWNER.MC_DEFECT_SUB_DESC DUD ON (ADF.DUD_GEN_NUM = DUD.GEN_NUM)
+        LEFT JOIN MC_DEFECT_DETAIL DFD ON (DUD.FK_DDE_DNU_DSU_DSE_DCA_PART=DFD.FK_DNU_DSU_DSE_DCA_PART
+            AND DUD.FK_DDE_DNU_DSU_DSE_DCA_NUMBER = DFD.FK_DNU_DSU_DSE_DCA_NUMBER
+            AND DUD.FK_DDE_DNU_DSU_DSE_SECTION_NUM = DFD.FK_DNU_DSU_DSE_SECTION_NUM
+            AND DUD.FK_DDE_DNU_DSU_SUBSEC_NUM = DFD.FK_DNU_DSU_SUBSEC_NUM
+            AND DUD.FK_DDE_DNU_DEFECT_NUM = DFD.FK_DNU_DEFECT_NUM
+            AND DUD.FK_DDE_EFFECTIVE_FROM = DFD.EFFECTIVE_FROM)
+        LEFT JOIN MC_DEFECT_SUB_DETAIL DSD ON (DFD.FK_DNU_DSU_DSE_DCA_PART=DSD.FK_DSU_DSE_DCA_PART
+            AND DFD.FK_DNU_DSU_DSE_DCA_NUMBER = DSD.FK_DSU_DSE_DCA_NUMBER
+            AND DFD.FK_DNU_DSU_DSE_SECTION_NUM = DSD.FK_DSU_DSE_SECTION_NUM
+            AND DFD.FK_DNU_DSU_SUBSEC_NUM = DSD.FK_DSU_SUBSEC_NUM
+            AND DSD.EFFECTIVE_FROM &lt;= VEN.ENCNTR_START_DATE
+            AND (DSD.EFFECTIVE_TO >= VEN.ENCNTR_START_DATE OR DSD.EFFECTIVE_TO IS NULL))
+        LEFT JOIN MC_DEFECT_SEC_DETAIL DSE ON (DSD.FK_DSU_DSE_DCA_PART=DSE.FK_DSE_DCA_PART
+            AND DSD.FK_DSU_DSE_DCA_NUMBER = DSE.FK_DSE_DCA_NUMBER
+            AND DSD.FK_DSU_DSE_SECTION_NUM = DSE.FK_DSE_SECTION_NUM
+            AND DSE.EFFECTIVE_FROM &lt;= VEN.ENCNTR_START_DATE
+            AND (DSE.EFFECTIVE_TO >= VEN.ENCNTR_START_DATE OR DSE.EFFECTIVE_TO IS NULL))
+        LEFT JOIN MC_DEFECT_CAT_DETAIL DCD ON (DSE.FK_DSE_DCA_PART=DCD.FK_DCA_PART
+            AND DSE.FK_DSE_DCA_NUMBER = DCD.FK_DCA_NUMBER
+            AND DCD.EFFECTIVE_FROM &lt;= VEN.ENCNTR_START_DATE
+            AND (DCD.EFFECTIVE_TO >= VEN.ENCNTR_START_DATE OR DCD.EFFECTIVE_TO IS NULL))
+        LEFT JOIN MC_VEH_ENC_DEFECT_SUMMARY VED ON (ADF.FK_VEN_GENERATED_NUMBER = VED.FK_VEN_GENERATED_NUMBER)
+        LEFT JOIN MC_PART_MAKE MPM ON (ADF.MAKE = MPM.PART_MAKE)
+        WHERE ADF.FK_VEN_GENERATED_NUMBER = #{id}
+        ORDER BY 1 ASC
+    </select>
+
+    <select id="getDefectSummary">
+        SELECT VED.FK_VEN_GENERATED_NUMBER                                              AS VED_GEN_NUM,
+               VED.LAST_UPDATE                                                          AS VED_LAST_UPDATE,
+               VED.SGNFCANCE_REASON                                                     AS VED_SIG_REASON,
+               VED.ACTION                                                               AS VED_ACTION,
+               VED.UPDATE_USERID                                                        AS VED_UPDATE_USERID,
+               VED.ENDORSEMENT                                                          AS VED_ENDORSEMENT,
+               VED.FIFTY_PERCENT_RULE_MARKER                                            AS VED_FIFTY_PERCENT,
+               VED.OVERALL_PROHIBITION_SEVERITY                                         AS VED_OVERALL_PROH,
+               VED.MAINTENANCE_FAILURE_MARKER                                           AS VED_MAINT_FAILURE,
+               VED.CAT_9_9_DEFECT_COUNT                                                 AS VED_CAT_99,
+               VED.DEVIATION_DEFECT_COUNT                                               AS VED_DEVIATION_COUNT,
+               MCR.GENERATED_NUMBER                                                     AS MCR_GEN_NUM,
+               MCR.FULL_REASON                                                          AS MCR_FULL_REASON,
+               MCR.SHORT_REASON                                                         AS MCR_SHORT_REASON,
+               MCR.EFFECTIVE_FROM                                                       AS MCR_EFFECTIVE_FROM,
+               MCR.EFFECTIVE_TO                                                         AS MCR_EFFECTIVE_TO
+        FROM MC_VEH_ENC_DEFECT_SUMMARY VED
+        LEFT JOIN MC_SIGNIFICANCE_REASON MCR ON (VED.SGNFCANCE_REASON = MCR.FULL_REASON)
+        WHERE VED.FK_VEN_GENERATED_NUMBER = #{id}
+        ORDER BY 1 ASC
+    </select>
+
+    <select id="getNotices">
+        SELECT NTC.FK_VEN_GENERATED_NUMBER                                                  AS ENCOUNTER_ID,
+               NTC.RTE_VEH_ID,
+               case
+                   when NTC.FK_NTY_CODE = 'BWPZ01'
+                       then 'TE160W'
+                   when NTC.FK_NTY_CODE = 'BWRZ01'
+                       then 'TE160R'
+                   when NTC.FK_NTY_CODE = 'BMPZ01'
+                       then 'PG9'
+                   when NTC.FK_NTY_CODE = 'BWDZ01'
+                       then 'TE160DIR'
+                   when NTC.FK_NTY_CODE = 'BMIZ01'
+                       then 'PGDN35'
+                   when NTC.FK_NTY_CODE = 'BMRZ01'
+                       then 'PG10'
+                   when NTC.FK_NTY_CODE = 'BMVZ01'
+                       then 'PG9A'
+                   when NTC.FK_NTY_CODE = 'BMXZ01'
+                       then 'PG9B'
+                   when NTC.FK_NTY_CODE = 'BMFZ01'
+                       then 'PG9C'
+                   when NTC.FK_NTY_CODE = 'BOPA01'
+                       then 'TE160'
+                   when NTC.FK_NTY_CODE = 'BOPB01'
+                       then 'TE160DH'
+                   when NTC.FK_NTY_CODE = 'BORZ01'
+                       then 'TE160DHR'
+                   when NTC.FK_NTY_CODE = 'FOPA01'
+                       then 'GV170'
+                   when NTC.FK_NTY_CODE = 'FOPB01'
+                       then 'GV170'
+                   when NTC.FK_NTY_CODE = 'FORZ01'
+                       then 'GV170'
+                   when NTC.FK_NTY_CODE = 'FWPZ01'
+                       then 'GV170'
+                   when NTC.FK_NTY_CODE = 'FWRZ01'
+                       then 'GV170'
+                   when NTC.FK_NTY_CODE = 'FMPZ01'
+                       then 'GV171'
+                   when NTC.FK_NTY_CODE = 'FMRZ01'
+                       then 'GV171B'
+                   when NTC.FK_NTY_CODE = 'FMXZ01'
+                       then 'GV171A'
+                   else TRIM(NTC.FK_NTY_CODE)
+                   end                                                                      AS NOTICE_TYPE,
+               NTC.FK_NTY_CODE                                                              AS RAW_NOTICE_TYPE,
+               NTC.NOTICE_STATUS                                                            AS NOTICE_STATUS,
+               NTC.ORGINAL_ISSUE_DATE                                                       AS ORGINAL_ISSUE_DATE,
+               TIME_FORMAT(NTC.ORGINAL_ISSUE_DATE, '%H:%i:%s')                              AS ORGINAL_ISSUE_TIME,
+               NTC.ISSUE_DATE                                                               AS NTC_ISSUE_DATE,
+               TIME_FORMAT(NTC.ISSUE_DATE, '%H:%i:%s')                                      AS NTC_ISSUE_TIME,
+               NTC.IN_FORCE_DATE - NTC.ISSUE_DATE                                           AS DELAY_DAYS,
+               CASE
+                   WHEN NTC.IMMEDIATE_IND = 'I' THEN 'Immediate'
+                   WHEN NTC.IMMEDIATE_IND = 'D' THEN 'Delayed'
+                   WHEN NTC.IMMEDIATE_IND = '1' THEN 'Advisory Against Vehicle'
+                   WHEN NTC.IMMEDIATE_IND = '2' THEN 'Advisory Against Trailer'
+                   WHEN NTC.IMMEDIATE_IND = '3' THEN 'Advisory Against Vehicle and Trailer'
+                   WHEN NTC.IMMEDIATE_IND = '4' THEN 'Advisory Against Vehicle and Both Trailers'
+                   WHEN NTC.IMMEDIATE_IND = '5' THEN 'Advisory Against Both Trailers'
+                   ELSE NTC.IMMEDIATE_IND
+                   END                                                                  AS IMMEDIATE_IND,
+               NTC.DANGER_GOODS_DEFERRAL_PERIOD                                         AS DEFERRAL_PERIOD,
+               NTC.IN_FORCE_DATE                                                        AS NOTICE_IN_FORCE_DATE,
+               TIME_FORMAT(NTC.IN_FORCE_DATE, '%H:%i:%s')                               AS NOTICE_IN_FORCE_TIME,
+               NTC.DANGEROUS_GOODS_DIRECTION                                            AS NTC_DIRECTION,
+               NTC.OTHER_LOCATION                                                       AS NTC_OTHER_LOCATION,
+               NTC.REST_HOURS                                                           AS NTC_REST_HOURS,
+               NTC.INPUT_DATE                                                           AS INPUT_DATE,
+               NTC.TACHO_INSPECTION_DUE_DATE                                            AS NTC_TACHO_DUE,
+               NTC.TACHO_LAST_CALIBRATION_DATE                                          AS NTC_TACHO_LAST_CAL,
+               PNO.NOTICE_REF_SOURCE                                                    AS PNO_NOT_REF_SOURCE,
+               NTC.ISSUE_OFF_FNAME                                                      AS ISSUE_OFF_FNAME,
+               NTC.ISSUE_OFF_SNAME                                                      AS ISSUE_OFF_SNAME,
+               NTC.RCEIVED_BY_FORENME                                                   AS RECEIVED_BY_FORENME,
+               NTC.RCEIVED_BY_SURNAME                                                   AS RECEIVED_BY_SURNAME,
+               NTC.TRANSLATION_MKR                                                      AS TRANSLATION_MKR,
+               NTC.TOWING_VEH_ID                                                        AS TOWING_VEH_ID,
+               NTC.DANGER_GOODS_IMM_PROH_IND                                            AS DANGER_GOODS_IMM_PROH_IND,
+               NTY.CODE                                                                 AS NTY_CODE,
+               NTY.NTY_DESC                                                             AS NOTICE_DESCRIPTION,
+               NTY.CURRENT_CODE                                                         AS NTY_CURRENT_CODE,
+               NTY.ACT                                                                  AS NTY_ACT,
+               NTY.CURRENT_VERSION                                                      AS NTY_CURRENT_VERSION,
+               NTY.NTY_SUMMARY                                                          AS NTY_SUMMARY,
+               NTY.TYPE_CODE                                                            AS NTY_TYPE_CODE,
+               NTY.NTY_SHORT_DESC                                                       AS NTY_SHORT_DESC,
+               NTY.OPERATOR_COPY                                                        AS NTY_OPERATOR_COPY,
+               NTY.DRIVER_REQUIRED                                                      AS NTY_DRIVER_REQUIRED,
+               NTY.TRANSLATION_AVAILABLE                                                AS NTY_TRANSLATION_AVAILABLE,
+               NTY.SEQUENCE_NUMBER                                                      AS NTY_SEQUENCE_NUMBER,
+               NTY.NOTICE_TYPE_CATEGORY                                                 AS NTY_NOTICE_TYPE_CATEGORY,
+               NTY.AUTO_CLOSURE_PERIOD                                                  AS NTY_AUTO_CLOSURE_PERIOD,
+               NTY.CLOSE_FLAG                                                           AS NTY_CLOSE_FLAG,
+               NTY.ETT_CODE                                                             AS NTY_ETT_CODE,
+               NTY.NOTIFIABLE_FLAG                                                      AS NTY_NOTIFIABLE_FLAG,
+               NTY.AEV_EVENT_CODE_CLOSE                                                 AS NTY_AEV_EVENT_CODE_CLOSE,
+               NTY.AEV_EVENT_CODE_CLEAR                                                 AS NTY_AEV_EVENT_CODE_CLEAR,
+               NTY.AEV_EVENT_CODE_REACTIVATE                                            AS NTY_AEV_EVENT_CODE_REACTIVATE,
+               PNO.REFERENCE_NUMBER                                                     AS REFERENCE_NUMBER,
+               PNO.AMOUNT                                                               AS AMOUNT_DUE,
+               PNO.PAYMENT_DUE_DATE                                                     AS PAYMENT_DUE,
+               OFF.CODE                                                                 AS OFF_CODE,
+               OFF.VERSION                                                              AS OFF_VERSION,
+               OFF.UK_MARKER                                                            AS OFF_UK_MARKER,
+               OFF.DELETION_MARKER                                                      AS OFF_DELETION_IND,
+               OFF.SEQUENCE_NUMBER                                                      AS OFF_SEQ_NUM,
+               OFF.NAME                                                                 AS OFF_NAME,
+               OFF.DESCRIPTION                                                          AS DESCRIPTION,
+               OFF.OST_CODE                                                             AS OFF_OST_CODE,
+               OFF.OFG_CODE                                                             AS OFF_OFG_CODE,
+               OFF.EFFECTIVE_FROM_DATE                                                  AS OFF_EFFECT_FROM,
+               OFF.EFFECTIVE_TO_DATE                                                    AS OFF_EFFECT_TO,
+               OFF.OTY_CODE                                                             AS OFF_OTY_CODE,
+               OFF.OSB_CODE                                                             AS OFF_OSB_CODE,
+               OFF.HAZCHEM_RISK                                                         AS OFF_HAZ_RISK,
+               OFF.HAZCHEM_REASON                                                       AS OFF_HAZ_REASON,
+               OFF.ENDORSABLE_FLAG                                                      AS OFF_END_FLAG,
+               OFF.FK_OGP_CODE                                                          AS OFF_FK_OGP_CODE,
+               OFF.FK_OGP_VERSION                                                       AS OFF_FK_OGP_VERSION,
+               OFF.DESCRIPTION_WELSH                                                    AS OFF_DESC_WELSH,
+               AOF.REFRD_FOR_INVESTIG,
+               AOF.OFFENCE_DATE,
+               AOF.EXEMPT_FROM_PROHIBITION,
+               AOF.ENDORSABLE_FLAG,
+               OST.GENERATED_NUMBER                                                     AS OST_GEN_NUM,
+               OST.CODE                                                                 AS OST_CODE,
+               OST.TEXT                                                                 AS OST_TEXT,
+               OST.DELETION_IND                                                         AS OST_DELETION_IND,
+               AOF.ADDITIONAL_TEXT                                                      AS ADD_TEXT,
+               AOF.VRM                                                                  AS RELEVANT_VRM,
+               AOF.OTHER_OPERATOR,
+               CONCAT(OBD.FORENAME, ' ', OBD.SURNAME)                                   AS DRIVER_NAME,
+               NTC.ODR_GENERATED_NUMBER,
+               RVT.RVT_NUMBER                                                           AS RVT_NUMBER,
+               RVT.FK_VEHICLE_TYPE                                                      AS RVT_VEH_TYPE,
+               RVT.DELETION_IND                                                         AS RVT_DELETION,
+               RVT.TRACTOR_IND                                                          AS RVT_TRACTOR,
+               RVT.DESCRIPTION                                                          AS RVT_DESCRIPTION,
+               RVT.RANK                                                                 AS RVT_RANK,
+               RVT.DCA_DCA_PART                                                         AS RVT_DCA_PART,
+               RVT.USE_OFFENCE_FLOW                                                     AS RVT_OFFENCE_FLOW,
+               RIS.CODE                                                                 AS RIS_CODE,
+               RIS.DESCRIPTION                                                          AS RIS_DESCRIPTION,
+               RIS.DELETION_IND                                                         AS RIS_DELETION_IND,
+               RIS.SEQUENCE_NUMBER                                                      AS RIS_SEQ_NUM,
+               DATE_FORMAT(PNO.FK_NOT_INPUT_DATE, '%Y-%m-%d')                           AS ISSUE_DATE,
+               TIME_FORMAT(PNO.FK_NOT_INPUT_DATE, '%H:%i:%s')                           AS ISSUE_TIME,
+               CONCAT(NTC.ISSUE_OFF_FNAME, ' ', NTC.ISSUE_OFF_SNAME)                    AS ISSUING_OFFICER,
+               NTD.NTY_CODE                                                             AS NTD_NTY_CODE,
+               NTD.VERSION                                                              AS NTD_VERSION,
+               NTD.DELETION_IND                                                         AS NTD_DELETION_IND,
+               NTD.ACT_DETAIL                                                           AS NTD_ACT_DETAIL,
+               NTD.ACT_MSG_1                                                            AS NTD_MSG1,
+               NTD.ACT_MSG_2                                                            AS NTD_MSG2,
+               NTD.ACT_MSG_3                                                            AS NTD_MSG3,
+               MEC.EXPIRY_DATE                                                          AS MEC_EXPIRY,
+               MEC.NO_LOAD_INDICATOR                                                    AS MEC_NO_LOAD,
+               MEC.NO_TRAILER_INDICTR                                                   AS MEC_NO_TRAILER,
+               MEC.RGD_TOW_BAR_INDCTR                                                   AS MEC_RGD_TOW,
+               MEC.SUS_TOW_FRT_INDCTR                                                   AS MEC_SUS_FRT,
+               MEC.SUS_TOW_RR_INDCTR                                                    AS MEC_SUS_RR,
+               MEC.VISIBILITY_INDCTR                                                    AS MEC_VISIBILITY,
+               MEC.SPEED_RESTRICTION                                                    AS MEC_SPEED_RESTICT,
+               MEC.SPEED_UNIT                                                           AS MEC_SPEED_UNIT,
+               MEC.LOCATION_FROM                                                        AS MEC_LOCATION_FROM,
+               MEC.LOCATION_TO                                                          AS MEC_LOCATION_TO,
+               MEC.OTHER_CONDITIONS                                                     AS MEC_OTHER,
+               MEC.FK_NOT_NTY_CODE                                                      AS MEC_NTY_CODE
+        FROM MC_NOTICE NTC
+            LEFT JOIN MC_NOTICE_TYPE NTY ON (NTC.FK_NTY_CODE = NTY.CODE)
+            LEFT JOIN MC_NOTICE_TYPE_DETAIL NTD ON (NTY.CODE = NTD.NTY_CODE AND NTY.CURRENT_VERSION = NTD.VERSION)
+            LEFT JOIN MC_ACTUAL_OFFENCE_NOTICE_XREF AON ON (NTC.FK_VEN_GENERATED_NUMBER = AON.FK_NOT_FK_VEN_GENERATED_NUMBER
+                                                                AND NTC.FK_NTY_CODE = AON.FK_NOT_NTY_CODE
+                                                                AND NTC.INPUT_DATE = AON.FK_NOT_INPUT_DATE)
+            LEFT JOIN MC_ACTUAL_OFFENCE AOF ON (AON.FK_NOT_FK_VEN_GENERATED_NUMBER = AOF.FK_VEN_GENERATED_NUMBER AND AON.FK_AOF_GENERATED_NUMBER = AOF.GENERATED_NUMBER)
+            LEFT JOIN MC_OFFENCE OFF ON (OFF.CODE = AOF.FK_OFF_CODE AND OFF.VERSION = AOF.FK_OFF_VERSION AND OFF.UK_MARKER = AOF.FK_OFF_UK_MARKER)
+            LEFT JOIN MC_OBSERVED_DRIVER OBD ON (NTC.ODR_GENERATED_NUMBER = OBD.GENERATED_NUMBER)
+            LEFT JOIN MC_PENALTY_NOTICE PNO ON (NTC.FK_VEN_GENERATED_NUMBER = PNO.FK_NOT_VEN_GENERATED_NUMBER
+                                                    AND NTC.FK_NTY_CODE = PNO.FK_NOT_NTY_CODE
+                                                    AND NTC.INPUT_DATE = PNO.FK_NOT_INPUT_DATE)
+            LEFT JOIN MC_OFFENCE_SANCTION_TEXT OST ON (AOF.FK_OST_GENERATED_NUMBER = OST.GENERATED_NUMBER)
+            LEFT JOIN MC_VEHICLE_ENCOUNTER VEN ON (NTC.FK_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
+            LEFT JOIN MC_ROADSIDE_VEH_TYPE RVT ON (VEN.RVT_NUMBER = RVT.RVT_NUMBER)
+            LEFT JOIN MC_REMOVAL_INSTRUCTION RIS ON (NTC.RIS_CODE = RIS.CODE)
+            LEFT JOIN MC_EXEMPTION_CONDITN MEC ON (NTC.FK_VEN_GENERATED_NUMBER = MEC.FK_NOT_VEN_GENERATED_NUMBER AND NTC.FK_NTY_CODE = MEC.FK_NOT_NTY_CODE
+                                                    AND NTC.INPUT_DATE = MEC.FK_NOT_INPUT_DATE)
+        WHERE
+              NTC.FK_VEN_GENERATED_NUMBER IN
+        <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        ORDER BY NTC.FK_VEN_GENERATED_NUMBER, NTC.FK_NTY_CODE, NTC.INPUT_DATE
+    </select>
+
+    <select id="getRwList">
+        SELECT VEN.ILE_INSPECTION_LEVEL                                     AS ILE_INSPECTION_LEVEL,
+               ILE.DESCRIPTION                                              AS ILE_DESCRIPTION,
+               ILE.DELETION_IND                                             AS ILE_DELETION_IND
+        FROM MC_VEHICLE_ENCOUNTER VEN
+            LEFT JOIN MC_INSPECTION_LEVEL ILE ON (VEN.ILE_INSPECTION_LEVEL = ILE.INSPECTION_LEVEL)
+        WHERE VEN.GENERATED_NUMBER = #{vehicleEncounterId}
+    </select>
+
+    <select id="getRoadWorthinessChecklist">
+        SELECT ERC.CHECK_STATUS                                             AS ERC_STATUS,
+               RCL.CHECK_LIST_ITEM                                          AS RCL_CHECK_ITEM,
+               RCL.DESCRIPTION                                              AS RCL_DESCRIPTION,
+               RCL.EFFECTIVE_FROM                                           AS RCL_EFFECTIVE_FROM,
+               RCL.EFFECTIVE_TO                                             AS RCL_EFFECTIVE_TO,
+               RCL.DELETION_IND                                             AS RCL_DELETION_IND
+        FROM MC_ENCOUNTER_RW_CHECK_LIST ERC
+                 INNER JOIN MC_ROADWORTHINESS_CHECK_LIST RCL ON (ERC.FK_RWC_CHECK_LIST_ITEM = RCL.CHECK_LIST_ITEM)
+        WHERE ERC.FK_VEN_GENERATED_NUMBER = #{vehicleEncounterId}
+    </select>
+
+    <select id="getPenalties">
+        SELECT PNO.REFERENCE_NUMBER                                         AS NOTICE_REFERENCE,
+               CONCAT(PNO.DRIVER_FORENAME, ' ', PNO.DRIVER_SURNAME) AS DRIVER,
+               PNO.AMOUNT                                                   AS AMOUNT_DUE,
+               PNS.CODE                                                     AS PNS_CODE,
+               PNS.DESCRIPTION                                              AS PNS_DESCRIPTION,
+               PNS.SEQUENCE_NUMBER                                          AS PNS_SEQ_NUM,
+               PNS.DELETION_IND                                             AS PNS_DELETION_IND,
+               PNS.USAGE_INDICATOR                                          AS PNS_USAGE_IND,
+               PNS.BFPN01_FLAG                                              AS PNS_BFPN01_FLAG,
+               PNS.FFPN01_FLAG                                              AS PNS_FFPNO1_FLAG,
+               PNS.FDEN01_FLAG                                              AS PNS_FDEN01_FLAG,
+               PNS.ENDORSABLE_FLAG                                          AS PNS_END_FLAG,
+               PNO.FK_PNS_CODE                                              AS PNO_PNS_CODE,
+               PNO.DRIVER_TYPE                                              AS ISSUE_UNIT_TYPE,
+               VEN.RTE_VEH_ID                                               AS VEHICLE_ID,
+               DLS.CODE                                                     AS DLS_CODE,
+               DLS.DESCRIPTION                                              AS DLS_DESCRIPTION,
+               DLS.DELETION_IND                                             AS DLS_DELETION_IND,
+               DLS.SEQUENCE_NUMBER                                          AS DLS_SEQ_NUM,
+               PNO.DLS_CODE                                                 AS PNO_DLS_CODE,
+               CASE
+                   WHEN AOF.ENDORSABLE_FLAG = 'Y' THEN 'Y'
+                   ELSE 'N'
+               END                                                          AS ENDORSABLE_FLAG,
+               PNO.FK_NOT_VEN_GENERATED_NUMBER                              AS ENCOUNTER_ID,
+               PNO.REFERENCE_NUMBER                                         AS REFERENCE_NUMBER,
+               PNS.DESCRIPTION                                              AS STATUS,
+               PNO.AMOUNT                                                   AS AMOUNT_DUE,
+               OFF.CODE                                                     AS OFF_CODE,
+               OFF.VERSION                                                  AS OFF_VERSION,
+               OFF.UK_MARKER                                                AS OFF_UK_MARKER,
+               OFF.DELETION_MARKER                                          AS OFF_DELETION_IND,
+               OFF.SEQUENCE_NUMBER                                          AS OFF_SEQ_NUM,
+               OFF.NAME                                                     AS OFF_NAME,
+               OFF.DESCRIPTION                                              AS DESCRIPTION,
+               OFF.OST_CODE                                                 AS OFF_OST_CODE,
+               OFF.OFG_CODE                                                 AS OFF_OFG_CODE,
+               OFF.EFFECTIVE_FROM_DATE                                      AS OFF_EFFECT_FROM,
+               OFF.EFFECTIVE_TO_DATE                                        AS OFF_EFFECT_TO,
+               OFF.OTY_CODE                                                 AS OFF_OTY_CODE,
+               OFF.OSB_CODE                                                 AS OFF_OSB_CODE,
+               OFF.HAZCHEM_RISK                                             AS OFF_HAZ_RISK,
+               OFF.HAZCHEM_REASON                                           AS OFF_HAZ_REASON,
+               OFF.ENDORSABLE_FLAG                                          AS OFF_END_FLAG,
+               OFF.FK_OGP_CODE                                              AS OFF_FK_OGP_CODE,
+               OFF.FK_OGP_VERSION                                           AS OFF_FK_OGP_VERSION,
+               OFF.DESCRIPTION_WELSH                                        AS OFF_DESC_WELSH,
+               DATE_FORMAT(PNO.FK_NOT_INPUT_DATE, '%Y-%m-%d')               AS ISSUE_DATE,
+               TIME_FORMAT(PNO.FK_NOT_INPUT_DATE, '%H:%i:%s')               AS ISSUE_TIME,
+               PNO.FK_NOT_NTY_CODE                                          AS PNO_NOTICE_CODE,
+               NTC.NTY_DESC                                                 AS NTY_DESC,
+               AONX.FK_AOF_GENERATED_NUMBER                                 AS AONX_AOF_GEN_NUM,
+               (SELECT FK_PST_CODE
+                    FROM (SELECT * FROM
+                        MC_ACTUAL_PAYMENT ACP
+                        WHERE PNO.FK_NOT_VEN_GENERATED_NUMBER = ACP.FK_VEN_GENERATED_NUMBER
+                        AND PNO.FK_ODR_GENERATED_NUMBER = ACP.FK_ODR_GENERATED_NUMBER
+                        ORDER BY ACP.INPUT_DATE DESC) AS LATEST_PAYMENT
+                    LIMIT 1)                                                AS FP_PAYMENT_STATUS,
+                (SELECT DISTINCT CONCAT(RQU.FIRST_NAME, ' ', RQU.LAST_NAME)
+                FROM MC_REQUEST_USER RQU
+                WHERE ACP.USE_EHR_EMPLOYEE_ID_RECORDER = RQU.EMPLOYEE_ID
+                LIMIT 1)                                                    AS RECORDER,
+               ACP.PAYMENT_DATE                                             AS PAYMENT_DATE,
+               ACP.AMOUNT                                                   AS AMOUNT,
+               ACP.PAYMENT_METHOD                                           AS PAYMENT_METHOD,
+               ACP.SORT_CODE                                                AS SORT_CODE,
+               ACP.CHEQUE_NUMBER                                            AS CHEQUE_NUMBER,
+               ACP.CLIENT_GUID                                              AS CLIENT_GUID,
+               ACP.CARD_PAYMENT_REF                                         AS CARD_PAYMENT_REF
+        FROM MC_PENALTY_NOTICE PNO
+            LEFT JOIN MC_VEHICLE_ENCOUNTER VEN ON (PNO.FK_NOT_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
+            LEFT JOIN MC_DRIVING_LICENCE_STATUS DLS ON DLS.CODE = PNO.DLS_CODE
+            LEFT JOIN MC_OBSERVED_DRIVER ODR ON ODR.GENERATED_NUMBER = PNO.FK_ODR_GENERATED_NUMBER
+            LEFT JOIN MC_PENALTY_NOTICE_STATUS PNS ON PNS.CODE = PNO.FK_PNS_CODE
+            LEFT JOIN MC_ACTUAL_OFFENCE_NOTICE_XREF AONX ON (PNO.FK_NOT_VEN_GENERATED_NUMBER = AONX.FK_NOT_FK_VEN_GENERATED_NUMBER
+                                                                 AND PNO.FK_NOT_NTY_CODE = AONX.FK_NOT_NTY_CODE
+                                                                 AND PNO.FK_NOT_INPUT_DATE = AONX.FK_NOT_INPUT_DATE)
+            LEFT JOIN MC_ACTUAL_OFFENCE AOF ON (AONX.FK_AOF_GENERATED_NUMBER = AOF.GENERATED_NUMBER)
+            LEFT JOIN MC_OFFENCE OFF ON (AOF.FK_OFF_CODE = OFF.CODE AND AOF.FK_OFF_VERSION = OFF.VERSION AND AOF.FK_OFF_UK_MARKER = OFF.UK_MARKER)
+            LEFT JOIN MC_NOTICE_TYPE NTC ON (PNO.FK_NOT_NTY_CODE = NTC.CODE)
+            LEFT JOIN  MC_ACTUAL_PAYMENT ACP ON (PNO.FK_NOT_VEN_GENERATED_NUMBER = ACP.FK_VEN_GENERATED_NUMBER
+                                                    AND PNO.FK_ODR_GENERATED_NUMBER = ACP.FK_ODR_GENERATED_NUMBER)
+        WHERE PNO.FK_NOT_VEN_GENERATED_NUMBER IN
+        <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        ORDER BY PNO.REFERENCE_NUMBER DESC, ACP.PAYMENT_DATE
+    </select>
+
+    <select id="getOffencesAll">
+        SELECT OFF.DESCRIPTION                                  AS OFF_DESCRIPTION,
+               OFF.NAME                                         AS OFF_NAME,
+               CASE WHEN OBD.FORENAME IS NULL OR OBD.SURNAME IS NULL OR OBD.DRIVER_TYPE IS NULL THEN ''
+                    WHEN OBD.DRIVER_TYPE = 'A' THEN CONCAT('Actual (', OBD.FORENAME, ' ', OBD.SURNAME, ')')
+                    WHEN OBD.DRIVER_TYPE = 'O' THEN CONCAT('Other (', OBD.FORENAME, ' ', OBD.SURNAME, ')')
+                    ELSE ''
+               END                                              AS DRIVER_NAME,
+               AOF.REFRD_FOR_INVESTIG,
+               AOF.OFFENCE_DATE,
+               AOF.ADDITIONAL_TEXT,
+               AOF.ENDORSABLE_FLAG,
+               AOF.OTHER_OPERATOR,
+               AOF.VRM,
+               AOF.GENERATED_NUMBER                             AS AOF_GENERATED_NUMBER,
+               AOF.EXEMPT_FROM_PROHIBITION                      AS AOF_EXEMPT,
+               OST.TEXT                                         AS OST_TEXT,
+               OFF.HAZCHEM_RISK,
+               OBD.DRIVER_TYPE,
+               OFF.HAZCHEM_REASON,
+               AOF.FK_OFF_UK_MARKER,
+               MVT.INTERNAL_NUMBER                              AS MVT_INTERNAL_NUM,
+               MVT.VEHICLE_TYPE                                 AS MVT_VEHICLE_TYPE,
+               MVT.DELETION_IND                                 AS MVT_DELETION_IND,
+               MVT.OPERATOR_IDENTIFIER_IND                      AS MVT_OPERATOR_IND,
+               OTY.VERSION                                      AS OTY_VERSION,
+               OTY.CODE                                         AS OTY_CODE,
+               OTY.DESCRIPTION                                  AS OTY_DESCRIPTION,
+               OTY.DELETION_IND                                 AS OTY_DELETION_IND,
+               OSU.CODE                                         AS OSU_CODE,
+               OSU.DESCRIPTION                                  AS OSU_DESCRIPTION,
+               OSU.VERSION                                      AS OSU_VERSION,
+               OSU.DELETION_IND                                 AS OSU_DELETION_IND,
+               OGP.CODE                                         AS OGP_CODE,
+               OGP.VERSION                                      AS OGP_VERSION,
+               OGP.DESCRIPTION                                  AS OGP_DESCRIPTION,
+               OGP.DELETION_IND                                 AS OGP_DELETION_IND,
+               OSB.PENALTY_POINTS,
+               OSB.CODE                                         AS OSB_CODE,
+               OFF.VERSION                                      AS OFF_VERSION,
+               OSB.GENERATED_NUMBER                             AS OSB_GEN_NUM,
+               OSB.CODE                                         AS OSB_CODE,
+               OSB.EFFECTIVE_FROM_DATE                          AS OSB_EFFECTIVE_FROM,
+               OSB.EFFECTIVE_TO_DATE                            AS OSB_EFFECTIVE_TO,
+               OSB.PENALTY_POINTS                               AS OSB_PENALTY_POINTS,
+               OSB.PENALTY_AMOUNT                               AS OSB_PENALTY_AMOUNT,
+               OSB.DELETION_IND                                 AS OSB_DELETION_IND,
+               OSB.DEPOSIT_AMOUNT                               AS OSB_DEPOSIT_AMOUNT,
+               OFF.ENDORSABLE_FLAG,
+               OST.GENERATED_NUMBER                             AS OST_GEN_NUM,
+               OST.CODE                                         AS OST_CODE,
+               OST.TEXT                                         AS OST_TEXT,
+               OST.DELETION_IND                                 AS OST_DELETION_IND,
+               OSB.PENALTY_AMOUNT,
+               OFF.CODE                                         AS OFF_CODE,
+               OFF.DELETION_MARKER                              AS OFF_DELETION_IND
+        FROM MC_ACTUAL_OFFENCE AOF
+            LEFT JOIN MC_VEHICLE_ENCOUNTER VEN ON (AOF.FK_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
+            LEFT JOIN MC_OFFENCE OFF ON (AOF.FK_OFF_CODE = OFF.CODE AND AOF.FK_OFF_VERSION = OFF.VERSION AND AOF.FK_OFF_UK_MARKER = OFF.UK_MARKER)
+            LEFT JOIN MC_OFFENCE_GROUP OGP ON (OFF.FK_OGP_CODE = OGP.CODE AND OFF.FK_OGP_VERSION = OGP.VERSION)
+            LEFT JOIN MC_OFFENCE_SEVERITY_BAND OSB ON (AOF.OSB_GENERATED_NUMBER = OSB.GENERATED_NUMBER)
+            LEFT JOIN MC_OFFENCE_SANCTION_TEXT OST ON (AOF.FK_OST_GENERATED_NUMBER = OST.GENERATED_NUMBER)
+            LEFT JOIN MC_OFFENCE_TYPE OTY ON (OFF.OTY_CODE = OTY.CODE AND OTY.DELETION_IND != 'Y')
+            LEFT JOIN MC_ROADSIDE_VEH_TYPE RVT ON (VEN.RVT_NUMBER = RVT.RVT_NUMBER)
+            LEFT JOIN MC_VEHICLE_TYPE MVT ON (RVT.FK_VEHICLE_TYPE = MVT.INTERNAL_NUMBER)
+            LEFT JOIN MC_OFF_TYPE_VEH_TYPE_XREF XREF ON (RVT.FK_VEHICLE_TYPE = XREF.FK_VTY_INTERNAL_NUMBER AND OFF.OTY_CODE = XREF.FK_OTY_CODE)
+            LEFT JOIN MC_OFFENCE_SUB_TYPE OSU ON (OGP.FK_OSU_CODE = OSU.CODE AND OFF.OTY_CODE = OSU.FK_OTY_CODE AND XREF.GENERATED_NUMBER = OSU.VERSION)
+            LEFT JOIN MC_OBSERVED_DRIVER OBD ON (AOF.ODR_GENERATED_NUMBER = OBD.GENERATED_NUMBER)
+        WHERE AOF.FK_VEN_GENERATED_NUMBER IN
+        <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getOffNotTypeXref">
+        SELECT MONTX.GENERATED_NUMBER AS ONTX_GENERATED_NUMBER,
+               MONTX.OFF_CODE AS ONTX_OFF_CODE,
+               MONTX.FK_NTY_CODE AS ONTX_FK_NTY_CODE,
+               MONTX.DELETION_INDICATOR AS ONTX_DELETION_MARKER
+        FROM MC_OFFENCE_NOTICE_TYPE_XREF MONTX
+        WHERE MONTX.OFF_CODE = #{offenceCode}
+          AND MONTX.FK_NTY_CODE IN (SELECT DISTINCT FK_NOT_NTY_CODE
+                              FROM MC_ACTUAL_OFFENCE_NOTICE_XREF WHERE FK_AOF_GENERATED_NUMBER = #{genNum})
+          AND MONTX.DELETION_INDICATOR='N'
+        ORDER BY MONTX.GENERATED_NUMBER
+    </select>
+
+    <select id="getESOData">
+        SELECT MRU.FIRST_NAME,
+               MRU.LAST_NAME,
+               MRU.USER_ID,
+               MRU.EXAMINER_TYPE
+        FROM MC_REQUEST_USER MRU
+        WHERE MRU.EMPLOYEE_ID IN
+              (SELECT FK_EMPLOYEE_ID FROM MC_ESO
+               WHERE FK_VEN_GENERATED_NUMBER = #{identifier})
+    </select>
+</mapper>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--suppress ALL -->
+
+<mapper namespace="dvsa.mc">
+    <select id="getFixedPenalties">
+        SELECT PNO.FK_NOT_VEN_GENERATED_NUMBER             AS ENCOUNTER_IDENTIFIER,
+               VEN.RTE_VEH_ID                              AS VEHICLE_ID,
+               VEN.USE_EHR_EMPLOYEE_ID_EXAMINER            AS VEN_EXAMINER_ID,
+               PNO.REFERENCE_NUMBER                        AS NOTICE_REFERENCE,
+               DLS.DESCRIPTION                             AS LICENCE_COLLECTION_STATUS,
+               CASE
+                   WHEN AOF.ENDORSABLE_FLAG = 'Y' THEN 'Y'
+                   ELSE 'N'
+                   END                                     AS ENDORSABLE_FLAG,
+               PNO.AMOUNT                                  AS AMOUNT_DUE,
+               PNO.POINTS                                  AS PNO_POINTS,
+               PNO.REFERRED_DATE                           AS PNO_REFERRED_DATE,
+               PNO.PAYMENT_DUE_DATE                        AS PNO_PAYMENT_DUE_DATE,
+               PNS.DESCRIPTION                             AS PAYMENT_STATUS,
+               ODR.DRIVER_TYPE                             AS DRIVER_TYPE,
+               ODR.FORENAME                                AS FORENAME,
+               ODR.SURNAME                                 AS SURNAME,
+               ODR.DATE_OF_BIRTH                           AS DATE_OF_BIRTH,
+               ODR.BIRTH_PLACE                             AS BIRTH_PLACE,
+               DDO.ORIGIN_DESCRIPTION                      AS ORIGIN_DESCRIPTION,
+               DDO.DRIVER_DETAILS_ORIGIN_CODE              AS DRIVER_DETAILS_ORIGIN_CODE,
+               ODR.DRIVER_LIC_NUM                          AS DRIVER_LIC_NUM,
+               ODR.REG_KEEPER_INDICTR                      AS REG_KEEPER_INDICTR,
+               ODR.SEX                                     AS SEX,
+               IRL.IRL_CODE                                AS IRL_CODE,
+               IRL.IRL_COUNTRY                             AS IRL_COUNTRY,
+               DLC.CATEGORY_CODE                           AS CATEGORY_CODE,
+               DLT.LICENCE_TYPE_DESCRIPTION                AS LICENCE_TYPE_DESCRIPTION,
+               DLT.LICENCE_TYPE_CODE                       AS LICENCE_TYPE_CODE,
+               ODR.LICENCE_ISSUE_NO                        AS LICENCE_ISSUE_NO,
+               ODR.DRIVING_LICENCE_ISSUE_DATE              AS DRIVING_LICENCE_ISSUE_DATE,
+               ODR.PASSPORT_NUMBER                         AS PASSPORT_NUMBER,
+               ODR.ADDR_1                                  AS ADDR_1,
+               ODR.ADDR_2                                  AS ADDR_2,
+               ODR.ADDR_3                                  AS ADDR_3,
+               ODR.ADDR_4                                  AS ADDR_4,
+               ODR.POSTOWN                                 AS POSTOWN,
+               ODR.POSTCODE                                AS POSTCODE,
+               ODR.UK_RESIDENT                             AS UK_RESIDENT,
+               NTY.CODE                                    AS CODE,
+               NTY.NTY_DESC                                AS NTY_DESC,
+               NTY.CURRENT_CODE                            AS CURRENT_CODE,
+               NTY.ACT                                     AS ACT,
+               NTY.CURRENT_VERSION                         AS CURRENT_VERSION,
+               NTY.TYPE_CODE                               AS TYPE_CODE,
+               NTY.NTY_SHORT_DESC                          AS NTY_SHORT_DESC,
+               NTY.OPERATOR_COPY                           AS OPERATOR_COPY,
+               NTY.DRIVER_REQUIRED                         AS DRIVER_REQUIRED,
+               NTY.TRANSLATION_AVAILABLE                   AS TRANSLATION_AVAILABLE,
+               NTY.SEQUENCE_NUMBER                         AS SEQUENCE_NUMBER,
+               NTY.NOTICE_TYPE_CATEGORY                    AS NOTICE_TYPE_CATEGORY,
+               NTY.AUTO_CLOSURE_PERIOD                     AS AUTO_CLOSURE_PERIOD,
+               NTY.NTY_SUMMARY                             AS NTY_SUMMARY,
+               NTY.CLOSE_FLAG                              AS CLOSE_FLAG,
+               NTY.ETT_CODE                                AS ETT_CODE,
+               NTY.AEV_EVENT_CODE_CLOSE                    AS AEV_EVENT_CODE_CLOSE,
+               NTY.AEV_EVENT_CODE_CLEAR                    AS AEV_EVENT_CODE_CLEAR,
+               NTY.AEV_EVENT_CODE_REACTIVATE               AS AEV_EVENT_CODE_REACTIVATE,
+               NTY.NOTIFIABLE_FLAG                         AS NOTIFIABLE_FLAG,
+               (SELECT DESCRIPTION
+                FROM MC_OFFENCE MO
+                WHERE AOF.FK_OFF_CODE = MO.CODE
+                  AND AOF.FK_OFF_VERSION = MO.VERSION
+                  AND AOF.FK_OFF_UK_MARKER = MO.UK_MARKER) AS DESCRIPTION,
+               (SELECT FK_PST_CODE
+                FROM (SELECT *
+                      FROM MC_ACTUAL_PAYMENT ACP
+                      WHERE PNO.FK_NOT_VEN_GENERATED_NUMBER = ACP.FK_VEN_GENERATED_NUMBER
+                        AND PNO.FK_ODR_GENERATED_NUMBER = ACP.FK_ODR_GENERATED_NUMBER
+                      ORDER BY ACP.INPUT_DATE DESC) AS ACTUAL_PAYMENT
+                LIMIT 1)                                   AS FP_PAYMENT_STATUS,
+               (SELECT DISTINCT CONCAT(RQU.FIRST_NAME, ' ', RQU.LAST_NAME)
+                FROM MC_REQUEST_USER RQU
+                WHERE ACP.USE_EHR_EMPLOYEE_ID_RECORDER = RQU.EMPLOYEE_ID
+                LIMIT 1)                                   AS RECORDER,
+               ACP.PAYMENT_DATE                            AS PAYMENT_DATE,
+               ACP.AMOUNT                                  AS AMOUNT,
+               ACP.PAYMENT_METHOD                          AS PAYMENT_METHOD,
+               ACP.SORT_CODE                               AS SORT_CODE,
+               ACP.CHEQUE_NUMBER                           AS CHEQUE_NUMBER,
+               ACP.CLIENT_GUID                             AS CLIENT_GUID,
+               ACP.CARD_PAYMENT_REF                        AS CARD_PAYMENT_REF
+        FROM MC_PENALTY_NOTICE PNO
+                 LEFT JOIN MC_VEHICLE_ENCOUNTER VEN ON (PNO.FK_NOT_VEN_GENERATED_NUMBER = VEN.GENERATED_NUMBER)
+                 LEFT JOIN MC_ACTUAL_OFFENCE_NOTICE_XREF AON
+                           ON (PNO.FK_NOT_VEN_GENERATED_NUMBER = AON.FK_NOT_FK_VEN_GENERATED_NUMBER
+                               AND PNO.FK_NOT_INPUT_DATE = AON.FK_NOT_INPUT_DATE)
+                 LEFT JOIN MC_DRIVING_LICENCE_STATUS DLS ON (DLS.CODE = PNO.DLS_CODE)
+                 LEFT JOIN MC_OBSERVED_DRIVER ODR ON (ODR.GENERATED_NUMBER = PNO.FK_ODR_GENERATED_NUMBER)
+                 LEFT JOIN MC_ACTUAL_OFFENCE AOF ON (AON.FK_AOF_GENERATED_NUMBER = AOF.GENERATED_NUMBER
+            AND AON.FK_NOT_FK_VEN_GENERATED_NUMBER = AOF.FK_VEN_GENERATED_NUMBER)
+                 LEFT JOIN MC_PENALTY_NOTICE_STATUS PNS ON (PNS.CODE = PNO.FK_PNS_CODE)
+                 LEFT JOIN MC_DRIVER_DETAILS_ORIGIN DDO
+                           ON (ODR.DDO_DRIVER_DETAILS_ORIGIN_CODE = DDO.DRIVER_DETAILS_ORIGIN_CODE)
+                 LEFT JOIN MC_INTRNTNL_REG_ID IRL ON (ODR.IRI_IRL_CODE_DRIVING_LICENCE = IRL.IRL_CODE)
+                 LEFT JOIN MC_DRIVING_LICENCE_CATEGORY DLC ON (ODR.LICENCE_CATEGORY = DLC.CATEGORY_CODE)
+                 LEFT JOIN MC_DRIVING_LICENCE_TYPE DLT ON (ODR.LICENCE_TYPE = DLT.LICENCE_TYPE_CODE)
+                 LEFT JOIN MC_NOTICE_TYPE NTY ON (PNO.FK_NOT_NTY_CODE = NTY.CODE)
+                 LEFT JOIN MC_ACTUAL_PAYMENT ACP ON (PNO.FK_NOT_VEN_GENERATED_NUMBER = ACP.FK_VEN_GENERATED_NUMBER
+            AND PNO.FK_ODR_GENERATED_NUMBER = ACP.FK_ODR_GENERATED_NUMBER)
+        WHERE PNO.FK_NOT_VEN_GENERATED_NUMBER IN (SELECT PN1.FK_NOT_VEN_GENERATED_NUMBER
+                                                  from MC_PENALTY_NOTICE PN1
+                                                  WHERE PN1.REFERENCE_NUMBER = #{identifier})
+        ORDER BY PNO.FK_NOT_INPUT_DATE DESC, ACP.PAYMENT_DATE
+    </select>
+
+    <select id="getUserName">
+        SELECT CONCAT(MRU.FIRST_NAME, ' ', MRU.LAST_NAME) AS NAME
+        FROM MC_REQUEST_USER MRU
+        WHERE MRU.EMPLOYEE_ID = #{userId}
+        LIMIT 1
+    </select>
+</mapper>

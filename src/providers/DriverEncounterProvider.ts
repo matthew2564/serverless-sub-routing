@@ -1,4 +1,4 @@
-import { Container, Inject, Service } from 'typedi';
+import { Container, Service } from 'typedi';
 import { SESSION } from '../domain/di-tokens/di-tokens';
 import { DriverRequest } from '../domain/models/driver/DriverRequest';
 import { ObservedDriverData } from '../domain/models/driver/ObservedDriverData';
@@ -45,13 +45,13 @@ export class DriverEncounterProvider {
 				return [];
 		}
 
-		const observedIDsList: ObservedIDs[] = await this.session.selectList(mapperID, { ...driverRequest }, ObservedIDs);
+		const list = await this.session.selectList(mapperID, { ...driverRequest }, ObservedIDs);
 
-		if (!observedIDsList || observedIDsList.length === 0) {
+		if (!list || list.length === 0) {
 			return [];
 		}
 
-		return this.session.selectList('getObservedEncountersByDriver', { list: observedIDsList }, ObservedEncounterData);
+		return this.session.selectList('getObservedEncountersByDriver', { list }, ObservedEncounterData);
 	}
 
 	async getDriverEnforcementByName(driverRequest: DriverRequest): Promise<EncounterData[]> {

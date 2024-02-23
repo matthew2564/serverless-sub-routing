@@ -31,6 +31,7 @@ import { EncounterCopyNotices } from '../domain/models/encounter/encounter-copy/
 import { EncounterCopyOffenceData } from '../domain/models/encounter/encounter-copy/EncounterCopyOffenceData';
 import { EncounterCopyOffenceNoticeTypeXref } from '../domain/models/encounter/encounter-copy/EncounterCopyOffenceNoticeTypeXref';
 import { EncounterCopyFixedPenalties } from '../domain/models/encounter/encounter-copy/EncounterCopyFixedPenalties';
+import { omitBy } from 'lodash';
 
 @Service()
 export class EncounterCopyProvider {
@@ -90,7 +91,7 @@ export class EncounterCopyProvider {
 			return null;
 		}
 
-		const { genNum, ...encounterOperator } = operator;
+		const encounterOperator = omitBy(operator, 'genNum') as EncounterOperator;
 
 		const [encounterCopyNationality, ocrs] = (await Promise.all([
 			// get the nationality using `nationalityCode`

@@ -159,7 +159,7 @@ export class EncounterResource {
 
 			const resp = await this.originalProhibitionService.processRequest(body);
 
-			this.logger.info(`Original prohibition response ${!!resp ? 'found' : 'not found'}.`);
+			this.logger.info(`Original prohibition response ${resp ? 'found' : 'not found'}.`);
 
 			if (!resp) {
 				return response.status(204).json({});

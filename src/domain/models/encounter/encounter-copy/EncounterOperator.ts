@@ -1,4 +1,4 @@
-import { Exclude, Expose, instanceToPlain, Transform, Type } from 'class-transformer';
+import { Exclude, Expose, Transform, Type } from 'class-transformer';
 import { OCRSSnapshot } from '../../operator/OCRSSnapshot';
 import { EncounterCopyNationality } from './EncounterCopyNationality';
 import { EncounterCopyOpLicenceType } from './EncounterCopyOpLicenceType';

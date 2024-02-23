@@ -17,6 +17,6 @@
     "class-methods-use-this": "off",
     "security/detect-non-literal-fs-filename": "off",
     "no-mixed-spaces-and-tabs": "off",
-    "max-len": ["error", { "code": 120 }]
+    "max-len": ["error", { "code": 140 }]
   }
 }

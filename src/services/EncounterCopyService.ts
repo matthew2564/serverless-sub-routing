@@ -15,7 +15,7 @@ export class EncounterCopyService {
 	constructor(@Inject() private encounterCopyProvider: EncounterCopyProvider) {}
 
 	async getCopyEncounter(encounterID: string): Promise<EncounterCopyResponse> {
-		let resp: Partial<EncounterCopyResponse> = new EncounterCopyResponse();
+		const resp: Partial<EncounterCopyResponse> = new EncounterCopyResponse();
 
 		let encounterTwoId: string | null = null;
 		let encounterThreeId: string | null = null;
@@ -168,37 +168,37 @@ export class EncounterCopyService {
 		} as EncounterCopyResponse;
 	}
 
-	async getCopyEncounterParallel(encounterID: string) {
-		const resp = {} as Record<string, any>;
-
-		const [
-			generalDetails,
-			drivers,
-			journey,
-			dangerousGoods,
-			dangerousGoodsQuestions,
-			additionalInfo,
-			roadWorthinessChecklist,
-			axleWeights,
-		] = await Promise.all([
-			this.encounterCopyProvider.getGeneralDetails(encounterID),
-			this.encounterCopyProvider.getDriver(encounterID),
-			this.encounterCopyProvider.getJourney(encounterID),
-			this.encounterCopyProvider.getDangerousGoods(encounterID),
-			this.encounterCopyProvider.getDangerousGoodsQuestions(encounterID),
-			this.encounterCopyProvider.getAdditionalInformation(encounterID),
-			this.encounterCopyProvider.getRoadWorthinessChecklist(encounterID),
-			this.getAxleWeights(encounterID),
-		]);
-
-		// if encounterID is for a vehicle and not a trailer populate the vehicle section
-		if (generalDetails && EncounterCopyService.VRM_VIN.test(generalDetails.vehicleIdentifierType.code)) {
-		}
-
-		// if encounterID is for a trailer and not a vehicle populate the trailer section
-		if (generalDetails && EncounterCopyService.TRA_TIN.test(generalDetails.vehicleIdentifierType.code)) {
-		}
-	}
+	// async getCopyEncounterParallel(encounterID: string) {
+	// 	const resp = {} as Record<string, any>;
+	//
+	// 	const [
+	// 		generalDetails,
+	// 		drivers,
+	// 		journey,
+	// 		dangerousGoods,
+	// 		dangerousGoodsQuestions,
+	// 		additionalInfo,
+	// 		roadWorthinessChecklist,
+	// 		axleWeights,
+	// 	] = await Promise.all([
+	// 		this.encounterCopyProvider.getGeneralDetails(encounterID),
+	// 		this.encounterCopyProvider.getDriver(encounterID),
+	// 		this.encounterCopyProvider.getJourney(encounterID),
+	// 		this.encounterCopyProvider.getDangerousGoods(encounterID),
+	// 		this.encounterCopyProvider.getDangerousGoodsQuestions(encounterID),
+	// 		this.encounterCopyProvider.getAdditionalInformation(encounterID),
+	// 		this.encounterCopyProvider.getRoadWorthinessChecklist(encounterID),
+	// 		this.getAxleWeights(encounterID),
+	// 	]);
+	//
+	// 	// if encounterID is for a vehicle and not a trailer populate the vehicle section
+	// 	if (generalDetails && EncounterCopyService.VRM_VIN.test(generalDetails.vehicleIdentifierType.code)) {
+	// 	}
+	//
+	// 	// if encounterID is for a trailer and not a vehicle populate the trailer section
+	// 	if (generalDetails && EncounterCopyService.TRA_TIN.test(generalDetails.vehicleIdentifierType.code)) {
+	// 	}
+	// }
 
 	private async getAxleWeights(encounterID: string) {
 		const allAxles = await this.encounterCopyProvider.getAxles(encounterID);

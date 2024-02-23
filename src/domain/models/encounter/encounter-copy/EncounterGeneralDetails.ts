@@ -1,4 +1,4 @@
-import { Exclude, Expose, plainToInstance, Transform } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
 import { EncounterCopyLocation } from './EncounterCopyLocation';
 import { EncounterStoppingOfficer } from './EncounterStoppingOfficer';
 import { EncounterCopyVehicleIdType } from './EncounterCopyVehicleIdType';

@@ -3,7 +3,6 @@ import { SESSION } from '../domain/di-tokens/di-tokens';
 import { EncounterData } from '../domain/models/encounter/EncounterData';
 import { EncounterDetail } from '../domain/models/encounter/EncounterDetail';
 import { EncounterAxle } from '../domain/models/encounter/EncounterAxle';
-import { Params } from 'mybatis-mapper';
 import { EncounterNotice } from '../domain/models/encounter/EncounterNotice';
 import { EncounterOffence } from '../domain/models/encounter/EncounterOffence';
 import { EncounterDefect } from '../domain/models/encounter/EncounterDefect';

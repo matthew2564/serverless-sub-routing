@@ -2,7 +2,7 @@ import { Exclude, Expose, Transform } from 'class-transformer';
 import { NoticeType } from './NoticeType';
 import { ActualPayment } from './ActualPayment';
 import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
-import {plainToInstanceOrNull} from "../../helpers/MapModelOrNull";
+import { plainToInstanceOrNull } from '../../helpers/MapModelOrNull';
 
 @Exclude()
 export class FixedPenaltyData {

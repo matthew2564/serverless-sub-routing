@@ -1,4 +1,5 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
+import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 
 @Exclude()
 export class EncounterCopyLocation {
@@ -26,6 +27,7 @@ export class EncounterCopyLocation {
 	@Expose({ name: 'USE_EHR_EMPLOYEE_ID_SETUP' })
 	ifkSetupEmpId!: string;
 
+	@Transform(({ value }) => DateTime.at(value).format('DD/MM/YYYY HH:mm:ss'))
 	@Expose({ name: 'LAST_UPDATE' })
 	lastUpdate!: string;
 

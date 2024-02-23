@@ -103,7 +103,7 @@
         WHERE CHS.GENERATED_NUMBER = #{csiId}
     </select>
 
-    <select id="getOperator" parameterType="String" resultMap="encounterOperatorMap">
+    <select id="getOperator">
         SELECT * FROM (
         SELECT COALESCE(OBO.GENERATED_NUMBER,ODT.OLI_LICENCE_NUMBER)     AS GEN_NUM,
                COALESCE(OBO.FK_IRI_IRL_CODE, 'GB')                       AS NATIONALITY_CODE,
@@ -134,7 +134,7 @@
         LIMIT 1
     </select>
 
-    <select id="getNationality" parameterType="String" resultMap="nationalityMap">
+    <select id="getNationality">
         SELECT IRL.IRL_CODE                                 AS IRL_CODE,
                IRL.IRL_COUNTRY                              AS IRL_COUNTRY,
                IRL.DELETION_IND                             AS IRL_DELETION_IND,
@@ -149,7 +149,7 @@
         WHERE IRL.IRL_CODE = #{vehicleEncounterId}
     </select>
 
-    <select id="getVehicle" parameterType="String" resultMap="encounterVehicleMap">
+    <select id="getVehicle">
         SELECT * FROM (
                           SELECT VEN.RTE_VEH_ID                               AS VEHICLE_IDENTIFIER,
                                  MVI.SHORT_CODE                               AS MVI_SHORT_CODE,
@@ -215,7 +215,7 @@
             LIMIT 1;
     </select>
 
-    <select id="getDriver" parameterType="String" resultMap="encounterDriverMap">
+    <select id="getDriver">
         SELECT OBD.DRIVER_TYPE,
                OBD.FORENAME,
                OBD.SURNAME,
@@ -264,7 +264,7 @@
         WHERE OBD.FK_VEN_GENERATED_NUMBER = #{vehicleEncounterId}
     </select>
 
-    <select id="getTrailer" parameterType="String" resultMap="encounterTrailerMap">
+    <select id="getTrailer">
         SELECT * FROM (
         SELECT IRL.IRL_CODE                                 AS IRL_CODE,
                IRL.IRL_COUNTRY                              AS IRL_COUNTRY,
@@ -319,7 +319,7 @@
         LIMIT 1
     </select>
 
-    <select id="getTrailerTwo" parameterType="String" resultMap="encounterTrailerMap">
+    <select id="getTrailerTwo">
         SELECT * FROM (
         SELECT IRL.IRL_CODE                                 AS IRL_CODE,
                IRL.IRL_COUNTRY                              AS IRL_COUNTRY,
@@ -374,7 +374,7 @@
         LIMIT 1
     </select>
 
-    <select id="getJourney" parameterType="String" resultMap="encounterJourneyMap">
+    <select id="getJourney">
         SELECT JTY.GENERATED_NUMBER                         AS JTY_GEN_NUM,
                JTY.RANK                                     AS JTY_RANK,
                JTY.DESCRIPTION                              AS JTY_DESCRIPTION,
@@ -405,7 +405,7 @@
         LIMIT 1
     </select>
 
-    <select id="getDangerousGoods" parameterType="String" resultMap="encounterDangerousGoodsMap">
+    <select id="getDangerousGoods">
         SELECT CASE WHEN VEN.HAZARDOUS_MKR = 'Y' THEN 'hazardous'
                     WHEN VEN.RADIOACTIVE_MKR = 'Y' THEN 'radioactive'
                     ELSE ''
@@ -443,7 +443,7 @@
         LIMIT 1
     </select>
 
-    <select id="getDangerousGoodsStatus" parameterType="String" resultMap="encounterDangerousGoodsStatusMap">
+    <select id="getDangerousGoodsStatus">
         SELECT FK_HCH_GENERATED_NUMBER,
                STATUS_NAME
         FROM MC_HAZCHEM_CHECKLIST_STATUS HCS
@@ -451,7 +451,7 @@
         ORDER BY FK_HCH_GENERATED_NUMBER
     </select>
 
-    <select id="getAdditionalInformation" parameterType="String" resultMap="encounterAdditionalInformationMap">
+    <select id="getAdditionalInformation">
         SELECT * FROM (
         SELECT ILE.INSPECTION_LEVEL                                             AS ILE_INSPECTION_LEVEL,
                ILE.DESCRIPTION                                                  AS ILE_DESCRIPTION,
@@ -491,7 +491,7 @@
         LIMIT 1
     </select>
 
-    <select id="getAdditionalText" parameterType="String" resultMap="encounterAdditionalTextMap">
+    <select id="getAdditionalText">
         SELECT MET.TEXT                                                 AS MET_TEXT,
                ETT.CODE                                                 AS ETT_CODE,
                ETT.DELETION_MARKER                                      AS ETT_DELETION_IND,
@@ -505,14 +505,14 @@
         WHERE MET.FK_VEN_GENERATED_NUMBER = #{vehicleEncounterId}
     </select>
 
-    <select id="getSpecialReturnFlag" parameterType="String" resultMap="specialReturnFlagMap">
+    <select id="getSpecialReturnFlag">
         SELECT SRF.CODE_NUMBER                                          AS SRF_CODE_NUMBER,
                SRF.CODE_DESCRIPTION                                     AS SRF_CODE_DESCRIPTION
         FROM MC_SPECIAL_RETURN_CODE_FLAG SRF
         WHERE SRF.FK_SRX_EXERCISE_CODE = #{vehicleEncounterId}
     </select>
 
-    <select id="getAxles" parameterType="String" resultMap="encounterAxlesMap">
+    <select id="getAxles">
         SELECT COALESCE(VEN.DESIGN_GROSS_WGT_1, 0)                      AS GROSS_DESIGN_WEIGHT1,
                COALESCE(VEN.PERM_GROSS_WEIGHT_1, 0)                     AS GROSS_PERMITTED_WEIGHT1,
                COALESCE(VEN.ACT_GROSS_WEIGHT_1, 0)                      AS GROSS_ACTUAL_WEIGHT1,
@@ -601,7 +601,7 @@
         WHERE VEN.GENERATED_NUMBER = #{vehicleEncounterId}
     </select>
 
-    <select id="getAxleData" parameterType="String" resultMap="encounterAxleDataMap">
+    <select id="getAxleData">
         SELECT
             AXW.AXLE_NUMBER                         AS DB_AXLE_NUMBER,
             AXW.PERMITTED_WEIGHT                    AS PERMITTED_WEIGHT,
@@ -686,7 +686,7 @@
         ORDER BY AXLE_VEH_TYPE, AXLE_NUMBER, COMPENSATING_CODE
     </select>
 
-    <select id="getDefectsAll" parameterType="hashmap" resultMap="encounterCopyDefectsMap">
+    <select id="getDefectsAll">
         SELECT ADF.FK_VEN_GENERATED_NUMBER,
         VEN.RTE_VEH_ID,
         CASE DCD.FK_DCA_PART
@@ -785,7 +785,7 @@
         ORDER BY 1 ASC
     </select>
 
-    <select id="getDefectSummary" parameterType="String" resultMap="encounterCopyDefectSummaryMap">
+    <select id="getDefectSummary">
         SELECT VED.FK_VEN_GENERATED_NUMBER                                              AS VED_GEN_NUM,
                VED.LAST_UPDATE                                                          AS VED_LAST_UPDATE,
                VED.SGNFCANCE_REASON                                                     AS VED_SIG_REASON,
@@ -808,7 +808,7 @@
         ORDER BY 1 ASC
     </select>
 
-    <select id="getNotices" parameterType="list" resultMap="encounterCopyNoticeMap">
+    <select id="getNotices">
         SELECT NTC.FK_VEN_GENERATED_NUMBER                                                  AS ENCOUNTER_ID,
                NTC.RTE_VEH_ID,
                case
@@ -938,12 +938,11 @@
                OST.CODE                                                                 AS OST_CODE,
                OST.TEXT                                                                 AS OST_TEXT,
                OST.DELETION_IND                                                         AS OST_DELETION_IND,
-               AOF.ADDITIONAL_TEXT,
+               AOF.ADDITIONAL_TEXT                                                      AS ADD_TEXT,
                AOF.VRM                                                                  AS RELEVANT_VRM,
                AOF.OTHER_OPERATOR,
                CONCAT(OBD.FORENAME, ' ', OBD.SURNAME)                                   AS DRIVER_NAME,
                NTC.ODR_GENERATED_NUMBER,
-               AOF.ADDITIONAL_TEXT                                                      AS ADDITIONAL_TEXT,
                RVT.RVT_NUMBER                                                           AS RVT_NUMBER,
                RVT.FK_VEHICLE_TYPE                                                      AS RVT_VEH_TYPE,
                RVT.DELETION_IND                                                         AS RVT_DELETION,
@@ -1005,7 +1004,7 @@
         ORDER BY NTC.FK_VEN_GENERATED_NUMBER, NTC.FK_NTY_CODE, NTC.INPUT_DATE
     </select>
 
-    <select id="getRwList" parameterType="String" resultMap="inspectionLevelMap">
+    <select id="getRwList">
         SELECT VEN.ILE_INSPECTION_LEVEL                                     AS ILE_INSPECTION_LEVEL,
                ILE.DESCRIPTION                                              AS ILE_DESCRIPTION,
                ILE.DELETION_IND                                             AS ILE_DELETION_IND
@@ -1014,7 +1013,7 @@
         WHERE VEN.GENERATED_NUMBER = #{vehicleEncounterId}
     </select>
 
-    <select id="getRoadWorthinessChecklist" parameterType="String" resultMap="encounterCopyRoadWorthinessMap">
+    <select id="getRoadWorthinessChecklist">
         SELECT ERC.CHECK_STATUS                                             AS ERC_STATUS,
                RCL.CHECK_LIST_ITEM                                          AS RCL_CHECK_ITEM,
                RCL.DESCRIPTION                                              AS RCL_DESCRIPTION,
@@ -1026,7 +1025,7 @@
         WHERE ERC.FK_VEN_GENERATED_NUMBER = #{vehicleEncounterId}
     </select>
 
-    <select id="getPenalties" parameterType="list" resultMap="encounterCopyPenaltiesMap">
+    <select id="getPenalties">
         SELECT PNO.REFERENCE_NUMBER                                         AS NOTICE_REFERENCE,
                CONCAT(PNO.DRIVER_FORENAME, ' ', PNO.DRIVER_SURNAME) AS DRIVER,
                PNO.AMOUNT                                                   AS AMOUNT_DUE,
@@ -1117,7 +1116,7 @@
         ORDER BY PNO.REFERENCE_NUMBER DESC, ACP.PAYMENT_DATE
     </select>
 
-    <select id="getOffencesAll" parameterType="list" resultMap="encounterCopyOffenceDataMap">
+    <select id="getOffencesAll">
         SELECT OFF.DESCRIPTION                                  AS OFF_DESCRIPTION,
                OFF.NAME                                         AS OFF_NAME,
                CASE WHEN OBD.FORENAME IS NULL OR OBD.SURNAME IS NULL OR OBD.DRIVER_TYPE IS NULL THEN ''
@@ -1191,7 +1190,7 @@
         </foreach>
     </select>
 
-    <select id="getOffNotTypeXref" parameterType="String" resultMap="OffNotTypeXrefMap">
+    <select id="getOffNotTypeXref">
         SELECT MONTX.GENERATED_NUMBER AS ONTX_GENERATED_NUMBER,
                MONTX.OFF_CODE AS ONTX_OFF_CODE,
                MONTX.FK_NTY_CODE AS ONTX_FK_NTY_CODE,
@@ -1204,7 +1203,7 @@
         ORDER BY MONTX.GENERATED_NUMBER
     </select>
 
-    <select id="getESOData" parameterType="String" resultMap="esoMap">
+    <select id="getESOData">
         SELECT MRU.FIRST_NAME,
                MRU.LAST_NAME,
                MRU.USER_ID,

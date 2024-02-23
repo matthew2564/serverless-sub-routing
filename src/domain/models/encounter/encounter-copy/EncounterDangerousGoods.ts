@@ -1,9 +1,15 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform, Type } from 'class-transformer';
+import { EncounterCopyHazchemContainerType } from './EncounterCopyHazchemContainerType';
+import { plainToInstanceOrNull } from '../../../helpers/MapModelOrNull';
 
 @Exclude()
 export class EncounterDangerousGoods {
 	@Expose({ name: 'DANGER_TYPE' })
 	type!: string;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyHazchemContainerType, obj))
+	@Expose({ name: '' })
+	modeOfTransport!: EncounterCopyHazchemContainerType;
 
 	@Expose({ name: 'UN_NUMBER' })
 	unNumber!: string;

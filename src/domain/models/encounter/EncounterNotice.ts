@@ -1,7 +1,7 @@
-import {Expose, Transform, Type} from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import { EncounterDefect } from './EncounterDefect';
 import { EncounterOffence } from './EncounterOffence';
-import {DateTime} from "@dvsa/cvs-microservice-common/classes/utils/date";
+import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 
 export class EncounterNotice {
 	@Expose({ name: 'PROHIBITION_NOTICE' })

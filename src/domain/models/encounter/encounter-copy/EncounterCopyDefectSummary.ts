@@ -1,4 +1,7 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
+import { EncounterCopyShortReason } from './EncounterCopyShortReason';
+import { plainToInstanceOrNull } from '../../../helpers/MapModelOrNull';
+import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 
 @Exclude()
 export class EncounterCopyDefectSummary {
@@ -20,6 +23,7 @@ export class EncounterCopyDefectSummary {
 	@Expose({ name: 'VED_FIFTY_PERCENT' })
 	fiftyPercentRuleMarker!: string;
 
+	@Transform(({ value }) => DateTime.at(value).format('DD/MM/YYYY HH:mm:ss'))
 	@Expose({ name: 'VED_LAST_UPDATE' })
 	lastUpdate!: string;
 
@@ -34,4 +38,8 @@ export class EncounterCopyDefectSummary {
 
 	@Expose({ name: 'VED_UPDATE_USERID' })
 	updateUserId!: string;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyShortReason, obj))
+	@Expose({ name: '' })
+	shortReason!: EncounterCopyShortReason;
 }

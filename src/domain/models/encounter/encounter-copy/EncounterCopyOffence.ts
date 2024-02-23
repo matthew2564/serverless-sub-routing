@@ -1,4 +1,5 @@
 import { Exclude, Expose } from 'class-transformer';
+import { EncounterCopyOffenceNoticeTypeXref } from './EncounterCopyOffenceNoticeTypeXref';
 
 @Exclude()
 export class EncounterCopyOffence {
@@ -61,4 +62,6 @@ export class EncounterCopyOffence {
 
 	@Expose({ name: 'OFF_DELETION_IND' })
 	deletionMarker!: string;
+
+	offenceXref!: EncounterCopyOffenceNoticeTypeXref[];
 }

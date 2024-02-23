@@ -1,4 +1,5 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
+import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 
 @Exclude()
 export class EncounterCopyOffenceCode {
@@ -29,6 +30,7 @@ export class EncounterCopyOffenceCode {
 	@Expose({ name: 'OFF_OFG_CODE' })
 	ofgCode!: string;
 
+	@Transform(({ value }) => (value ? DateTime.at(value).format('DD/MM/YYYY HH:mm:ss') : null))
 	@Expose({ name: 'OFF_EFFECT_FROM' })
 	effectiveFromDate!: string;
 

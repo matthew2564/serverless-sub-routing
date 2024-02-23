@@ -1,7 +1,9 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
+import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 
 @Exclude()
 export class EncounterCopyExemptionCondition {
+	@Transform(({ value }) => (value ? DateTime.at(value).format('DD/MM/YYYY HH:mm:ss') : null))
 	@Expose({ name: 'MEC_EXPIRY' })
 	expiryDate!: string;
 

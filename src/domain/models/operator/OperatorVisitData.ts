@@ -1,4 +1,4 @@
-import { Expose, Transform, Type } from 'class-transformer';
+import { Exclude, Expose, Transform, Type } from 'class-transformer';
 import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 import { TeHoursResult } from './TeHoursResult';
 import { Examiner } from './Examiner';
@@ -6,14 +6,15 @@ import { InitiatingReason } from './InitiatingReason';
 import { VeVisitResult } from './VeVisitResult';
 import { TeOtherResult } from './TeOtherResult';
 import { OperatorVisitVehicleEncounter } from './OperatorVisitVehicleEncounter';
-import {plainToInstanceOrNull} from "../../helpers/MapModelOrNull";
+import { plainToInstanceOrNull } from '../../helpers/MapModelOrNull';
 
+@Exclude()
 export class OperatorVisitData {
 	@Expose({ name: 'GENERATED_NUMBER' })
 	generatedNumber!: string;
 
 	@Expose({ name: 'FAS_STATUS' })
-	fasStatus?: string; // Optional property
+	fasStatus?: string;
 
 	@Transform(({ value }) => DateTime.at(value).format('DD/MM/YYYY HH:mm:ss'))
 	@Expose({ name: 'ACTUAL_START_DATE' })

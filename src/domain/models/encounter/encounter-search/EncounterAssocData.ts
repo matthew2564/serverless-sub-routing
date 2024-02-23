@@ -1,6 +1,8 @@
-import { Exclude, Expose, Type } from 'class-transformer';
+import { Exclude, Expose, Transform, Type } from 'class-transformer';
 import { EncounterCheckType } from './EncounterCheckType';
 import { EncounterSearchDriver } from './EncounterSearchDriver';
+import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
+import { plainToInstanceOrNull } from '../../../helpers/MapModelOrNull';
 
 @Exclude()
 export class EncounterAssocData {
@@ -25,6 +27,7 @@ export class EncounterAssocData {
 	@Expose({ name: 'CHECKSITE_COUNTY' })
 	checksiteCounty!: string;
 
+	@Transform(({ value }) => DateTime.at(value).format('DD/MM/YYYY HH:mm:ss'))
 	@Expose({ name: 'ENCOUNTER_DATE' })
 	encounterDate!: string;
 
@@ -69,6 +72,7 @@ export class EncounterAssocData {
 	@Type(() => EncounterSearchDriver)
 	driverName!: EncounterSearchDriver[] | null;
 
-	@Type(() => EncounterCheckType)
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCheckType, obj))
+	@Expose({ name: '' })
 	checkType!: EncounterCheckType;
 }

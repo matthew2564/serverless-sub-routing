@@ -1,5 +1,5 @@
 import { Inject, Service } from 'typedi';
-import {Body, Get, JsonController, Param, Post, QueryParam, Res} from 'routing-controllers';
+import { Body, Get, JsonController, Param, Post, QueryParam, Res } from 'routing-controllers';
 import { Response } from 'express';
 import { LOGGER } from '../domain/di-tokens/di-tokens';
 import { Logger } from '@aws-lambda-powertools/logger';
@@ -15,6 +15,8 @@ import { OriginalProhibitionRequest } from '../domain/models/prohibition/Origina
 import { OriginalProhibitionService } from '../services/OriginalProhibitionService';
 import { EncounterRequest } from '../domain/models/encounter/encounter-search/EncounterRequest';
 import { EncounterSearchService } from '../services/EncounterSearchService';
+import { isNil, omitBy } from 'lodash';
+import { EncounterCopyService } from '../services/EncounterCopyService';
 
 @Service()
 @JsonController('/2.0/encounter')
@@ -25,6 +27,7 @@ export class EncounterResource {
 		@Inject() private fixedPenaltyService: FixedPenaltyService,
 		@Inject() private originalProhibitionService: OriginalProhibitionService,
 		@Inject() private encounterSearchService: EncounterSearchService,
+		@Inject() private encounterCopyService: EncounterCopyService,
 		@Inject(LOGGER) private logger: Logger
 	) {}
 
@@ -82,7 +85,8 @@ export class EncounterResource {
 	@Post('/search')
 	async getSearchEncounter(@Body({ validate: true }) body: EncounterRequest, @Res() response: Response) {
 		try {
-			this.logger.addPersistentLogAttributes({ body });
+			// strip the nullish values from the log attributes using `omitBy` & `isNil` from `lodash`
+			this.logger.addPersistentLogAttributes({ body: omitBy(body, isNil) });
 
 			this.logger.debug('Calling `getSearchEncounter`');
 
@@ -90,7 +94,7 @@ export class EncounterResource {
 
 			this.logger.info(`${resp.encounters.length} encounters found.`);
 
-			if (resp.encounters.length === 0) {
+			if (resp.encounters?.length === 0) {
 				return response.status(204).json({});
 			}
 			return response.status(200).json(resp);
@@ -107,6 +111,14 @@ export class EncounterResource {
 			this.logger.addPersistentLogAttributes({ encounterId });
 
 			this.logger.debug('Calling `getCopyEncounter`');
+
+			const encounter = await this.encounterCopyService.getCopyEncounter(encounterId);
+
+			if (!encounter) {
+				return response.status(204).json({});
+			}
+
+			return response.status(200).json(encounter);
 		} catch (err) {
 			this.logger.error('[ERROR]: getEncounterCopy', { err });
 

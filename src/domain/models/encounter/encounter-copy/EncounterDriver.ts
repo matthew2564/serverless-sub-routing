@@ -1,4 +1,10 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
+import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
+import { EncounterCopyDriverDetailsOrigin } from './EncounterCopyDriverDetailsOrigin';
+import { EncounterCopyNationality } from './EncounterCopyNationality';
+import { EncounterCopyDrivingLicenceType } from './EncounterCopyDrivingLicenceType';
+import { EncounterCopyDrivingLicenceCategory } from './EncounterCopyDrivingLicenceCategory';
+import { plainToInstanceOrNull } from '../../../helpers/MapModelOrNull';
 
 @Exclude()
 export class EncounterDriver {
@@ -11,6 +17,7 @@ export class EncounterDriver {
 	@Expose({ name: 'SURNAME' })
 	surname!: string;
 
+	@Transform(({ value }) => DateTime.at(value).format('DD/MM/YYYY'))
 	@Expose({ name: 'DATE_OF_BIRTH' })
 	dateOfBirth!: string;
 
@@ -55,4 +62,20 @@ export class EncounterDriver {
 
 	@Expose({ name: 'UK_RESIDENT' })
 	ukResident!: string;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyDriverDetailsOrigin, obj))
+	@Expose({ name: '' })
+	detailsOrigin!: EncounterCopyDriverDetailsOrigin;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyDrivingLicenceCategory, obj))
+	@Expose({ name: '' })
+	drivingLicenceCategory!: EncounterCopyDrivingLicenceCategory;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyDrivingLicenceType, obj))
+	@Expose({ name: '' })
+	drivingLicenceType!: EncounterCopyDrivingLicenceType;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyNationality, obj))
+	@Expose({ name: '' })
+	driverNationality!: EncounterCopyNationality;
 }

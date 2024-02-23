@@ -1,4 +1,12 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
+import { EncounterCopyPartMake } from './EncounterCopyPartMake';
+import { EncounterCopyDefectCategory } from './EncounterCopyDefectCategory';
+import { EncounterCopyDefectSection } from './EncounterCopyDefectSection';
+import { EncounterCopyDefectSubSection } from './EncounterCopyDefectSubSection';
+import { EncounterCopyDefectDesc } from './EncounterCopyDefectDesc';
+import { EncounterCopyDefectText } from './EncounterCopyDefectText';
+import { EncounterCopyDefectSeverity } from './EncounterCopyDefectSeverity';
+import { plainToInstanceOrNull } from '../../../helpers/MapModelOrNull';
 
 @Exclude()
 export class EncounterCopyDefects {
@@ -69,5 +77,33 @@ export class EncounterCopyDefects {
 	sequenceNumber!: string;
 
 	@Expose({ name: 'DUD_GEN_NUM' })
-	dudGenNum!: string;
+	dudGenNum!: number;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyPartMake, obj))
+	@Expose({ name: '' })
+	partMakes!: EncounterCopyPartMake | null;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyDefectCategory, obj))
+	@Expose({ name: '' })
+	defectCategory!: EncounterCopyDefectCategory | null;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyDefectSection, obj))
+	@Expose({ name: '' })
+	defectSection!: EncounterCopyDefectSection | null;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyDefectSubSection, obj))
+	@Expose({ name: '' })
+	defectSubSection!: EncounterCopyDefectSubSection | null;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyDefectDesc, obj))
+	@Expose({ name: '' })
+	defectDesc!: EncounterCopyDefectDesc | null;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyDefectText, obj))
+	@Expose({ name: '' })
+	defectText!: EncounterCopyDefectText | null;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyDefectSeverity, obj))
+	@Expose({ name: '' })
+	defectSeverity!: EncounterCopyDefectSeverity | null;
 }

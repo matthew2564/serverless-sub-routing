@@ -1,4 +1,9 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
+import { EncounterCopyPenaltyNoticeStatus } from './EncounterCopyPenaltyNoticeStatus';
+import { EncounterCopyDrivingLicenceStatus } from './EncounterCopyDrivingLicenceStatus';
+import { ActualPayment } from '../../fixed-penalty/ActualPayment';
+import { EncounterCopyFpnOffenceDetail } from './EncounterCopyFpnOffenceDetail';
+import { plainToInstanceOrNull } from '../../../helpers/MapModelOrNull';
 
 @Exclude()
 export class EncounterCopyFixedPenalties {
@@ -43,4 +48,22 @@ export class EncounterCopyFixedPenalties {
 
 	@Expose({ name: 'FP_PAYMENT_STATUS' })
 	fixedPenaltyNoticePaymentStatus!: string;
+
+	encounterUnit!: string;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyPenaltyNoticeStatus, obj))
+	@Expose({ name: '' })
+	noticePaymentStatus!: EncounterCopyPenaltyNoticeStatus;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyDrivingLicenceStatus, obj))
+	@Expose({ name: '' })
+	licenceCollectionStatus!: EncounterCopyDrivingLicenceStatus;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyFpnOffenceDetail, obj))
+	@Expose({ name: '' })
+	offenceDetails!: EncounterCopyFpnOffenceDetail;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(ActualPayment, obj))
+	@Expose({ name: '' })
+	paymentDetails!: ActualPayment;
 }

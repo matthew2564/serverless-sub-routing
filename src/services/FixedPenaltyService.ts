@@ -17,7 +17,7 @@ export class FixedPenaltyService {
 				return {
 					...fixedPen,
 					examiner: user ?? '',
-				} satisfies FixedPenaltyData;
+				};
 			})
 		);
 

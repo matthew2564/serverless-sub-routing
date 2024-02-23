@@ -1,4 +1,5 @@
 import { Exclude, Expose } from 'class-transformer';
+import { EncounterCopySpecialReturnFlag } from './EncounterCopySpecialReturnFlag';
 
 @Exclude()
 export class EncounterCopySpecialReturn {
@@ -37,4 +38,6 @@ export class EncounterCopySpecialReturn {
 
 	@Expose({ name: 'SPECL_RETURN_CODE_8' })
 	specialReturnCode8!: string;
+
+	specialReturnFlag!: EncounterCopySpecialReturnFlag[];
 }

@@ -1,4 +1,10 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
+import { EncounterCopyOffenceType } from './EncounterCopyOffenceType';
+import { EncounterCopyOffenceSubType } from './EncounterCopyOffenceSubType';
+import { EncounterCopyOffenceGroup } from './EncounterCopyOffenceGroup';
+import { EncounterCopyOffence } from './EncounterCopyOffence';
+import { plainToInstanceOrNull } from '../../../helpers/MapModelOrNull';
+import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 
 @Exclude()
 export class EncounterCopyOffenceData {
@@ -14,6 +20,7 @@ export class EncounterCopyOffenceData {
 	@Expose({ name: 'REFRD_FOR_INVESTIG' })
 	additionalAction!: string;
 
+	@Transform(({ value }) => DateTime.at(value).format('DD/MM/YYYY HH:mm:ss'))
 	@Expose({ name: 'OFFENCE_DATE' })
 	date!: string;
 
@@ -49,4 +56,20 @@ export class EncounterCopyOffenceData {
 
 	@Expose({ name: 'OFFENCE_DATE' })
 	dateTimeValue!: string;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyOffenceType, obj))
+	@Expose({ name: '' })
+	offenceType!: EncounterCopyOffenceType;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyOffenceSubType, obj))
+	@Expose({ name: '' })
+	offenceSubType!: EncounterCopyOffenceSubType;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyOffenceGroup, obj))
+	@Expose({ name: '' })
+	offenceGroup!: EncounterCopyOffenceGroup;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyOffence, obj))
+	@Expose({ name: '' })
+	offence!: EncounterCopyOffence;
 }

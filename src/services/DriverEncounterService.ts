@@ -32,7 +32,8 @@ export class DriverEncounterService {
 		const [observedEncounters, encounters] =
 			// If there are multiple observed drivers, we don't want to return any encounter data
 			observedDriverList.length > 1
-				? [[], []]
+				? // this results in empty arrays in this scenario
+				  [[], []]
 				: // otherwise, we want to return the encounter data for the requested driver
 				  await Promise.all([
 						this.getAssociatedObservedEncounterData(driverRequest),

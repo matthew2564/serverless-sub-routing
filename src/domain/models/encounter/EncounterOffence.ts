@@ -1,5 +1,5 @@
-import {Exclude, Expose, Transform, Type} from 'class-transformer';
-import {DateTime} from "@dvsa/cvs-microservice-common/classes/utils/date";
+import { Exclude, Expose, Transform, Type } from 'class-transformer';
+import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 
 @Exclude()
 export class EncounterOffence {

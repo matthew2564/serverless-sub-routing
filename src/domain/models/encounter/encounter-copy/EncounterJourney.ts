@@ -1,4 +1,7 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
+import { EncounterCopyJourneyType } from './EncounterCopyJourneyType';
+import { EncounterCopyPortOfExit } from './EncounterCopyPortOfExit';
+import { plainToInstanceOrNull } from '../../../helpers/MapModelOrNull';
 
 @Exclude()
 export class EncounterJourney {
@@ -32,9 +35,17 @@ export class EncounterJourney {
 	@Expose({ name: 'CON_POSTCODE' })
 	postcode!: string;
 
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyJourneyType, obj))
+	@Expose({ name: '' })
+	journeyType!: EncounterCopyJourneyType;
+
 	@Expose({ name: 'JOURNEY_START_LCTN' })
 	journeyStartLocation!: string;
 
 	@Expose({ name: 'JOURNEY_END_LOCATN' })
 	journeyEndLocation!: string;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyPortOfExit, obj))
+	@Expose({ name: '' })
+	portOfExit!: EncounterCopyPortOfExit;
 }

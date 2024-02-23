@@ -1,8 +1,8 @@
-import {Exclude, Expose, plainToInstance, Transform, Type} from 'class-transformer';
+import { Exclude, Expose, plainToInstance, Transform, Type } from 'class-transformer';
 import { EncounterAxle } from './EncounterAxle';
 import { EncounterOffence } from './EncounterOffence';
 import { EncounterNotice } from './EncounterNotice';
-import {DateTime} from "@dvsa/cvs-microservice-common/classes/utils/date";
+import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 
 @Exclude()
 export class EncounterDetail {

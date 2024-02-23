@@ -17,14 +17,10 @@ export class OriginalProhibitionService {
 
 	constructor(@Inject() private originalProhibitionProvider: OriginalProhibitionProvider) {}
 
-	async processRequest(
-		originalProhibitionRequest: OriginalProhibitionRequest
-	): Promise<OriginalProhibitionResponse | null> {
-		const ntyCode = this.getNtyCodes(originalProhibitionRequest);
-
+	async processRequest(originalProhibRequest: OriginalProhibitionRequest): Promise<OriginalProhibitionResponse | null> {
 		const issueDate = await this.originalProhibitionProvider.getIssueDate({
-			...originalProhibitionRequest,
-			ntyCodes: ntyCode,
+			...originalProhibRequest,
+			ntyCodes: this.getNtyCodes(originalProhibRequest),
 		});
 
 		if (!issueDate) {
@@ -37,11 +33,11 @@ export class OriginalProhibitionService {
 			timeStamp: new DateTime().format('DD/MM/YYYY HH:mm:ss'),
 			originalProhibitionDate,
 			originalProhibitionTime,
-			originalProhibitionRequest,
+			originalProhibitionRequest: originalProhibRequest,
 		};
 	}
 
-	getNtyCodes(originalProhibitionRequest: OriginalProhibitionRequest) {
+	getNtyCodes(originalProhibitionRequest: OriginalProhibitionRequest): string[] {
 		if (OriginalProhibitionService.ROADWORTHINESS_CODES.includes(originalProhibitionRequest.fkNotNtyCode)) {
 			return OriginalProhibitionService.ROADWORTHINESS_SEARCH_CODES;
 		}

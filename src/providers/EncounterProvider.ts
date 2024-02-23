@@ -7,7 +7,7 @@ import { Params } from 'mybatis-mapper';
 import { EncounterNotice } from '../domain/models/encounter/EncounterNotice';
 import { EncounterOffence } from '../domain/models/encounter/EncounterOffence';
 import { EncounterDefect } from '../domain/models/encounter/EncounterDefect';
-import {DateTime} from "@dvsa/cvs-microservice-common/classes/utils/date";
+import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 
 @Service()
 export class EncounterProvider {
@@ -59,9 +59,7 @@ export class EncounterProvider {
 						const noticeParams = {
 							genNum: notice.noticeGeneratedNumber,
 							noticeType: notice.noticeType,
-							noticeInputDate: DateTime.at(
-								notice.noticeInputDate, 'DD/MM/YYYY HH:mm:ss'
-							).format('YYYY-MM-DDTHH:mm:ss'),
+							noticeInputDate: DateTime.at(notice.noticeInputDate, 'DD/MM/YYYY HH:mm:ss').format('YYYY-MM-DDTHH:mm:ss'),
 						};
 
 						const [encounterDefects, encounterOffences] = await Promise.all([

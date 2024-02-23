@@ -1,16 +1,32 @@
-import { Exclude, Expose, Type } from 'class-transformer';
+import { Exclude, Expose, Transform, Type } from 'class-transformer';
 import { EncounterAdditionalText } from './EncounterAdditionalText';
 import { EncounterCopySpecialReturn } from './EncounterCopySpecialReturn';
 import { EncounterCopyDefectProsecutionCode } from './EncounterCopyDefectProsecutionCode';
 import { EncounterCopyInspectionLevel } from './EncounterCopyInspectionLevel';
+import { plainToInstanceOrNull } from '../../../helpers/MapModelOrNull';
 
 @Exclude()
 export class EncounterAdditionalInformation {
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyInspectionLevel, obj))
+	@Expose({ name: '' })
+	inspectionLevel!: EncounterCopyInspectionLevel;
+
 	@Expose({ name: 'WEIGHT_CHECK_IND' })
 	vehicleWeighed!: string;
 
 	@Expose({ name: 'SPEED_LIMITER_CHECKED' })
 	speedLimitedCheck!: string;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyDefectProsecutionCode, obj))
+	@Expose({ name: '' })
+	defectProsecution!: EncounterCopyDefectProsecutionCode;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopySpecialReturn, obj))
+	@Expose({ name: '' })
+	specialReturnCode!: EncounterCopySpecialReturn;
+
+	@Type(() => EncounterAdditionalText)
+	additionalText!: EncounterAdditionalText[];
 
 	@Expose({ name: 'ACTUAL_DRIVER_PAPER_TACHO_QTY' })
 	analogueChartsActualDriver!: string;
@@ -29,16 +45,4 @@ export class EncounterAdditionalInformation {
 
 	@Expose({ name: 'MIU' })
 	miu!: string;
-
-	@Type(() => EncounterAdditionalText)
-	additionalText!: EncounterAdditionalText[];
-
-	@Type(() => EncounterCopySpecialReturn)
-	specialReturnCode!: EncounterCopySpecialReturn;
-
-	@Type(() => EncounterCopyDefectProsecutionCode)
-	defectProsecution!: EncounterCopyDefectProsecutionCode;
-
-	@Type(() => EncounterCopyInspectionLevel)
-	inspectionLevel!: EncounterCopyInspectionLevel;
 }

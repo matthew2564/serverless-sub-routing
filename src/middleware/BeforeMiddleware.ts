@@ -66,7 +66,7 @@ export class BeforeMiddleware implements ExpressMiddlewareInterface {
 		const connection = createConnection({
 			// host: secret.host,
 			// @TODO: Ask SMC to create a `host` key in secrets manager
-			host: 'bastion.dev-ctrl.smc.dvsacloud.uk',
+			host: process.env.DB_HOST,
 			database: secret.target,
 			user: secret.username,
 			password: secret.password,

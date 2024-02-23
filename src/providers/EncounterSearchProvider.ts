@@ -38,7 +38,8 @@ export class EncounterSearchProvider {
 						immobilisationCount,
 						sanction,
 					] = await Promise.all([
-						// pass in the encounter id to the getTrailerCount method to return the number of trailers for the entire encounter
+						// pass in the encounter id to the getTrailerCount method to return the number of
+						// trailers for the entire encounter
 						this.getTrailerCount(encounter.encounterIdentifier),
 
 						// populate driver name array with list drivers
@@ -89,7 +90,14 @@ export class EncounterSearchProvider {
 	async getTrailerCount(encounterID: string) {
 		// @TODO: Role check - getAllowEncounter OR getAllowEms
 
-		const result = await this.session.selectAndCatchSilently('getTrailerCount', { encounterID }, EncounterTrailerCount);
+		const result = await this.session.selectAndCatchSilently(
+			'getTrailerCount',
+			{
+				identifier: encounterID,
+			},
+			EncounterTrailerCount
+		);
+
 		return result[0];
 	}
 
@@ -102,7 +110,7 @@ export class EncounterSearchProvider {
 		// get list of notices for all associated vehicles by the encounter id
 		const encounterSanctionList = await this.session.selectAndCatchSilently(
 			'getSanctionCode',
-			{ encounterID },
+			{ identifier: encounterID },
 			EncounterSanction
 		);
 

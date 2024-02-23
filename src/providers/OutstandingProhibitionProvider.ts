@@ -1,5 +1,4 @@
-import { Container, Inject, Service } from 'typedi';
-import { default as Session } from 'mybatis-mapper/create-session';
+import { Container, Service } from 'typedi';
 import { SESSION } from '../domain/di-tokens/di-tokens';
 import { OutstandingProhibitionData } from '../domain/models/prohibition/OutstandingProhibitionData';
 
@@ -21,8 +20,6 @@ export class OutstandingProhibitionProvider {
 			{ identifier },
 			OutstandingProhibitionData
 		);
-
-		console.log(outstandingProhibitionData);
 
 		return outstandingProhibitionData.map((outstandingProhibition) => {
 			const prohibitionKey = this.getProhibitionKey(outstandingProhibition.noticeCode);

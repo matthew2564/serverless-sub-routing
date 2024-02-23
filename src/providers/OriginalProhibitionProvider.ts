@@ -9,7 +9,7 @@ export class OriginalProhibitionProvider {
 		return Container.get(SESSION);
 	}
 
-	async getIssueDate(originalProhibitionRequest: OriginalProhibitionRequest) {
+	async getIssueDate(originalProhibitionRequest: OriginalProhibitionRequest): Promise<string | null> {
 		const data = await this.session.selectOne(
 			'getIssueDate',
 			{ ...originalProhibitionRequest },

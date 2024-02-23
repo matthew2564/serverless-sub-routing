@@ -1,9 +1,19 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
+import { EncounterCopyRoadVehicleType } from './EncounterCopyRoadVehicleType';
+import { EncounterCopyNoticeTypeDetail } from './EncounterCopyNoticeTypeDetail';
+import { EncounterCopyNoticeType } from './EncounterCopyNoticeType';
+import { EncounterCopyOffenceCode } from './EncounterCopyOffenceCode';
+import { EncounterCopyRemovalInstruction } from './EncounterCopyRemovalInstruction';
+import { EncounterCopySanction } from './EncounterCopySanction';
+import { EncounterCopyFpnFixedPenalty } from './EncounterCopyFpnFixedPenalty';
+import { EncounterCopyExemptionCondition } from './EncounterCopyExemptionCondition';
+import { plainToInstanceOrNull } from '../../../helpers/MapModelOrNull';
+import { DateTime } from '@dvsa/cvs-microservice-common/classes/utils/date';
 
 @Exclude()
 export class EncounterCopyNotices {
 	@Expose({ name: 'ENCOUNTER_ID' })
-	encounterIdentifier!: string;
+	encounterIdentifier!: number;
 
 	@Expose({ name: 'RTE_VEH_ID' })
 	unitId!: string;
@@ -14,6 +24,18 @@ export class EncounterCopyNotices {
 	@Expose({ name: '' })
 	issueUnitType!: string;
 
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyRoadVehicleType, obj))
+	@Expose({ name: '' })
+	vehicleType!: EncounterCopyRoadVehicleType;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyNoticeTypeDetail, obj))
+	@Expose({ name: '' })
+	noticeTypeDetail!: EncounterCopyNoticeTypeDetail;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyNoticeType, obj))
+	@Expose({ name: '' })
+	noticeType!: EncounterCopyNoticeType;
+
 	@Expose({ name: 'NOTICE_TYPE' })
 	noticeCode!: string;
 
@@ -23,12 +45,14 @@ export class EncounterCopyNotices {
 	@Expose({ name: 'NOTICE_STATUS' })
 	noticeStatus!: string;
 
+	@Transform(({ value }) => (value ? DateTime.at(value).format('DD/MM/YYYY') : null))
 	@Expose({ name: 'ORGINAL_ISSUE_DATE' })
 	originalProhibDate!: string;
 
 	@Expose({ name: 'ORGINAL_ISSUE_TIME' })
 	originalProhibTime!: string;
 
+	@Transform(({ value }) => (value ? DateTime.at(value).format('DD/MM/YYYY') : null))
 	@Expose({ name: 'NTC_ISSUE_DATE' })
 	issueDate!: string;
 
@@ -44,6 +68,7 @@ export class EncounterCopyNotices {
 	@Expose({ name: 'DEFERRAL_PERIOD' })
 	deferralHours!: string;
 
+	@Transform(({ value }) => (value ? DateTime.at(value).format('DD/MM/YYYY') : null))
 	@Expose({ name: 'NOTICE_IN_FORCE_DATE' })
 	inForceDate!: string;
 
@@ -65,6 +90,7 @@ export class EncounterCopyNotices {
 	@Expose({ name: 'NTC_REST_HOURS' })
 	restPeriodHours!: string;
 
+	@Transform(({ value }) => (value ? DateTime.at(value).format('DD/MM/YYYY HH:mm:ss') : null))
 	@Expose({ name: 'INPUT_DATE' })
 	inputDateTime!: string;
 
@@ -80,8 +106,7 @@ export class EncounterCopyNotices {
 	@Expose({ name: 'RAW_NOTICE_TYPE' })
 	code!: string;
 
-	@Expose({ name: '' })
-	criteriaMet!: string;
+	criteriaMet: string | null = null;
 
 	@Expose({ name: 'RECEIVED_BY_FORENME' })
 	receivedByFirstName!: string;
@@ -101,12 +126,17 @@ export class EncounterCopyNotices {
 	@Expose({ name: 'PAYMENT_DUE' })
 	paymentDue!: string;
 
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyOffenceCode, obj))
+	@Expose({ name: '' })
+	offenceCode!: EncounterCopyOffenceCode;
+
 	@Expose({ name: 'DRIVER_NAME' })
 	driver!: string;
 
 	@Expose({ name: 'REFRD_FOR_INVESTIG' })
 	additionalAction!: string;
 
+	@Transform(({ value }) => (value ? DateTime.at(value).format('DD/MM/YYYY HH:mm:ss') : null))
 	@Expose({ name: 'OFFENCE_DATE' })
 	dateOfOffence!: string;
 
@@ -115,6 +145,10 @@ export class EncounterCopyNotices {
 
 	@Expose({ name: 'ENDORSABLE_FLAG' })
 	endorsableOffence!: string;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopySanction, obj))
+	@Expose({ name: '' })
+	sanction!: EncounterCopySanction;
 
 	@Expose({ name: 'ADDITIONAL_TEXT' })
 	notes!: string;
@@ -125,7 +159,7 @@ export class EncounterCopyNotices {
 	@Expose({ name: 'OTHER_OPERATOR' })
 	historicalOperator!: string;
 
-	@Expose({ name: 'ADDITIONAL_TEXT' })
+	@Expose({ name: 'ADD_TEXT' })
 	additionalText!: string;
 
 	@Expose({ name: 'TOWING_VEH_ID' })
@@ -133,4 +167,16 @@ export class EncounterCopyNotices {
 
 	@Expose({ name: 'DANGER_GOODS_IMM_PROH_IND' })
 	dangerGoodsImmProhInd!: string;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyRemovalInstruction, obj))
+	@Expose({ name: '' })
+	removalMethod!: EncounterCopyRemovalInstruction | null;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyFpnFixedPenalty, obj))
+	@Expose({ name: '' })
+	fixedPenaltyNotice!: EncounterCopyFpnFixedPenalty | null;
+
+	@Transform(({ obj }) => plainToInstanceOrNull(EncounterCopyExemptionCondition, obj))
+	@Expose({ name: '' })
+	exemptionConditions!: EncounterCopyExemptionCondition | null;
 }

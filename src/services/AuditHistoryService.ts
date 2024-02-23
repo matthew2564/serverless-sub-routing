@@ -14,18 +14,18 @@ export class AuditHistoryService {
 
 		if (auditHistory.length === 0) {
 			return {
-				timeStamp: new Date().toISOString(),
+				timeStamp: new DateTime().format('DD/MM/YYYY HH:mm:ss'),
 				auditHistory,
 			};
 		}
 
 		const auditData: AuditEvent[] = await Promise.all(
-			auditHistory.map(async (auditEvent) => ({
+			// destructure the callback argument to get the fkAevEventCode and the rest of the auditEvent without fkAevEventCode
+			auditHistory.map(async ({ fkAevEventCode, ...auditEvent }) => ({
+				// we then spread the object here
 				...auditEvent,
-				fkAevEventCode: undefined, // set as undefined to remove from payload
-				aevEventCode: (await this.auditHistoryProvider.getFkAevEvent(
-					auditEvent.fkAevEventCode as string
-				)) satisfies AevEventCode,
+				// and use the `fkAevEventCode` to do a lookup for the `aevEventCode`
+				aevEventCode: (await this.auditHistoryProvider.getFkAevEvent(fkAevEventCode as string)) satisfies AevEventCode,
 			}))
 		);
 

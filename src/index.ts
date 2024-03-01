@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import serverless from 'serverless-http';
 import { createExpressServer, useContainer } from 'routing-controllers';
 import { Container } from 'typedi';
-import { UserResource } from './resources/UserResource';
+import { DefectsResource } from './resources/DefectsResource';
 import { BeforeMiddleware } from './middleware/BeforeMiddleware';
 import { CustomErrorMiddleware } from './middleware/CustomErrorMiddleware';
 import { NotFoundMiddleware } from './middleware/NotFoundMiddleware';
@@ -14,7 +14,7 @@ useContainer(Container);
 const app = createExpressServer({
 	cors: true,
 	defaultErrorHandler: false,
-	controllers: [UserResource, VersionResource],
+	controllers: [DefectsResource, VersionResource],
 	middlewares: [BeforeMiddleware, CustomErrorMiddleware, NotFoundMiddleware],
 });
 

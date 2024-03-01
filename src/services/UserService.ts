@@ -1,14 +1,12 @@
 import { Inject, Service } from 'typedi';
 import { HttpError, NotFoundError } from 'routing-controllers';
 import { UserProvider } from '../providers/UserProvider';
-import { User } from '../models/UserModel';
-import { ErrorEnum } from '../enums/Error.enum';
+import { ErrorEnum } from '../domain/enums/Error.enum';
+import type { User } from '../domain/models/UserModel';
 
 @Service()
 export class UserService {
-	constructor(@Inject() private userProvider: UserProvider) {
-		this.userProvider = userProvider;
-	}
+	constructor(@Inject() private userProvider: UserProvider) {}
 
 	async getUserByStaffNumber(staffNumber: string): Promise<void> {
 		const user = await this.userProvider.findUserRecord(staffNumber);

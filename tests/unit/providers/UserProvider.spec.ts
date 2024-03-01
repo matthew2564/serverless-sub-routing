@@ -1,7 +1,7 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
-import { UserProvider } from '../UserProvider';
-import { User } from '../../models/UserModel';
+import { UserProvider } from '../../../src/providers/UserProvider';
+import { User } from '../../../src/domain/models/UserModel';
 
 // Mocking the AWS SDK and credential providers
 jest.mock('@aws-sdk/lib-dynamodb', () => ({

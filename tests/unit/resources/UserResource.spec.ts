@@ -1,27 +1,24 @@
 import { HttpError, NotFoundError } from 'routing-controllers';
 import { Response } from 'express';
 import { Container } from 'typedi';
-import { version } from '../../../package.json';
-import { UserService } from '../../services/UserService';
-import { UserResource } from '../UserResource';
-import { User } from '../../models/UserModel';
-import { ErrorEnum } from '../../enums/Error.enum';
-import { UserServiceMock } from '../../services/__mocks__/UserService.mock';
+import { UserService } from '../../../src/services/UserService';
+import { UserResource } from '../../../src/resources/UserResource';
+import { User } from '../../../src/domain/models/UserModel';
+import { ErrorEnum } from '../../../src/domain/enums/Error.enum';
+import { UserServiceMock } from '../../mocks/services/UserService.mock';
+import { LOGGER } from '../../../src/domain/di-tokens/di-tokens';
+import { Logger } from '@aws-lambda-powertools/logger';
+import { AWSPowerToolsLoggerMock } from '../../mocks/packages/power-tools-logger.mock';
+import { ExpressMock } from '../../mocks/packages/express.mock';
 
-jest.mock('../../services/UserService');
-jest.mock('../../providers/UserProvider');
-jest.mock('@aws-lambda-powertools/logger', () => ({
-	Logger: jest.fn().mockImplementation(() => ({
-		info: jest.fn(),
-		debug: jest.fn(),
-		error: jest.fn(),
-	})),
-}));
+jest.mock('../../../src/services/UserService');
+jest.mock('../../../src/providers/UserProvider');
 
 describe('UserResource', () => {
 	let userResource: UserResource;
 	let mockUserService: jest.Mocked<UserService>;
-	let mockResponse: Partial<Response>;
+	let mockLogger: jest.Mocked<Logger>;
+	const mockResponse: Partial<Response> = ExpressMock.factory;
 	const mockUser: User = {
 		staffNumber: '123',
 		age: 65,
@@ -30,39 +27,18 @@ describe('UserResource', () => {
 	beforeEach(() => {
 		// set the mock implementation
 		Container.set(UserService, new UserServiceMock());
+		Container.set(LOGGER, AWSPowerToolsLoggerMock.factory.Logger);
 
 		// get the mock service from the container
 		mockUserService = Container.get(UserService) as jest.Mocked<UserService>;
+		mockLogger = Container.get(LOGGER) as jest.Mocked<Logger>;
 
 		// inject the mock service into the resource
-		userResource = new UserResource(mockUserService);
-
-		mockResponse = {
-			status: jest.fn().mockReturnThis(),
-			json: jest.fn().mockReturnThis(),
-			send: jest.fn().mockReturnThis(),
-		};
+		userResource = new UserResource(mockUserService, mockLogger);
 	});
 
-	describe('authRestrictedRoute', () => {
-		it('should return the status code for being able to be accessed', () => {
-			// ACT
-			userResource.authRestrictedRoute(mockResponse as Response);
-
-			// ASSERT
-			expect(mockResponse.status).toHaveBeenCalledWith(200);
-		});
-	});
-
-	describe('getVersion', () => {
-		it('should return the version from the package.json', () => {
-			// ACT
-			userResource.getVersion(mockResponse as Response);
-
-			// ASSERT
-			expect(mockResponse.status).toHaveBeenCalledWith(200);
-			expect(mockResponse.json).toHaveBeenCalledWith({ version });
-		});
+	afterEach(() => {
+		jest.clearAllMocks();
 	});
 
 	describe('getUser', () => {
@@ -71,6 +47,8 @@ describe('UserResource', () => {
 			await userResource.getUser(123, mockResponse as Response);
 
 			// ASSERT
+			expect(mockLogger.debug).toHaveBeenCalledWith(`Calling \`getUserByStaffNumber\``);
+			expect(mockLogger.info).toHaveBeenCalledWith('User found');
 			expect(mockResponse.status).toHaveBeenCalledWith(200);
 			expect(mockResponse.json).toHaveBeenCalledWith({});
 		});
@@ -83,6 +61,7 @@ describe('UserResource', () => {
 			await userResource.getUser(456, mockResponse as Response);
 
 			// ASSERT
+			expect(mockLogger.error).toHaveBeenCalledWith('[ERROR]: getUser', 'User not found');
 			expect(mockResponse.status).toHaveBeenCalledWith(404);
 			expect(mockResponse.send).toHaveBeenCalledWith({ message: 'User not found' });
 		});
@@ -95,6 +74,7 @@ describe('UserResource', () => {
 			await userResource.getUser(789, mockResponse as Response);
 
 			// ASSERT
+			expect(mockLogger.error).toHaveBeenCalledWith('[ERROR]: getUser', 'Unexpected error');
 			expect(mockResponse.status).toHaveBeenCalledWith(500);
 			expect(mockResponse.send).toHaveBeenCalledWith({ message: 'Internal server error' });
 		});
@@ -106,11 +86,13 @@ describe('UserResource', () => {
 			await userResource.createUser(mockUser, mockResponse as Response);
 
 			// ASSERT
+			expect(mockLogger.debug).toHaveBeenCalledWith(`Calling \`postUser\``);
+			expect(mockLogger.info).toHaveBeenCalledWith('User added');
 			expect(mockResponse.status).toHaveBeenCalledWith(201);
 			expect(mockResponse.json).toHaveBeenCalledWith({ message: 'User added: 123' });
 		});
 
-		it('should return 500 when an unexpected/unknown error occurs', async () => {
+		it('should return 500 when a known error occurs', async () => {
 			// ARRANGE
 			mockUserService.postUser.mockRejectedValue(new HttpError(500, ErrorEnum.CREATING));
 
@@ -118,6 +100,7 @@ describe('UserResource', () => {
 			await userResource.createUser(mockUser, mockResponse as Response);
 
 			// ASSERT
+			expect(mockLogger.error).toHaveBeenCalledWith('[ERROR]: postUser', { err: 'Failed to create' });
 			expect(mockResponse.status).toHaveBeenCalledWith(500);
 			expect(mockResponse.send).toHaveBeenCalledWith({ message: 'Internal server error. Failed to create.' });
 		});
@@ -130,6 +113,7 @@ describe('UserResource', () => {
 			await userResource.createUser(mockUser, mockResponse as Response);
 
 			// ASSERT
+			expect(mockLogger.error).toHaveBeenCalledWith('[ERROR]: postUser', { err: 'Unexpected err' });
 			expect(mockResponse.status).toHaveBeenCalledWith(500);
 			expect(mockResponse.send).toHaveBeenCalledWith({ message: 'Internal server error. Unknown error.' });
 		});

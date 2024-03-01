@@ -1,7 +1,7 @@
 import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { Service } from 'typedi';
 import { DynamoDb } from '@dvsa/cvs-microservice-common/classes/aws/dynamo-db-client';
-import { User } from '../models/UserModel';
+import type { User } from '../domain/models/UserModel';
 
 @Service()
 export class UserProvider {

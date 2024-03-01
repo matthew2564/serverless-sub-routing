@@ -28,7 +28,6 @@
   "dependencies": {
     "@aws-lambda-powertools/commons": "^1.17.0",
     "@aws-lambda-powertools/logger": "^1.17.0",
-    "@aws-sdk/lib-dynamodb": "^3.490.0",
     "@dvsa/cvs-microservice-common": "^0.6.0",
     "@dvsa/cvs-type-definitions": "^6.0.1",
     "cors": "^2.8.5",

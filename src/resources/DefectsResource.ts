@@ -1,5 +1,6 @@
 import { Inject, Service } from 'typedi';
 import { BadRequestError, Get, JsonController, NotFoundError, Res } from 'routing-controllers';
+import { OpenAPI } from 'routing-controllers-openapi';
 import { Response } from 'express';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes';
@@ -8,6 +9,9 @@ import { DefectsService } from '../services/DefectsService';
 import { ErrorEnum } from '../domain/enums/Error.enum';
 import { RequiredStandardsService } from '../services/RequiredStandardsService';
 import { NotNullQueryParam } from '../domain/decorators/NotNullQueryParam';
+import { OpenAPISpecResponses } from '../../documentation/spec/responses/responses';
+import { OpenAPISpecServers } from '../../documentation/spec/servers/servers';
+import { OpenAPISpecParams } from '../../documentation/spec/parameters/parameters';
 
 @Service()
 @JsonController('/1.0/defects')
@@ -19,6 +23,15 @@ export class DefectsResource {
 	) {}
 
 	@Get('')
+	@OpenAPI({
+		description: 'API for retrieving a list of defect reference data',
+		tags: ['Defects'],
+		servers: OpenAPISpecServers.SERVERS,
+		responses: {
+			'200': OpenAPISpecResponses.OK('DefectDetails'),
+			'500': OpenAPISpecResponses.INTERNAL_SERVER_ERROR,
+		},
+	})
 	async getDefects(@Res() response: Response) {
 		try {
 			this.logger.debug(`Calling \`getDefectList\``);
@@ -39,6 +52,16 @@ export class DefectsResource {
 	}
 
 	@Get('/required-standards')
+	@OpenAPI({
+		description: 'API for retrieving a list of required standards',
+		tags: ['Defects'],
+		parameters: OpenAPISpecParams.PARAMS.RequiredStandards,
+		servers: OpenAPISpecServers.SERVERS,
+		responses: {
+			'200': OpenAPISpecResponses.OK('RequiredStandards'),
+			'500': OpenAPISpecResponses.INTERNAL_SERVER_ERROR,
+		},
+	})
 	async getRequiredStandards(
 		@NotNullQueryParam('euVehicleCategory') euVehicleCategory: string,
 		@Res() response: Response

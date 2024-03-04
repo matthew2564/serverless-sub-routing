@@ -1,5 +1,6 @@
 import { Inject, Service } from 'typedi';
 import { Get, JsonController, Res } from 'routing-controllers';
+import { OpenAPI } from 'routing-controllers-openapi';
 import { Logger } from '@aws-lambda-powertools/logger';
 import type { Response } from 'express';
 import { VersionService } from '../services/VersionService';
@@ -14,6 +15,15 @@ export class VersionResource {
 	) {}
 
 	@Get('')
+	@OpenAPI({
+		description: 'API for retrieving the version of the service',
+		tags: ['version'],
+		responses: {
+			'200': {
+				description: 'OK',
+			},
+		},
+	})
 	getVersion(@Res() response: Response) {
 		const versionData = this.versionService.getVersion();
 

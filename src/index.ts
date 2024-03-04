@@ -11,7 +11,7 @@ import { VersionResource } from './resources/VersionResource';
 // This line tells routing-controllers to use typedi container
 useContainer(Container);
 
-const app = createExpressServer({
+export const app = createExpressServer({
 	cors: true,
 	defaultErrorHandler: false,
 	controllers: [DefectsResource, VersionResource],

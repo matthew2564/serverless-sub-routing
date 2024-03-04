@@ -25,7 +25,7 @@ export class RequiredStandardsService {
 
 		// if lookup not successful, throw bad request error
 		if (!categoryEnumKey) {
-			throw new BadRequestError(`Invalid EU Vehicle Category provided - ${euVehicleCategory}`);
+			throw new BadRequestError(`Invalid EU Vehicle Category provided - \`${euVehicleCategory}\``);
 		}
 
 		// get required standards using valid `euVehicleCategory`

@@ -1,5 +1,5 @@
 import { Inject, Service } from 'typedi';
-import { BadRequestError, Get, JsonController, NotFoundError, QueryParam, Res } from 'routing-controllers';
+import { BadRequestError, Get, JsonController, NotFoundError, Res } from 'routing-controllers';
 import { Response } from 'express';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes';
@@ -7,6 +7,7 @@ import { LOGGER } from '../domain/di-tokens/di-tokens';
 import { DefectsService } from '../services/DefectsService';
 import { ErrorEnum } from '../domain/enums/Error.enum';
 import { RequiredStandardsService } from '../services/RequiredStandardsService';
+import { NotNullQueryParam } from '../domain/decorators/NotNullQueryParam';
 
 @Service()
 @JsonController('/1.0/defects')
@@ -38,11 +39,14 @@ export class DefectsResource {
 	}
 
 	@Get('/required-standards')
-	async getRequiredStandards(@QueryParam('euVehicleCategory') euVehicleCategory: string, @Res() response: Response) {
+	async getRequiredStandards(
+		@NotNullQueryParam('euVehicleCategory') euVehicleCategory: string,
+		@Res() response: Response
+	) {
 		try {
 			this.logger.addPersistentLogAttributes({ euVehicleCategory });
 
-			this.logger.debug(`Calling \`getRequiredStandardsByEUVehicleCategory\``);
+			this.logger.debug(`Calling \`getByEUVehicleCategory\``);
 
 			const resp = await this.requiredStandardsService.getByEUVehicleCategory(euVehicleCategory);
 
@@ -56,7 +60,10 @@ export class DefectsResource {
 			this.logger.error('[ERROR]: getRequiredStandards', { err });
 
 			if (err instanceof BadRequestError) {
-				return response.status(HttpStatus.BAD_REQUEST).send({ message: err.message });
+				return response.status(HttpStatus.BAD_REQUEST).send({
+					message: ErrorEnum.VALIDATION,
+					detail: err.message,
+				});
 			}
 			return response.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ message: ErrorEnum.INTERNAL_SERVER_ERROR });
 		}

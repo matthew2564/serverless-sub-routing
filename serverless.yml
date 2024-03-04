@@ -6,7 +6,8 @@ provider:
   stage: dev
   region: eu-west-1
   environment:
-    USERS_DDB_TABLE_NAME: users
+    DEFECTS_DDB_TABLE_NAME: defects-local
+    REQUIRED_STANDARDS_DDB_TABLE_NAME: required-standards-local
     DDB_OFFLINE_ENDPOINT: http://localhost:8000
     AWS_ACCESS_KEY_ID: accessKeyId
     AWS_SECRET_ACCESS_KEY: secretAccessKey
@@ -32,21 +33,40 @@ custom:
     seed:
       test:
         sources:
-          - table: users
-            sources: [./test-data/dynamo-seed-users.json]
+          - table: ${self:provider.environment.DEFECTS_DDB_TABLE_NAME}
+            sources: [./tests/test-data/dynamo-seed-defects.json]
+          - table: ${self:provider.environment.REQUIRED_STANDARDS_DDB_TABLE_NAME}
+            sources: [./tests/test-data/dynamo-seed-required-standards.json]
 
 resources:
   Resources:
-    users:
+    defects:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:provider.environment.USERS_DDB_TABLE_NAME}
+        TableName: ${self:provider.environment.DEFECTS_DDB_TABLE_NAME}
         AttributeDefinitions:
-          - AttributeName: staffNumber
+          - AttributeName: id
+            AttributeType: N
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+    requiredStandards:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.REQUIRED_STANDARDS_DDB_TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: euVehicleCategory
+            AttributeType: S
+          - AttributeName: sectionNumber
             AttributeType: S
         KeySchema:
-          - AttributeName: staffNumber
+          - AttributeName: euVehicleCategory
             KeyType: HASH
+          - AttributeName: sectionNumber
+            KeyType: RANGE
         ProvisionedThroughput:
           ReadCapacityUnits: 5
           WriteCapacityUnits: 5

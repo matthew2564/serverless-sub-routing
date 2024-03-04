@@ -4,7 +4,7 @@ import { CustomErrorMiddleware } from '../../../src/middleware/CustomErrorMiddle
 import { ValidationError } from 'class-validator';
 import { ExpressMock } from '../../mocks/packages/express.mock';
 import { Container } from 'typedi';
-import { LOGGER } from '../../../src/domain/di-tokens/di-tokens';
+import { LOGGER } from '../../../src/domain/di-tokens/Tokens';
 import { AWSPowerToolsLoggerMock } from '../../mocks/packages/power-tools-logger.mock';
 import { CustomError } from '../../../src/domain/models/CustomError';
 import { ErrorEnum } from '../../../src/domain/enums/Error.enum';

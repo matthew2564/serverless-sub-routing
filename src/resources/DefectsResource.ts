@@ -3,7 +3,7 @@ import { BadRequestError, Get, JsonController, NotFoundError, Res } from 'routin
 import { Response } from 'express';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes';
-import { LOGGER } from '../domain/di-tokens/di-tokens';
+import { LOGGER } from '../domain/di-tokens/Tokens';
 import { DefectsService } from '../services/DefectsService';
 import { ErrorEnum } from '../domain/enums/Error.enum';
 import { RequiredStandardsService } from '../services/RequiredStandardsService';

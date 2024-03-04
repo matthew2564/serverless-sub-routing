@@ -3,7 +3,7 @@ import { Get, JsonController, Res } from 'routing-controllers';
 import { Logger } from '@aws-lambda-powertools/logger';
 import type { Response } from 'express';
 import { VersionService } from '../services/VersionService';
-import { LOGGER } from '../domain/di-tokens/di-tokens';
+import { LOGGER } from '../domain/di-tokens/Tokens';
 
 @Service()
 @JsonController('/1.0/version')

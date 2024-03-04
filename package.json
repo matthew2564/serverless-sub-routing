@@ -1,14 +1,15 @@
 {
   "name": "serverless-sub-routing",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Serverless Sub Routing with DI",
-  "main": "./src/index.ts",
+  "main": "src/index.ts",
   "author": "matthew2564",
   "friendlyName": "Serverless Sub Routing",
   "license": "ISC",
   "scripts": {
     "clean": "rimraf artifacts build dist",
     "format": "prettier . --write",
+    "generate-openapi-spec": "ts-node documentation/generate-openapi-spec.ts",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "test": "jest",

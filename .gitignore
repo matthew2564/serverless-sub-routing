@@ -1,7 +1,7 @@
 .DS_Store
 **/.DS_Store
 .dynamodb/
-idea/
+.idea/
 build
 dist
 /artifacts/

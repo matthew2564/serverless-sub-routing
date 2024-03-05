@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="debug-ts" type="NodeJSConfigurationType" application-parameters="run start:debug" path-to-js-file="$USER_HOME$/.n/bin/npm" working-dir="$PROJECT_DIR$/src">
+    <envs>
+      <env name="TS_NODE_PROJECT" value="tsconfig.json" />
+    </envs>
+    <method v="2" />
+  </configuration>
+</component>

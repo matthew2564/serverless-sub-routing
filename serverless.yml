@@ -4,6 +4,7 @@ provider:
   name: aws
   runtime: nodejs20.x
   stage: dev
+  timeout: 60
   region: eu-west-1
   environment:
     DEFECTS_DDB_TABLE_NAME: defects-local
@@ -14,7 +15,7 @@ provider:
 
 functions:
   app:
-    handler: dist/lambda.handler
+    handler: dist/src/index.handler
     events:
       - http:
           path: /{proxy+}

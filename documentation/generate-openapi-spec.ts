@@ -27,6 +27,7 @@ async function deleteFileIfExists() {
 
 	// Generate the OpenAPI spec
 	const spec = routingControllersToSpec(getMetadataArgsStorage(), app, {
+		openapi: '3.1.0',
 		info: {
 			title: name,
 			version,

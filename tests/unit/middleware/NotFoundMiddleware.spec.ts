@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { NotFoundMiddleware } from '../../../src/middleware/NotFoundMiddleware';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { Container } from 'typedi';
-import { LOGGER } from '../../../src/domain/di-tokens/di-tokens';
+import { LOGGER } from '../../../src/domain/di-tokens/Tokens';
 import { AWSPowerToolsLoggerMock } from '../../mocks/packages/power-tools-logger.mock';
 import { ExpressMock } from '../../mocks/packages/express.mock';
 

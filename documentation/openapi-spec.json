@@ -1,0 +1,631 @@
+{
+  "components": {
+    "schemas": {
+      "DefectDetails": {
+        "title": "Defect Details Schema",
+        "type": "object",
+        "properties": {
+          "imNumber": {
+            "type": "integer"
+          },
+          "imDescription": {
+            "type": "string"
+          },
+          "additionalInformation": {
+            "properties": {
+              "location": {
+                "title": "Defect Location Schema",
+                "type": "object",
+                "properties": {
+                  "vertical": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "horizontal": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "lateral": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "longitudinal": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "rowNumber": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "seatNumber": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "axleNumber": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "notes": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "location",
+              "notes"
+            ]
+          },
+          "itemNumber": {
+            "type": "integer"
+          },
+          "itemDescription": {
+            "type": "string"
+          },
+          "deficiencyRef": {
+            "type": "string"
+          },
+          "deficiencyId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "deficiencySubId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "deficiencyCategory": {
+            "type": "string"
+          },
+          "deficiencyText": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stdForProhibition": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "prs": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "prohibitionIssued": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "metadata": {
+            "title": "Defect Metadata Schema",
+            "type": "object",
+            "properties": {
+              "category": {
+                "properties": {
+                  "additionalInfo": {
+                    "title": "Defect Additional Details Metadata Schema",
+                    "type": "object",
+                    "properties": {
+                      "location": {
+                        "title": "Defect Location Metadata Schema",
+                        "type": "object",
+                        "properties": {
+                          "vertical": {
+                            "anyOf": [
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "horizontal": {
+                            "anyOf": [
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "lateral": {
+                            "anyOf": [
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "longitudinal": {
+                            "anyOf": [
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "rowNumber": {
+                            "anyOf": [
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "number"
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "seatNumber": {
+                            "anyOf": [
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "integer"
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "axleNumber": {
+                            "anyOf": [
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "number"
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "notes": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                      "location",
+                      "notes"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "category"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "imNumber",
+          "imDescription",
+          "additionalInformation",
+          "itemNumber",
+          "itemDescription",
+          "deficiencyRef",
+          "deficiencyId",
+          "deficiencySubId",
+          "deficiencyCategory",
+          "deficiencyText",
+          "stdForProhibition",
+          "prs",
+          "prohibitionIssued",
+          "metadata"
+        ]
+      },
+      "RequiredStandards": {
+        "title": "DefectGETRequiredStandards",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "euVehicleCategories",
+          "basic",
+          "normal"
+        ],
+        "properties": {
+          "euVehicleCategories": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "title": "EU Vehicle Category",
+                  "type": "string",
+                  "tsEnumNames": [
+                    "M1",
+                    "M2",
+                    "M3",
+                    "N1",
+                    "N2",
+                    "N3",
+                    "O1",
+                    "O2",
+                    "O3",
+                    "O4",
+                    "L1E_A",
+                    "L1E",
+                    "L2E",
+                    "L3E",
+                    "L4E",
+                    "L5E",
+                    "L6E",
+                    "L7E"
+                  ],
+                  "enum": [
+                    "m1",
+                    "m2",
+                    "m3",
+                    "n1",
+                    "n2",
+                    "n3",
+                    "o1",
+                    "o2",
+                    "o3",
+                    "o4",
+                    "l1e-a",
+                    "l1e",
+                    "l2e",
+                    "l3e",
+                    "l4e",
+                    "l5e",
+                    "l6e",
+                    "l7e"
+                  ]
+                }
+              ]
+            }
+          },
+          "basic": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "title": "RequiredStandardTaxonomySection",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "sectionNumber",
+                    "sectionDescription",
+                    "requiredStandards"
+                  ],
+                  "properties": {
+                    "sectionNumber": {
+                      "type": [
+                        "string"
+                      ]
+                    },
+                    "sectionDescription": {
+                      "type": [
+                        "string"
+                      ]
+                    },
+                    "requiredStandards": {
+                      "type": "array",
+                      "items": {
+                        "title": "Required Standard",
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "rsNumber",
+                          "requiredStandard",
+                          "refCalculation",
+                          "additionalInfo",
+                          "inspectionTypes"
+                        ],
+                        "properties": {
+                          "rsNumber": {
+                            "type": [
+                              "integer"
+                            ]
+                          },
+                          "requiredStandard": {
+                            "type": [
+                              "string"
+                            ]
+                          },
+                          "refCalculation": {
+                            "type": [
+                              "string"
+                            ]
+                          },
+                          "additionalInfo": {
+                            "type": [
+                              "boolean"
+                            ]
+                          },
+                          "inspectionTypes": {
+                            "type": "array",
+                            "items": {
+                              "anyOf": [
+                                {
+                                  "title": "Inspection Type",
+                                  "type": "string",
+                                  "enum": [
+                                    "basic",
+                                    "normal"
+                                  ]
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "normal": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "title": "RequiredStandardTaxonomySection",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "sectionNumber",
+                    "sectionDescription",
+                    "requiredStandards"
+                  ],
+                  "properties": {
+                    "sectionNumber": {
+                      "type": [
+                        "string"
+                      ]
+                    },
+                    "sectionDescription": {
+                      "type": [
+                        "string"
+                      ]
+                    },
+                    "requiredStandards": {
+                      "type": "array",
+                      "items": {
+                        "title": "Required Standard",
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "rsNumber",
+                          "requiredStandard",
+                          "refCalculation",
+                          "additionalInfo",
+                          "inspectionTypes"
+                        ],
+                        "properties": {
+                          "rsNumber": {
+                            "type": [
+                              "integer"
+                            ]
+                          },
+                          "requiredStandard": {
+                            "type": [
+                              "string"
+                            ]
+                          },
+                          "refCalculation": {
+                            "type": [
+                              "string"
+                            ]
+                          },
+                          "additionalInfo": {
+                            "type": [
+                              "boolean"
+                            ]
+                          },
+                          "inspectionTypes": {
+                            "type": "array",
+                            "items": {
+                              "anyOf": [
+                                {
+                                  "title": "Inspection Type",
+                                  "type": "string",
+                                  "enum": [
+                                    "basic",
+                                    "normal"
+                                  ]
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "info": {
+    "title": "serverless-sub-routing",
+    "version": "1.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/1.0/defects": {
+      "get": {
+        "operationId": "DefectsResource.getDefects",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DefectDetails"
+                  }
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get defects",
+        "tags": [
+          "Defects"
+        ],
+        "description": "API for retrieving a list of defect reference data",
+        "servers": [
+          {
+            "description": "Dev URL",
+            "url": "https://api.develop.cvs.dvsacloud.uk/develop/"
+          }
+        ]
+      }
+    },
+    "/1.0/defects/required-standards": {
+      "get": {
+        "operationId": "DefectsResource.getRequiredStandards",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RequiredStandards"
+                  }
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get required standards",
+        "tags": [
+          "Defects"
+        ],
+        "description": "API for retrieving a list of required standards",
+        "parameters": [
+          {
+            "name": "euVehicleCategory",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "servers": [
+          {
+            "description": "Dev URL",
+            "url": "https://api.develop.cvs.dvsacloud.uk/develop/"
+          }
+        ]
+      }
+    },
+    "/1.0/version": {
+      "get": {
+        "operationId": "VersionResource.getVersion",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Get version",
+        "tags": [
+          "version"
+        ],
+        "description": "API for retrieving the version of the service"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Defects",
+      "description": "API endpoints related to defects"
+    }
+  ]
+}

@@ -1,14 +1,15 @@
 {
   "name": "serverless-sub-routing",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Serverless Sub Routing with DI",
-  "main": "./src/index.ts",
+  "main": "src/index.ts",
   "author": "matthew2564",
   "friendlyName": "Serverless Sub Routing",
   "license": "ISC",
   "scripts": {
     "clean": "rimraf artifacts build dist",
     "format": "prettier . --write",
+    "generate-openapi-spec": "ts-node documentation/generate-openapi-spec.ts",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "test": "jest",
@@ -16,8 +17,9 @@
     "prepare": "husky install",
     "setup": "sls dynamodb install",
     "build": "ts-node compile-service.ts",
-    "start": "npm run build -- --source-map && serverless offline start",
-    "package": "npm run build && zip lambda.zip dist/lambda.js && mkdir -p artifacts && mv lambda.zip artifacts/lambda.zip"
+    "start": "npm run clean && npm run build -- --source-map && SLS_DEBUG=* sls offline start",
+    "start:debug": "npm run clean && tsc && SLS_DEBUG=* sls offline start",
+    "package": "npm run build && mv dist/src/** dist/ && zip lambda.zip dist/index.js && mkdir -p artifacts && mv lambda.zip artifacts/lambda.zip"
   },
   "keywords": [
     "serverless",
@@ -28,12 +30,13 @@
   "dependencies": {
     "@aws-lambda-powertools/commons": "^1.17.0",
     "@aws-lambda-powertools/logger": "^1.17.0",
-    "@aws-sdk/lib-dynamodb": "^3.490.0",
-    "@dvsa/cvs-microservice-common": "^0.5.0",
+    "@dvsa/cvs-microservice-common": "^0.8.0",
+    "@dvsa/cvs-type-definitions": "^6.0.1",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "reflect-metadata": "^0.2.1",
     "routing-controllers": "^0.10.4",
+    "routing-controllers-openapi": "^4.0.0",
     "serverless-http": "^3.2.0",
     "typedi": "^0.10.0"
   },
@@ -60,7 +63,8 @@
     "serverless-offline": "^13.3.3",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.2",
-    "typescript": "~5.3.3"
+    "typescript": "~5.3.3",
+    "typescript-json-schema": "^0.63.0"
   },
   "lint-staged": {
     "*.ts": "npm run lint:fix",

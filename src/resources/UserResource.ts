@@ -1,11 +1,15 @@
-import { JsonController, Param, Get, Res, NotFoundError, Post, Body, HttpError } from 'routing-controllers';
+import { JsonController, Param, Get, Res, NotFoundError, Post, Body, HttpError, HttpCode } from 'routing-controllers';
+import { OpenAPI } from 'routing-controllers-openapi';
 import { Response } from 'express';
 import { Inject, Service } from 'typedi';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { UserService } from '../services/UserService';
 import { User } from '../domain/models/UserModel';
 import { ErrorEnum } from '../domain/enums/Error.enum';
-import { LOGGER } from '../domain/di-tokens/di-tokens';
+import { LOGGER } from '../domain/di-tokens/Tokens';
+import { OpenAPISpecServers } from '../../documentation/spec/servers/servers';
+import { OpenAPISpecResponses } from '../../documentation/spec/responses/responses';
+import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes';
 
 @Service()
 @JsonController('/1.0/users')
@@ -16,9 +20,19 @@ export class UserResource {
 	) {}
 
 	@Get('/:staffNumber')
+	@OpenAPI({
+		description: 'API for retrieving a user by staff number',
+		tags: ['Users'],
+		servers: OpenAPISpecServers.SERVERS,
+		responses: {
+			'200': OpenAPISpecResponses.OK('UserGet'),
+			'404': OpenAPISpecResponses.NOT_FOUND,
+			'500': OpenAPISpecResponses.INTERNAL_SERVER_ERROR,
+		},
+	})
 	async getUser(@Param('staffNumber') staffNumber: number, @Res() response: Response) {
 		try {
-			this.logger.addPersistentLogAttributes({ staffNumber: staffNumber });
+			this.logger.addPersistentLogAttributes({ staffNumber });
 
 			this.logger.debug(`Calling \`getUserByStaffNumber\``);
 
@@ -26,18 +40,28 @@ export class UserResource {
 
 			this.logger.info(`User found`);
 
-			return response.status(200).json({});
+			return response.status(HttpStatus.OK).json({});
 		} catch (err) {
 			this.logger.error('[ERROR]: getUser', (err as Error).message);
 
 			if (err instanceof NotFoundError) {
-				return response.status(404).send({ message: ErrorEnum.NOT_FOUND });
+				return response.status(HttpStatus.NOT_FOUND).send({ message: ErrorEnum.NOT_FOUND });
 			}
-			return response.status(500).send({ message: ErrorEnum.INTERNAL_SERVER_ERROR });
+			return response.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ message: ErrorEnum.INTERNAL_SERVER_ERROR });
 		}
 	}
 
-	@Post('/')
+	@Post('')
+	@HttpCode(HttpStatus.CREATED)
+	@OpenAPI({
+		description: 'API for creating a user record',
+		tags: ['Users'],
+		servers: OpenAPISpecServers.SERVERS,
+		responses: {
+			'201': OpenAPISpecResponses.CREATED,
+			'500': OpenAPISpecResponses.INTERNAL_SERVER_ERROR,
+		},
+	})
 	async createUser(@Body({ validate: true }) user: User, @Res() response: Response) {
 		try {
 			this.logger.addPersistentLogAttributes({ ...user });
@@ -48,7 +72,7 @@ export class UserResource {
 
 			this.logger.info(`User added`);
 
-			return response.status(201).json({ message: `User added: ${user.staffNumber}` });
+			return response.status(HttpStatus.CREATED).json({ message: `User added: ${user.staffNumber}` });
 		} catch (err) {
 			this.logger.error('[ERROR]: postUser', { err: (err as Error)?.message });
 
@@ -57,7 +81,7 @@ export class UserResource {
 					? `${ErrorEnum.INTERNAL_SERVER_ERROR}. ${ErrorEnum.CREATING}.`
 					: `${ErrorEnum.INTERNAL_SERVER_ERROR}. ${ErrorEnum.UNKNOWN}.`;
 
-			return response.status(500).send({ message });
+			return response.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ message });
 		}
 	}
 }

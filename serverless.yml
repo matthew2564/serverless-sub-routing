@@ -4,6 +4,7 @@ provider:
   name: aws
   runtime: nodejs20.x
   stage: dev
+  timeout: 60
   region: eu-west-1
   environment:
     USERS_DDB_TABLE_NAME: users
@@ -13,7 +14,7 @@ provider:
 
 functions:
   app:
-    handler: dist/lambda.handler
+    handler: dist/src/index.handler
     events:
       - http:
           path: /{proxy+}

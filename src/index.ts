@@ -8,10 +8,10 @@ import { CustomErrorMiddleware } from './middleware/CustomErrorMiddleware';
 import { NotFoundMiddleware } from './middleware/NotFoundMiddleware';
 import { VersionResource } from './resources/VersionResource';
 
-// This line tells routing-controllers to use typedi container
+// This line tells routing-controllers to use `type-di` container
 useContainer(Container);
 
-const app = createExpressServer({
+export const app = createExpressServer({
 	cors: true,
 	defaultErrorHandler: false,
 	controllers: [UserResource, VersionResource],

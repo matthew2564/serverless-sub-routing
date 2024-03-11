@@ -7,7 +7,7 @@ provider:
   timeout: 60
   region: eu-west-1
   environment:
-    USERS_DDB_TABLE_NAME: users
+    USERS_DDB_TABLE_NAME: users-local
     DDB_OFFLINE_ENDPOINT: http://localhost:8000
     AWS_ACCESS_KEY_ID: accessKeyId
     AWS_SECRET_ACCESS_KEY: secretAccessKey
@@ -33,8 +33,8 @@ custom:
     seed:
       test:
         sources:
-          - table: users
-            sources: [./test-data/dynamo-seed-users.json]
+          - table: ${self:provider.environment.USERS_DDB_TABLE_NAME}
+            sources: [./tests/test-data/dynamo-seed-users.json]
 
 resources:
   Resources:

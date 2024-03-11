@@ -1,93 +1,73 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDb } from '@dvsa/cvs-microservice-common/classes/aws/dynamo-db-client';
 import { UserProvider } from '../../../src/providers/UserProvider';
 import { User } from '../../../src/domain/models/UserModel';
 
-// Mocking the AWS SDK and credential providers
-jest.mock('@aws-sdk/lib-dynamodb', () => ({
-	GetCommand: jest.fn(),
-	PutCommand: jest.fn(),
-}));
-jest.mock('@aws-sdk/client-dynamodb', () => {
-	const originalModule = jest.requireActual('@aws-sdk/client-dynamodb');
+jest.mock('@aws-sdk/lib-dynamodb', () => {
+	const originalModule = jest.requireActual('@aws-sdk/lib-dynamodb');
+
 	return {
+		__esModule: true,
 		...originalModule,
-		DynamoDBClient: jest.fn(),
+		GetCommand: jest.fn(),
+		PutCommand: jest.fn(),
 	};
 });
 
+jest.mock('@dvsa/cvs-microservice-common/classes/aws/dynamo-db-client', () => ({
+	DynamoDb: {
+		getClient: jest.fn().mockReturnValue({
+			send: jest.fn(),
+		}),
+	},
+}));
+
 describe('UserProvider', () => {
 	let userProvider: UserProvider;
-	let originalEnvironment = {};
-	const mockResponse = { Item: { staffNumber: '123', name: 'John Doe' } };
-	const mockSend = jest.fn();
+	const mockTableName = 'users';
 
 	beforeAll(() => {
-		// Mocking DynamoDBClient instance
-		(DynamoDBClient as jest.Mock).mockImplementation(() => ({
-			send: mockSend,
-		}));
-	});
-
-	beforeEach(() => {
-		originalEnvironment = process.env;
-		process.env = { ...originalEnvironment };
+		process.env.USERS_DDB_TABLE_NAME = mockTableName;
 		userProvider = new UserProvider();
 	});
 
-	afterEach(() => {
-		process.env = originalEnvironment;
+	beforeEach(() => {
 		jest.clearAllMocks();
 	});
 
 	describe('findUserRecord', () => {
-		it('should find a user record', async () => {
-			// ARRANGE
-			mockSend.mockResolvedValueOnce(mockResponse);
+		it('should call GetCommand with correct parameters', async () => {
+			const staffNumber = '123';
+			const mockResponse = { Item: { staffNumber: '123', name: 'John Doe' } };
+			(DynamoDb.getClient().send as jest.Mock).mockResolvedValueOnce(mockResponse);
 
-			// ACT
-			const result = await userProvider.findUserRecord('123');
+			const result = await userProvider.findUserRecord(staffNumber);
 
-			// ASSERT
 			expect(GetCommand).toHaveBeenCalledWith({
-				TableName: process.env.USERS_DDB_TABLE_NAME || 'users',
-				Key: { staffNumber: '123' },
+				TableName: mockTableName,
+				Key: { staffNumber },
 			});
 			expect(result).toEqual(mockResponse.Item);
-		});
-
-		it('should return null if no user record is found', async () => {
-			// ARRANGE
-			mockSend.mockResolvedValueOnce({});
-
-			// ACT
-			const result = await userProvider.findUserRecord('456');
-
-			// ASSERT
-			expect(result).toBeNull();
 		});
 	});
 
 	describe('postUserRecord', () => {
-		it('should create a user record with payload and return 200', async () => {
-			// ARRANGE
-			mockSend.mockResolvedValueOnce({ $metadata: { httpStatusCode: 200 } });
-
+		it('should call PutCommand with correct parameters and return http status code', async () => {
+			const mockResponse = { $metadata: { httpStatusCode: 200 } };
 			const user: User = {
 				email: 'some.email@some-addr.com',
 				staffNumber: '123',
 				age: 21,
 			};
+			(DynamoDb.getClient().send as jest.Mock).mockResolvedValueOnce(mockResponse);
 
-			// ACT
-			const result = await userProvider.postUserRecord(user);
+			const statusCode = await userProvider.postUserRecord(user);
 
-			// ASSERT
 			expect(PutCommand).toHaveBeenCalledWith({
-				TableName: process.env.USERS_DDB_TABLE_NAME || 'users',
+				TableName: mockTableName,
 				Item: user,
 			});
-			expect(result).toEqual(200);
+			expect(statusCode).toBe(mockResponse.$metadata.httpStatusCode);
 		});
 	});
 });

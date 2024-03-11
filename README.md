@@ -46,7 +46,7 @@ serverless-sub-routing /
 
 # Architecture
 
-###### [OpenAPI Documentation](https://github.com/matthew2564/serverless-sub-routing/blob/main/documentation/openapi-spec.json)
+###### [OpenAPI Spec](https://github.com/matthew2564/serverless-sub-routing/blob/main/documentation/openapi-spec.json)
 
 ### Resources
 

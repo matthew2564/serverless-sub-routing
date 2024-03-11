@@ -1,0 +1,224 @@
+{
+  "components": {
+    "schemas": {
+      "User": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "age": {
+            "type": "number"
+          },
+          "staffNumber": {
+            "maxLength": 8,
+            "type": "string",
+            "minLength": 3
+          }
+        },
+        "type": "object",
+        "required": [
+          "age",
+          "staffNumber"
+        ]
+      },
+      "UserGet": {
+        "properties": {}
+      },
+      "UserPost": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "A message including the staff number of the user created."
+          }
+        }
+      },
+      "Version": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "A service name identifier."
+          },
+          "buildDateTime": {
+            "type": "string",
+            "description": "The date and time of the request, formatted as DD/MM/YYYY HH:mm."
+          },
+          "version": {
+            "type": "string",
+            "description": "The version identifier."
+          }
+        }
+      }
+    }
+  },
+  "info": {
+    "title": "serverless-sub-routing",
+    "version": "1.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/1.0/users/{staffNumber}": {
+      "get": {
+        "operationId": "UserResource.getUser",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staffNumber",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/UserGet"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User not found"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get user",
+        "tags": [
+          "Users"
+        ],
+        "description": "API for retrieving a user by staff number",
+        "servers": [
+          {
+            "description": "Dev URL",
+            "url": "https://dev.mes.dev-dvsacloud.uk"
+          }
+        ]
+      }
+    },
+    "/1.0/users": {
+      "post": {
+        "operationId": "UserResource.createUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            }
+          },
+          "description": "User",
+          "required": false
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/UserPost"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create user",
+        "tags": [
+          "Users"
+        ],
+        "description": "API for creating a user record",
+        "servers": [
+          {
+            "description": "Dev URL",
+            "url": "https://dev.mes.dev-dvsacloud.uk"
+          }
+        ]
+      }
+    },
+    "/1.0/version": {
+      "get": {
+        "operationId": "VersionResource.getVersion",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Version"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Get version",
+        "tags": [
+          "version"
+        ],
+        "description": "API for retrieving the version of the service",
+        "servers": [
+          {
+            "description": "Dev URL",
+            "url": "https://dev.mes.dev-dvsacloud.uk"
+          }
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Users",
+      "description": "API endpoints related to users"
+    }
+  ]
+}

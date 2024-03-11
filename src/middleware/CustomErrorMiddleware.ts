@@ -5,7 +5,7 @@ import { ValidationError } from 'class-validator';
 import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes';
 import { ErrorEnum } from '../domain/enums/Error.enum';
 import { Priority } from '../domain/enums/MiddlewarePriority.enum';
-import { LOGGER } from '../domain/di-tokens/di-tokens';
+import { LOGGER } from '../domain/di-tokens/Tokens';
 import { CustomError } from '../domain/models/CustomError';
 
 @Service()

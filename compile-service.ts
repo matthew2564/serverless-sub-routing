@@ -13,7 +13,7 @@ const [majorNodeVersion] = readFileSync('.nvmrc', 'utf-8').trim().split('.');
 			logLevel: 'info',
 			platform: 'node',
 			target: `node${majorNodeVersion}`,
-			outfile: 'dist/lambda.js',
+			outfile: 'dist/src/index.js',
 			external: ['@koa/*', '@babel/*'],
 			plugins: [esbuildDecorators()],
 		});

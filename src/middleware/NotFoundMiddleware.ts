@@ -1,7 +1,7 @@
 import { Middleware, ExpressMiddlewareInterface } from 'routing-controllers';
 import { Request, Response, NextFunction } from 'express';
 import { Container, Service } from 'typedi';
-import { LOGGER } from '../domain/di-tokens/di-tokens';
+import { LOGGER } from '../domain/di-tokens/Tokens';
 
 @Service()
 @Middleware({ type: 'after' })

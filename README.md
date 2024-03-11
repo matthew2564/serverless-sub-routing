@@ -6,10 +6,14 @@ This project is a Node.js application utilising routing-controllers for route ma
 serverless-sub-routing /
 │
 ├── src/
+│   ├── domain/           # Domain objects (models/helpers/enums)
+│   │   └── **/*.ts
+│   │
 │   ├── resources/        # HTTP routing
 │   │   └── UserResource.ts
 │   │
 │   ├── middleware/       # HTTP route, request & response error handling
+│   │   └── BeforeMiddleware.ts
 │   │   └── NotFoundMiddleware.ts
 |   |   └── CustomErrorMiddleware.ts
 │   │
@@ -41,6 +45,8 @@ serverless-sub-routing /
 ###### `npm run package` - Packages the project and outputs to `/artifacts/lambda.zip`
 
 # Architecture
+
+###### [OpenAPI Documentation](https://github.com/matthew2564/serverless-sub-routing/blob/main/documentation/openapi-spec.json)
 
 ### Resources
 

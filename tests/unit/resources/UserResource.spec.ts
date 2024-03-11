@@ -6,7 +6,7 @@ import { UserResource } from '../../../src/resources/UserResource';
 import { User } from '../../../src/domain/models/UserModel';
 import { ErrorEnum } from '../../../src/domain/enums/Error.enum';
 import { UserServiceMock } from '../../mocks/services/UserService.mock';
-import { LOGGER } from '../../../src/domain/di-tokens/di-tokens';
+import { LOGGER } from '../../../src/domain/di-tokens/Tokens';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { AWSPowerToolsLoggerMock } from '../../mocks/packages/power-tools-logger.mock';
 import { ExpressMock } from '../../mocks/packages/express.mock';

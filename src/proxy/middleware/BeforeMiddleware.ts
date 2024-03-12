@@ -3,9 +3,9 @@ import { NextFunction, Request, Response } from 'express';
 import { Container, Service } from 'typedi';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { LogLevel } from '@aws-lambda-powertools/logger/lib/types';
-import { LOGGER } from '../domain/di-tokens/Tokens';
-import { name } from '../../package.json';
-import { Priority } from '../domain/enums/MiddlewarePriority.enum';
+import { LOGGER } from '../../domain/di-tokens/Tokens';
+import { name } from '../../../package.json';
+import { Priority } from '../../domain/enums/MiddlewarePriority.enum';
 
 @Service()
 @Middleware({ type: 'before', priority: Priority.HIGHEST })

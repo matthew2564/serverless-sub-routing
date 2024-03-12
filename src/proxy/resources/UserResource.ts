@@ -4,11 +4,11 @@ import { Response } from 'express';
 import { Inject, Service } from 'typedi';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { UserService } from '../services/UserService';
-import { User } from '../domain/models/UserModel';
-import { ErrorEnum } from '../domain/enums/Error.enum';
-import { LOGGER } from '../domain/di-tokens/Tokens';
-import { OpenAPISpecServers } from '../../documentation/spec/servers/servers';
-import { OpenAPISpecResponses } from '../../documentation/spec/responses/responses';
+import { User } from '../../domain/models/UserModel';
+import { ErrorEnum } from '../../domain/enums/Error.enum';
+import { LOGGER } from '../../domain/di-tokens/Tokens';
+import { OpenAPISpecServers } from '../../../documentation/spec/servers/servers';
+import { OpenAPISpecResponses } from '../../../documentation/spec/responses/responses';
 import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes';
 
 @Service()

@@ -1,13 +1,13 @@
 import { BadRequestError, HttpError } from 'routing-controllers';
 import { Request, Response, NextFunction } from 'express';
-import { CustomErrorMiddleware } from '../../../src/middleware/CustomErrorMiddleware';
+import { CustomErrorMiddleware } from '../../../../src/proxy/middleware/CustomErrorMiddleware';
 import { ValidationError } from 'class-validator';
-import { ExpressMock } from '../../mocks/packages/express.mock';
+import { ExpressMock } from '../../../mocks/packages/express.mock';
 import { Container } from 'typedi';
-import { LOGGER } from '../../../src/domain/di-tokens/Tokens';
-import { AWSPowerToolsLoggerMock } from '../../mocks/packages/power-tools-logger.mock';
-import { CustomError } from '../../../src/domain/models/CustomError';
-import { ErrorEnum } from '../../../src/domain/enums/Error.enum';
+import { LOGGER } from '../../../../src/domain/di-tokens/Tokens';
+import { AWSPowerToolsLoggerMock } from '../../../mocks/packages/power-tools-logger.mock';
+import { CustomError } from '../../../../src/domain/models/CustomError';
+import { ErrorEnum } from '../../../../src/domain/enums/Error.enum';
 import { Logger } from '@aws-lambda-powertools/logger';
 
 type Constraint = { [type: string]: string };

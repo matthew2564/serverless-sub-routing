@@ -3,10 +3,10 @@ import { NextFunction, Response, Request } from 'express';
 import { Container, Service } from 'typedi';
 import { ValidationError } from 'class-validator';
 import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes';
-import { ErrorEnum } from '../domain/enums/Error.enum';
-import { Priority } from '../domain/enums/MiddlewarePriority.enum';
-import { LOGGER } from '../domain/di-tokens/Tokens';
-import { CustomError } from '../domain/models/CustomError';
+import { ErrorEnum } from '../../domain/enums/Error.enum';
+import { Priority } from '../../domain/enums/MiddlewarePriority.enum';
+import { LOGGER } from '../../domain/di-tokens/Tokens';
+import { CustomError } from '../../domain/models/CustomError';
 
 @Service()
 @Middleware({ type: 'after', priority: Priority.MEDIUM })

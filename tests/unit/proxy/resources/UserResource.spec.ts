@@ -1,18 +1,18 @@
 import { HttpError, NotFoundError } from 'routing-controllers';
 import { Response } from 'express';
 import { Container } from 'typedi';
-import { UserService } from '../../../src/services/UserService';
-import { UserResource } from '../../../src/resources/UserResource';
-import { User } from '../../../src/domain/models/UserModel';
-import { ErrorEnum } from '../../../src/domain/enums/Error.enum';
-import { UserServiceMock } from '../../mocks/services/UserService.mock';
-import { LOGGER } from '../../../src/domain/di-tokens/Tokens';
+import { UserService } from '../../../../src/proxy/services/UserService';
+import { UserResource } from '../../../../src/proxy/resources/UserResource';
+import { User } from '../../../../src/domain/models/UserModel';
+import { ErrorEnum } from '../../../../src/domain/enums/Error.enum';
+import { UserServiceMock } from '../../../mocks/services/UserService.mock';
+import { LOGGER } from '../../../../src/domain/di-tokens/Tokens';
 import { Logger } from '@aws-lambda-powertools/logger';
-import { AWSPowerToolsLoggerMock } from '../../mocks/packages/power-tools-logger.mock';
-import { ExpressMock } from '../../mocks/packages/express.mock';
+import { AWSPowerToolsLoggerMock } from '../../../mocks/packages/power-tools-logger.mock';
+import { ExpressMock } from '../../../mocks/packages/express.mock';
 
-jest.mock('../../../src/services/UserService');
-jest.mock('../../../src/providers/UserProvider');
+jest.mock('../../../../src/proxy/services/UserService');
+jest.mock('../../../../src/proxy/providers/UserProvider');
 
 describe('UserResource', () => {
 	let userResource: UserResource;

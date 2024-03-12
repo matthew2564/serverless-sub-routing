@@ -1,8 +1,8 @@
 import { Inject, Service } from 'typedi';
 import { HttpError, NotFoundError } from 'routing-controllers';
 import { UserProvider } from '../providers/UserProvider';
-import { ErrorEnum } from '../domain/enums/Error.enum';
-import type { User } from '../domain/models/UserModel';
+import { ErrorEnum } from '../../domain/enums/Error.enum';
+import type { User } from '../../domain/models/UserModel';
 import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes';
 
 @Service()
@@ -25,6 +25,14 @@ export class UserService {
 				HttpStatus.INTERNAL_SERVER_ERROR,
 				`${ErrorEnum.CREATING}. StatusCode from DynamoDB: ${statusCode}`
 			);
+		}
+	}
+
+	async deleteUser(staffNumber: string): Promise<void> {
+		const statusCode = await this.userProvider.deleteUserRecord(staffNumber);
+
+		if (statusCode !== HttpStatus.OK) {
+			throw new Error(`${ErrorEnum.DELETING}. StatusCode from DynamoDB: ${statusCode}`);
 		}
 	}
 }

@@ -4,9 +4,9 @@ import { OpenAPI } from 'routing-controllers-openapi';
 import { Logger } from '@aws-lambda-powertools/logger';
 import type { Response } from 'express';
 import { VersionService } from '../services/VersionService';
-import { LOGGER } from '../domain/di-tokens/Tokens';
-import { OpenAPISpecResponses } from '../../documentation/spec/responses/responses';
-import { OpenAPISpecServers } from '../../documentation/spec/servers/servers';
+import { LOGGER } from '../../domain/di-tokens/Tokens';
+import { OpenAPISpecResponses } from '../../../documentation/spec/responses/responses';
+import { OpenAPISpecServers } from '../../../documentation/spec/servers/servers';
 
 @Service()
 @JsonController('/1.0/version')

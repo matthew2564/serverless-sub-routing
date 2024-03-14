@@ -17,12 +17,12 @@ on:
         default: false
         required: false
       update-type:
-        description: 'Update Type (major, minor, patch)'
+        description: 'Update Type - major (latest), minor, or patch'
         required: true
         default: 'minor'
         type: choice
         options:
-          - major
+          - latest
           - minor
           - patch
 
@@ -53,7 +53,8 @@ jobs:
         run: npm ci
 
       - name: ➕ Use `npm-check-updates` to attempt a `${{ github.event.inputs.update-type }}` version upgrade
-        run: npx --yes npm-check-updates --doctor -u --target ${{ github.event.inputs.update-type }}
+        run: |
+          npx --yes npm-check-updates --doctor -u --target ${{ github.event.inputs.update-type }} || exit 1
 
       - name: 🔄 Check for changes
         id: check_changes

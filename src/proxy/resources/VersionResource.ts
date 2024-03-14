@@ -3,10 +3,10 @@ import { Get, JsonController, Res } from 'routing-controllers';
 import { OpenAPI } from 'routing-controllers-openapi';
 import { Logger } from '@aws-lambda-powertools/logger';
 import type { Response } from 'express';
-import { VersionService } from '../services/VersionService';
-import { LOGGER } from '../domain/di-tokens/Tokens';
-import { OpenAPISpecResponses } from '../../documentation/spec/responses/responses';
-import { OpenAPISpecServers } from '../../documentation/spec/servers/servers';
+import { VersionService } from '../../services/VersionService';
+import { LOGGER } from '../../domain/di-tokens/Tokens';
+import { OpenAPISpecResponses } from '../../../documentation/spec/responses/responses';
+import { OpenAPISpecServers } from '../../../documentation/spec/servers/servers';
 
 @Service()
 @JsonController('/1.0/version')
@@ -23,6 +23,7 @@ export class VersionResource {
 		servers: OpenAPISpecServers.SERVERS,
 		responses: {
 			'200': OpenAPISpecResponses.OK('Version'),
+			'500': OpenAPISpecResponses.INTERNAL_SERVER_ERROR,
 		},
 	})
 	getVersion(@Res() response: Response) {

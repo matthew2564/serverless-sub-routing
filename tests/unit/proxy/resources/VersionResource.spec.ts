@@ -1,14 +1,14 @@
 import { Response } from 'express';
 import { Container } from 'typedi';
 import { Logger } from '@aws-lambda-powertools/logger';
-import { AWSPowerToolsLoggerMock } from '../../mocks/packages/power-tools-logger.mock';
-import { ExpressMock } from '../../mocks/packages/express.mock';
-import { LOGGER } from '../../../src/domain/di-tokens/Tokens';
-import { VersionResource } from '../../../src/resources/VersionResource';
-import { VersionService } from '../../../src/services/VersionService';
-import { VersionServiceMock } from '../../mocks/services/VersionService.mock';
+import { AWSPowerToolsLoggerMock } from '../../../mocks/packages/power-tools-logger.mock';
+import { ExpressMock } from '../../../mocks/packages/express.mock';
+import { LOGGER } from '../../../../src/domain/di-tokens/Tokens';
+import { VersionResource } from '../../../../src/proxy/resources/VersionResource';
+import { VersionService } from '../../../../src/services/VersionService';
+import { VersionServiceMock } from '../../../mocks/services/VersionService.mock';
 
-jest.mock('../../../src/services/VersionService');
+jest.mock('../../../../src/services/VersionService');
 
 describe('VersionResource', () => {
 	let mockResource: VersionResource;

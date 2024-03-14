@@ -13,8 +13,14 @@ provider:
     AWS_SECRET_ACCESS_KEY: secretAccessKey
 
 functions:
+  deleteUser:
+    handler: dist/functions/delete-user/index.handler
+    events:
+      - http:
+          path: /users/{staffNumber}
+          method: DELETE
   app:
-    handler: dist/src/index.handler
+    handler: dist/proxy/index.handler
     events:
       - http:
           path: /{proxy+}

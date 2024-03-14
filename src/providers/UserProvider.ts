@@ -1,4 +1,4 @@
-import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommand, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { Service } from 'typedi';
 import { DynamoDb } from '@dvsa/cvs-microservice-common/classes/aws/dynamo-db-client';
 import type { User } from '../domain/models/UserModel';
@@ -32,5 +32,21 @@ export class UserProvider {
 		);
 
 		return response?.$metadata.httpStatusCode;
+	}
+
+	async deleteUserRecord(staffNumber: string) {
+		const response = await this.dynamoClient.send(
+			new DeleteCommand({
+				TableName: UserProvider.dynamoDBTable,
+				Key: { staffNumber },
+			})
+		);
+
+		// `ConsumedCapacity` seems to exist only when it didn't find something to delete
+		if (response?.ConsumedCapacity) {
+			return undefined;
+		}
+
+		return response.$metadata.httpStatusCode;
 	}
 }

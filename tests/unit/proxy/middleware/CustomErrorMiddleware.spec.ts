@@ -1,13 +1,13 @@
 import { BadRequestError, HttpError } from 'routing-controllers';
 import { Request, Response, NextFunction } from 'express';
-import { CustomErrorMiddleware } from '../../../src/middleware/CustomErrorMiddleware';
+import { CustomErrorMiddleware } from '../../../../src/proxy/middleware/CustomErrorMiddleware';
 import { ValidationError } from 'class-validator';
-import { ExpressMock } from '../../mocks/packages/express.mock';
+import { ExpressMock } from '../../../mocks/packages/express.mock';
 import { Container } from 'typedi';
-import { LOGGER } from '../../../src/domain/di-tokens/Tokens';
-import { AWSPowerToolsLoggerMock } from '../../mocks/packages/power-tools-logger.mock';
-import { CustomError } from '../../../src/domain/models/CustomError';
-import { ErrorEnum } from '../../../src/domain/enums/Error.enum';
+import { LOGGER } from '../../../../src/domain/di-tokens/Tokens';
+import { AWSPowerToolsLoggerMock } from '../../../mocks/packages/power-tools-logger.mock';
+import { CustomError } from '../../../../src/domain/models/CustomError';
+import { ErrorEnum } from '../../../../src/domain/enums/Error.enum';
 import { Logger } from '@aws-lambda-powertools/logger';
 
 type Constraint = { [type: string]: string };
@@ -46,7 +46,8 @@ describe('CustomErrorMiddleware', () => {
 		);
 		expect(mockResponse.status).toHaveBeenCalledWith(400);
 		expect(mockResponse.send).toHaveBeenCalledWith({
-			message: 'Given parameter staffNumber is invalid. Value supplied cannot be parsed into number.',
+			message: ErrorEnum.VALIDATION,
+			error: 'Given parameter staffNumber is invalid. Value supplied cannot be parsed into number.',
 		});
 		expect(mockNext).not.toHaveBeenCalled();
 	});
@@ -63,7 +64,8 @@ describe('CustomErrorMiddleware', () => {
 		);
 		expect(mockResponse.status).toHaveBeenCalledWith(400);
 		expect(mockResponse.send).toHaveBeenCalledWith({
-			message: 'Given parameter staffNumber is invalid. Value supplied cannot be parsed into number.',
+			message: ErrorEnum.VALIDATION,
+			error: 'Given parameter staffNumber is invalid. Value supplied cannot be parsed into number.',
 		});
 		expect(mockNext).not.toHaveBeenCalled();
 	});
@@ -100,7 +102,7 @@ describe('CustomErrorMiddleware', () => {
 		});
 		expect(mockResponse.status).toHaveBeenCalledWith(400);
 		expect(mockResponse.send).toHaveBeenCalledWith({
-			detail: 'Some custom error',
+			error: 'Some custom error',
 			message: ErrorEnum.VALIDATION,
 		});
 		expect(mockNext).not.toHaveBeenCalled();
@@ -116,7 +118,7 @@ describe('CustomErrorMiddleware', () => {
 		expect(mockResponse.status).toHaveBeenCalledWith(500);
 		expect(mockResponse.send).toHaveBeenCalledWith({
 			message: ErrorEnum.INTERNAL_SERVER_ERROR,
-			detail: 'An application error has occurred and has been logged.',
+			error: ErrorEnum.ERROR_OCCURRED,
 		});
 		expect(mockNext).not.toHaveBeenCalled();
 	});

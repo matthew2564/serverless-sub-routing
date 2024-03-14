@@ -3,32 +3,36 @@
 This project is a Node.js application utilising routing-controllers for route management, a Service Layer for business logic, and a Repository Pattern for database interactions, specifically with DynamoDB.
 
 ```
-serverless-sub-routing /
+serverless-sub-routing/
 │
 ├── src/
-│   ├── domain/           # Domain objects (models/helpers/enums)
-│   │   └── **/*.ts
+│   ├── domain/                         # Domain-specific logic, helpers, enums & models
+│   │   ├── models/
+│   │   ├── enums/
+│   │   └── helpers/
 │   │
-│   ├── resources/        # HTTP routing
-│   │   └── UserResource.ts
-│   │
-│   ├── middleware/       # HTTP route, request & response error handling
-│   │   └── BeforeMiddleware.ts
-│   │   └── NotFoundMiddleware.ts
-|   |   └── CustomErrorMiddleware.ts
-│   │
-│   ├── services/         # Business logic implementation
+│   ├── services/                       # Business logic implementation
 │   │   └── UserService.ts
 │   │
-│   ├── providers/        # Database interaction layer
+│   ├── providers/                      # Data source interaction layer
 │   │   └── UserProvider.ts
 │   │
-│   └── index.ts          # Application entry point
+│   ├── proxy/                          # Application entry point
+│   │   └── index.ts
+│   │   ├── resources/                  # HTTP routing handlers
+│   │   │    └── UserResource.ts
+│   │   └── middleware/                 # HTTP route, request & response error handling
+│   │        ├── BeforeMiddleware.ts
+│   │        ├── CustomErrorMiddleware.ts
+│   │        └── NotFoundMiddleware.ts
+│   │
+│   └── functions/                      # Lambda functions and/or tasks that are not proxied
+│       └── getUser/
+│           └── handler.ts
 │
 ├── package.json
 ├── tsconfig.json
 └── README.md
-
 ```
 
 ## Prerequisites
@@ -42,24 +46,40 @@ serverless-sub-routing /
 2. `npm run setup` - Installs Serverless DynamoDB local
 3. `npm run start` - Starts Serverless offline
 
-###### `npm run package` - Packages the project and outputs to `/artifacts/lambda.zip`
+###### `npm run package` - Packages the project and outputs to `/artifacts/*.zip`
 
 # Architecture
 
-###### [OpenAPI Spec](https://github.com/matthew2564/serverless-sub-routing/blob/main/documentation/openapi-spec.json)
+### Dependency Injection
+
+We use Dependency Injection (DI) for managing dependencies between classes, making the application modular and testable.
+
+## Using an API Gateway Proxy
 
 ### Resources
 
-Resources in `src/resources` handle incoming HTTP requests and delegate complex business logic to the services. They are responsible for responding to the client.
+Resources in `src/proxy/resources` handle incoming HTTP requests and delegate complex business logic to the services. They are responsible for responding to the client.
 
 ### Services
 
-The `src/services` directory contains service classes. Services encapsulate the core business logic of the application. They interact with the repository layer to fetch and manipulate data.
+The `src/proxy/services` directory contains service classes. Services encapsulate the core business logic of the application. They interact with the repository layer to fetch and manipulate data.
 
 ### Providers
 
-Providers in `src/providers` are responsible for direct database interactions. They abstract the data layer, making it easier to manage data operations.
+Providers in `src/proxy/providers` are responsible for direct database interactions. They abstract the data layer, making it easier to manage data operations.
 
-### Dependency Injection
+### Middleware
 
-We use Dependency Injection (DI) for managing dependencies between classes, making the application more modular and testable.
+Middleware in `src/proxy/middleware` is used to handle errors and other request/response operations. They are useful to hooking into parts of the lambda invocation.
+
+## Lambda Functions
+
+Functions not using an API Gateway Proxy are in `src/functions`. They are responsible for handling the event and context passed to the lambda function.
+
+## Tests
+
+### Unit Tests
+
+Tests are written using Jest and can be found in the `tests` directory.
+
+The `unit/` folder should mimic the `src/` directory.

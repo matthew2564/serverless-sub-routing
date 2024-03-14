@@ -3,7 +3,7 @@ import { getMetadataArgsStorage } from 'routing-controllers';
 import { routingControllersToSpec } from 'routing-controllers-openapi';
 import fs from 'fs/promises';
 import { name, version } from '../package.json';
-import { app } from '../src';
+import { app } from '../src/proxy';
 import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
 
 const filePath = './documentation/openapi-spec.json';

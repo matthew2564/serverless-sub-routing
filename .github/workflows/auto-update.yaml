@@ -99,13 +99,15 @@ jobs:
             const base = process.env.GITHUB_REF.split('/').slice(-1)[0];
 
             try {
+              console.log(`Creating PR with base: ${base}, head: ${branch}`);
+
                await github.rest.pulls.create({
                 owner,
                 repo,
                 title,
                 body,
                 head: branch,
-                base,
+                base: 'main'
               });
             } catch (err) {
               console.error('ERROR PRINTED', err.response.data);

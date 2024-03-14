@@ -1,5 +1,10 @@
 name: Update Dependencies
 
+permissions:
+  contents: write
+  id-token: write
+  pull-requests: write
+
 on:
   schedule:
     # Runs at 07:00 on the first day of every month
@@ -12,7 +17,7 @@ on:
         default: false
         required: false
       update-type:
-        description: 'Update Type (major, minor, patch)'
+        description: 'Update Type - major, minor, or patch'
         required: true
         default: 'minor'
         type: choice
@@ -48,7 +53,12 @@ jobs:
         run: npm ci
 
       - name: ➕ Use `npm-check-updates` to attempt a `${{ github.event.inputs.update-type }}` version upgrade
-        run: npx --yes npm-check-updates --doctor -u --target ${{ github.event.inputs.update-type }}
+        run: |
+          TARGET_VERSION=${{ github.event.inputs.update-type }}
+          if [ "$TARGET_VERSION" = "major" ]; then
+             TARGET_VERSION="latest"
+          fi
+          npx --yes npm-check-updates --doctor -u --target $TARGET_VERSION || exit 1
 
       - name: 🔄 Check for changes
         id: check_changes
@@ -65,7 +75,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
           git add .
-          git commit -m "build: update ${{ github.event.inputs.update-type }} dependencies"
+          git commit -m "build: upgrading ${{ github.event.inputs.update-type }} versions of dependencies"
           git push
 
       - name: 📝 Create Pull Request
@@ -77,18 +87,15 @@ jobs:
           script: |
             const title = '[Automated] Update ${{ github.event.inputs.update-type }} dependencies';
             const body = 'This is an auto-generated PR with dependency updates and version bump performed by `npm-check-updates`.';
-            const branch = `build/${{ github.event.inputs.update-type }}-dependencies-bump-${Date.now()}`;
+            const dateInDDmmYYYY = new Date().toISOString().split('T')[0].split('-').reverse().join('-');
+            const branch = `build/${{ github.event.inputs.update-type }}-dependencies-bump-${dateInDDmmYYYY}`;
             const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
             const base = process.env.GITHUB_REF.split('/').slice(-1)[0];
 
-            try {
-              await github.rest.pulls.create({
+            await github.rest.pulls.create({
                 owner,
                 repo,
                 title,
                 body,
                 base,
-              });
-            } catch (err) {
-              console.error('Pull request error', err.response.data);
-            }
+              });  

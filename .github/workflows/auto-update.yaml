@@ -1,0 +1,94 @@
+name: Update Dependencies
+
+on:
+  schedule:
+    # Runs at 07:00 on the first day of every month
+    - cron: '0 7 1 * *'
+  workflow_dispatch:
+    inputs:
+      pat:
+        description: 'Is a Personal Access Token (PAT) required to install dependencies?'
+        type: boolean
+        default: false
+        required: false
+      update-type:
+        description: 'Update Type (major, minor, patch)'
+        required: true
+        default: 'minor'
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: 🔍 Read .nvmrc
+        id: nvm
+        run: echo "NVMRC=$(cat .nvmrc)" >> $GITHUB_ENV
+
+      - name: ⚙️ Setup Node.js ${{ env.NVMRC }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NVMRC }}
+
+      - name: ⚒️ Create .npmrc
+        if: ${{ github.event.inputs.pat == true}}
+        run: echo "//npm.pkg.github.com/:_authToken=$ACCESS_TOKEN" >> ~/.npmrc
+        env:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+
+      - name: ➕ Install dependencies
+        run: npm ci
+
+      - name: ➕ Use `npm-check-updates` to attempt a `${{ github.event.inputs.update-type }}` version upgrade
+        run: npx --yes npm-check-updates --doctor -u --target ${{ github.event.inputs.update-type }}
+
+      - name: 🔄 Check for changes
+        id: check_changes
+        run: |
+          git diff-index --quiet HEAD || echo "CHANGES_DETECTED=true" >> $GITHUB_ENV  
+
+      - name: 🔺 Bump package version
+        if: ${{ env.CHANGES_DETECTED == 'true' }}
+        run: npm version ${{ github.event.inputs.update-type }} --no-git-tag-version
+
+      - name: ✅ Commit and push changes
+        if: ${{ env.CHANGES_DETECTED == 'true' }}
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add .
+          git commit -m "build: update ${{ github.event.inputs.update-type }} dependencies"
+          git push
+
+      - name: 📝 Create Pull Request
+        uses: actions/github-script@v7
+        if: ${{ env.CHANGES_DETECTED == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          script: |
+            const title = '[Automated] Update ${{ github.event.inputs.update-type }} dependencies';
+            const body = 'This is an auto-generated PR with dependency updates and version bump performed by `npm-check-updates`.';
+            const branch = `build/${{ github.event.inputs.update-type }}-dependencies-bump-${Date.now()}`;
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+            const base = process.env.GITHUB_REF.split('/').slice(-1)[0];
+
+            try {
+              await github.rest.pulls.create({
+                owner,
+                repo,
+                title,
+                body,
+                base,
+              });
+            } catch (err) {
+              console.error('Pull request error', err.response.data);
+            }

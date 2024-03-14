@@ -98,11 +98,16 @@ jobs:
             const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
             const base = process.env.GITHUB_REF.split('/').slice(-1)[0];
 
-            await github.rest.pulls.create({
+            try {
+               await github.rest.pulls.create({
                 owner,
                 repo,
                 title,
                 body,
-                head: branch,
                 base,
-              });  
+              });
+            } catch (err) {
+              console.error(err);
+              console.error(err.response.data);
+              throw err;
+            }

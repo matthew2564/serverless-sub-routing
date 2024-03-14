@@ -69,9 +69,15 @@ jobs:
         if: ${{ env.CHANGES_DETECTED == 'true' }}
         run: npm version ${{ github.event.inputs.update-type }} --no-git-tag-version
 
+      - name: 🔨Set Branch Name
+        id: set_branch
+        run: |
+          echo "branch_name=build/${{ github.event.inputs.update-type }}-dependencies-bump-$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+
       - name: ✅ Commit and push changes
         if: ${{ env.CHANGES_DETECTED == 'true' }}
         run: |
+          git checkout -b ${{ steps.set_branch.outputs.branch_name }}
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
           git add .
@@ -88,7 +94,7 @@ jobs:
             const title = '[Automated] Update ${{ github.event.inputs.update-type }} dependencies';
             const body = 'This is an auto-generated PR with dependency updates and version bump performed by `npm-check-updates`.';
             const dateInDDmmYYYY = new Date().toISOString().split('T')[0].split('-').reverse().join('-');
-            const branch = `build/${{ github.event.inputs.update-type }}-dependencies-bump-${dateInDDmmYYYY}`;
+            const branch = '${{ steps.set_branch.outputs.branch_name }}';
             const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
             const base = process.env.GITHUB_REF.split('/').slice(-1)[0];
 
@@ -97,5 +103,6 @@ jobs:
                 repo,
                 title,
                 body,
+                head: branch,
                 base,
               });  

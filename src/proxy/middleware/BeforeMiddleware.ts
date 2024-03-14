@@ -2,7 +2,7 @@ import { ExpressMiddlewareInterface, Middleware } from 'routing-controllers';
 import { NextFunction, Request, Response } from 'express';
 import { Container, Service } from 'typedi';
 import { Logger } from '@aws-lambda-powertools/logger';
-import { LogLevel } from '@aws-lambda-powertools/logger/lib/types';
+import type { LogLevel } from '@aws-lambda-powertools/logger/lib/cjs/types/Log';
 import { LOGGER } from '../../domain/di-tokens/Tokens';
 import { name } from '../../../package.json';
 import { Priority } from '../../domain/enums/MiddlewarePriority.enum';

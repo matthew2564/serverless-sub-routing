@@ -82,7 +82,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git add .
           git commit -m "build: upgrading ${{ github.event.inputs.update-type }} versions of dependencies"
-          git push
+          git push --set-upstream origin ${{ steps.set_branch.outputs.branch_name }}
 
       - name: 📝 Create Pull Request
         uses: actions/github-script@v7

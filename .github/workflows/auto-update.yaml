@@ -104,10 +104,10 @@ jobs:
                 repo,
                 title,
                 body,
+                head: branch,
                 base,
               });
             } catch (err) {
-              console.error(err);
-              console.error(err.response.data);
+              console.error('ERROR PRINTED', err.response.data);
               throw err;
             }

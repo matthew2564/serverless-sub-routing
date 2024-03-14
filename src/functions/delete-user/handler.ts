@@ -3,11 +3,11 @@ import { Container, Inject } from 'typedi';
 import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes';
 import { Response as response } from '@dvsa/cvs-microservice-common/response/create';
 import { Logger } from '@aws-lambda-powertools/logger';
-import { LogLevel } from '@aws-lambda-powertools/logger/lib/types';
+import type { LogLevel } from '@aws-lambda-powertools/logger/lib/types';
 import type { APIGatewayEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { name } from '../../../package.json';
 import { ErrorEnum } from '../../domain/enums/Error.enum';
-import { UserService } from '../../proxy/services/UserService';
+import { UserService } from '../../services/UserService';
 
 class LambdaHandler {
 	private logger: Logger;

@@ -1,11 +1,11 @@
 import { Container } from 'typedi';
 import { HttpError, NotFoundError } from 'routing-controllers';
-import { UserProvider } from '../../../../src/proxy/providers/UserProvider';
-import { UserService } from '../../../../src/proxy/services/UserService';
-import { User } from '../../../../src/domain/models/UserModel';
-import { UserProviderMock } from '../../../mocks/providers/UserProvider.mock';
+import { UserProvider } from '../../../src/providers/UserProvider';
+import { UserService } from '../../../src/services/UserService';
+import { User } from '../../../src/domain/models/UserModel';
+import { UserProviderMock } from '../../mocks/providers/UserProvider.mock';
 
-jest.mock('../../../../src/proxy/providers/UserProvider');
+jest.mock('../../../src/providers/UserProvider');
 
 describe('UserService', () => {
 	let userService: UserService;

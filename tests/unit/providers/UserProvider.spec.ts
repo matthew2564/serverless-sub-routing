@@ -1,7 +1,7 @@
 import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { DynamoDb } from '@dvsa/cvs-microservice-common/classes/aws/dynamo-db-client';
-import { UserProvider } from '../../../../src/proxy/providers/UserProvider';
-import { User } from '../../../../src/domain/models/UserModel';
+import { UserProvider } from '../../../src/providers/UserProvider';
+import { User } from '../../../src/domain/models/UserModel';
 
 jest.mock('@aws-sdk/lib-dynamodb', () => {
 	const originalModule = jest.requireActual('@aws-sdk/lib-dynamodb');

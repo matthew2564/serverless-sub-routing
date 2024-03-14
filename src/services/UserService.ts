@@ -1,9 +1,9 @@
 import { Inject, Service } from 'typedi';
 import { HttpError, NotFoundError } from 'routing-controllers';
-import { UserProvider } from '../providers/UserProvider';
-import { ErrorEnum } from '../../domain/enums/Error.enum';
-import type { User } from '../../domain/models/UserModel';
 import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes';
+import { UserProvider } from '../providers/UserProvider';
+import { ErrorEnum } from '../domain/enums/Error.enum';
+import type { User } from '../domain/models/UserModel';
 
 @Service()
 export class UserService {

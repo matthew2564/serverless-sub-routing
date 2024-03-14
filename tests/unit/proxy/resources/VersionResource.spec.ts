@@ -5,10 +5,10 @@ import { AWSPowerToolsLoggerMock } from '../../../mocks/packages/power-tools-log
 import { ExpressMock } from '../../../mocks/packages/express.mock';
 import { LOGGER } from '../../../../src/domain/di-tokens/Tokens';
 import { VersionResource } from '../../../../src/proxy/resources/VersionResource';
-import { VersionService } from '../../../../src/proxy/services/VersionService';
+import { VersionService } from '../../../../src/services/VersionService';
 import { VersionServiceMock } from '../../../mocks/services/VersionService.mock';
 
-jest.mock('../../../../src/proxy/services/VersionService');
+jest.mock('../../../../src/services/VersionService');
 
 describe('VersionResource', () => {
 	let mockResource: VersionResource;

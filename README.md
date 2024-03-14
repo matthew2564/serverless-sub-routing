@@ -3,29 +3,36 @@
 This project is a Node.js application utilising routing-controllers for route management, a Service Layer for business logic, and a Repository Pattern for database interactions, specifically with DynamoDB.
 
 ```
-serverless-sub-routing /
+serverless-sub-routing/
 │
 ├── src/
-│   ├── proxy/
-│   │   ├── resources/      # HTTP routing
+│   ├── domain/                         # Domain-specific logic, helpers, enums & models
+│   │   ├── models/
+│   │   ├── enums/
+│   │   └── helpers/
+│   │
+│   ├── services/                       # Business logic implementation
+│   │   └── UserService.ts
+│   │
+│   ├── providers/                      # Data source interaction layer
+│   │   └── UserProvider.ts
+│   │
+│   ├── proxy/                          # Application entry point
+│   │   └── index.ts
+│   │   ├── resources/                  # HTTP routing handlers
 │   │   │    └── UserResource.ts
-│   │   ├── services/       # Business logic implementation
-│   │   │    └── UserService.ts
-│   │   ├── providers/
-│   │   │    └── UserProvider.ts
-│   │   └── middleware/
-│   │        └── BeforeMiddleware.ts
-│   │        └── CustomErrorMiddleware.ts
+│   │   └── middleware/                 # HTTP route, request & response error handling
+│   │        ├── BeforeMiddleware.ts
+│   │        ├── CustomErrorMiddleware.ts
 │   │        └── NotFoundMiddleware.ts
 │   │
-│   └── functions/
+│   └── functions/                      # Lambda functions and/or tasks that are not proxied
 │       └── getUser/
-│         └── resource.ts
+│           └── handler.ts
 │
 ├── package.json
 ├── tsconfig.json
 └── README.md
-
 ```
 
 ## Prerequisites
@@ -72,6 +79,7 @@ Functions not using an API Gateway Proxy are in `src/functions`. They are respon
 ## Tests
 
 ### Unit Tests
+
 Tests are written using Jest and can be found in the `tests` directory.
 
 The `unit/` folder should mimic the `src/` directory.

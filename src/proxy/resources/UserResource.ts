@@ -1,15 +1,15 @@
 import { JsonController, Param, Get, Res, NotFoundError, Post, Body, HttpError, HttpCode } from 'routing-controllers';
 import { OpenAPI } from 'routing-controllers-openapi';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { Inject, Service } from 'typedi';
 import { Logger } from '@aws-lambda-powertools/logger';
-import { UserService } from '../services/UserService';
+import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes';
+import { UserService } from '../../services/UserService';
 import { User } from '../../domain/models/UserModel';
 import { ErrorEnum } from '../../domain/enums/Error.enum';
 import { LOGGER } from '../../domain/di-tokens/Tokens';
 import { OpenAPISpecServers } from '../../../documentation/spec/servers/servers';
 import { OpenAPISpecResponses } from '../../../documentation/spec/responses/responses';
-import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes';
 
 @Service()
 @JsonController('/1.0/users')
@@ -47,7 +47,11 @@ export class UserResource {
 			if (err instanceof NotFoundError) {
 				return response.status(HttpStatus.NOT_FOUND).send({ message: ErrorEnum.NOT_FOUND });
 			}
-			return response.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ message: ErrorEnum.INTERNAL_SERVER_ERROR });
+
+			return response.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+				message: ErrorEnum.INTERNAL_SERVER_ERROR,
+				error: ErrorEnum.ERROR_OCCURRED,
+			});
 		}
 	}
 
@@ -76,12 +80,15 @@ export class UserResource {
 		} catch (err) {
 			this.logger.error('[ERROR]: postUser', { err: (err as Error)?.message });
 
-			const message =
+			const errorDetails =
 				err instanceof HttpError && err.message?.includes(ErrorEnum.CREATING)
-					? `${ErrorEnum.INTERNAL_SERVER_ERROR}. ${ErrorEnum.CREATING}.`
-					: `${ErrorEnum.INTERNAL_SERVER_ERROR}. ${ErrorEnum.UNKNOWN}.`;
+					? `${ErrorEnum.CREATING}`
+					: `${ErrorEnum.UNKNOWN}`;
 
-			return response.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ message });
+			return response.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+				message: `${ErrorEnum.INTERNAL_SERVER_ERROR}`,
+				error: errorDetails,
+			});
 		}
 	}
 }

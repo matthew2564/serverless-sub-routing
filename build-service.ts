@@ -22,7 +22,7 @@ async function buildAPI() {
 
 	// Check if the proxy directory exists
 	if (!existsSync(proxyDir)) {
-		console.log('\x1b[33m%s\x1b[0m', "No 'src/proxy' directory found. Skipping proxy build.");
+		console.log('\x1b[91m%s\x1b[0m', "No 'src/proxy' directory found. Skipping proxy build.");
 		return;
 	}
 
@@ -42,7 +42,7 @@ async function buildFunctions() {
 
 	// Check if the functions directory exists
 	if (!existsSync(functionsDir)) {
-		console.log('\x1b[33m%s\x1b[0m', "No 'src/functions' directory found. Skipping function build.");
+		console.log('\x1b[91m%s\x1b[0m', "No 'src/functions' directory found. Skipping function build.");
 		return;
 	}
 
@@ -53,7 +53,7 @@ async function buildFunctions() {
 
 	// Bundle each folder within functions
 	for (const dir of directories) {
-		const entryPoint = path.join(functionsDir, dir, 'resource.ts');
+		const entryPoint = path.join(functionsDir, dir, 'handler.ts');
 		const outdir = path.join(__dirname, 'dist', 'functions', dir);
 
 		await build({
@@ -71,7 +71,9 @@ async function buildFunctions() {
 
 (async () => {
 	try {
-		await Promise.all([buildAPI(), buildFunctions()]);
+		// not using Promise.all so we maintain log order
+		await buildAPI();
+		await buildFunctions();
 	} catch {
 		process.exit(1);
 	}

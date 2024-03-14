@@ -23,7 +23,8 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 			logger.error(`[ERROR]: CustomErrorMiddleware - instanceof HttpError & ParamError`, { error });
 
 			return response.status(error.httpCode).send({
-				message: error.message.replace(CustomErrorMiddleware.ValueSanitiserRegExp, 'supplied'),
+				message: ErrorEnum.VALIDATION,
+				error: error.message.replace(CustomErrorMiddleware.ValueSanitiserRegExp, 'supplied'),
 			});
 		}
 
@@ -43,7 +44,7 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 
 			return response.status(error.statusCode).send({
 				message: ErrorEnum.VALIDATION,
-				detail: error.message,
+				error: error.message,
 			});
 		}
 
@@ -52,7 +53,7 @@ export class CustomErrorMiddleware implements ExpressErrorMiddlewareInterface {
 
 			return response.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
 				message: ErrorEnum.INTERNAL_SERVER_ERROR,
-				detail: 'An application error has occurred and has been logged.',
+				error: 'An application error has occurred and has been logged.',
 			});
 		}
 

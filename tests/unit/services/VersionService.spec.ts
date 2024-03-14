@@ -1,5 +1,5 @@
-import { VersionService } from '../../../../src/proxy/services/VersionService';
-import { friendlyName, version } from '../../../../package.json';
+import { VersionService } from '../../../src/services/VersionService';
+import { friendlyName, version } from '../../../package.json';
 
 describe('VersionService', () => {
 	let mockService: VersionService;

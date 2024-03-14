@@ -46,7 +46,8 @@ describe('CustomErrorMiddleware', () => {
 		);
 		expect(mockResponse.status).toHaveBeenCalledWith(400);
 		expect(mockResponse.send).toHaveBeenCalledWith({
-			message: 'Given parameter staffNumber is invalid. Value supplied cannot be parsed into number.',
+			message: ErrorEnum.VALIDATION,
+			error: 'Given parameter staffNumber is invalid. Value supplied cannot be parsed into number.',
 		});
 		expect(mockNext).not.toHaveBeenCalled();
 	});
@@ -63,7 +64,8 @@ describe('CustomErrorMiddleware', () => {
 		);
 		expect(mockResponse.status).toHaveBeenCalledWith(400);
 		expect(mockResponse.send).toHaveBeenCalledWith({
-			message: 'Given parameter staffNumber is invalid. Value supplied cannot be parsed into number.',
+			message: ErrorEnum.VALIDATION,
+			error: 'Given parameter staffNumber is invalid. Value supplied cannot be parsed into number.',
 		});
 		expect(mockNext).not.toHaveBeenCalled();
 	});
@@ -100,7 +102,7 @@ describe('CustomErrorMiddleware', () => {
 		});
 		expect(mockResponse.status).toHaveBeenCalledWith(400);
 		expect(mockResponse.send).toHaveBeenCalledWith({
-			detail: 'Some custom error',
+			error: 'Some custom error',
 			message: ErrorEnum.VALIDATION,
 		});
 		expect(mockNext).not.toHaveBeenCalled();
@@ -116,7 +118,7 @@ describe('CustomErrorMiddleware', () => {
 		expect(mockResponse.status).toHaveBeenCalledWith(500);
 		expect(mockResponse.send).toHaveBeenCalledWith({
 			message: ErrorEnum.INTERNAL_SERVER_ERROR,
-			detail: 'An application error has occurred and has been logged.',
+			error: ErrorEnum.ERROR_OCCURRED,
 		});
 		expect(mockNext).not.toHaveBeenCalled();
 	});

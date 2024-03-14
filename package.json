@@ -7,7 +7,7 @@
   "friendlyName": "Serverless Sub Routing",
   "license": "ISC",
   "scripts": {
-    "build": "npm run clean && ts-node compile-service.ts",
+    "build": "npm run clean && ts-node build-service.ts",
     "clean": "rimraf artifacts build dist",
     "format": "prettier . --write",
     "generate-openapi-spec": "ts-node documentation/generate-openapi-spec.ts",

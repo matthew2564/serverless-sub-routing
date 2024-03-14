@@ -1,5 +1,9 @@
 name: Update Dependencies
 
+permissions:
+  contents: write
+  id-token: write
+
 on:
   schedule:
     # Runs at 07:00 on the first day of every month

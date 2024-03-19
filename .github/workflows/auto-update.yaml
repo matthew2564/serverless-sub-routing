@@ -10,14 +10,21 @@ on:
     # Runs at 07:00 on the first day of every month
     - cron: '0 7 1 * *'
   workflow_dispatch:
-    updateType:
-      description: 'Update Type (major, minor, patch)'
-      required: true
-      default: 'minor'
-      choices:
-        - major
-        - minor
-        - patch
+    inputs:
+      pat:
+        description: 'Is a Personal Access Token (PAT) required to install dependencies?'
+        type: boolean
+        default: false
+        required: false
+      updateType:
+        description: 'Update Type (major, minor, patch)'
+        required: true
+        default: 'minor'
+        type: 'choice'
+        options:
+          - major
+          - minor
+          - patch
 
 jobs:
   update:

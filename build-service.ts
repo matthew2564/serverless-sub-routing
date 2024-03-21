@@ -28,7 +28,7 @@ async function buildAPI() {
 
 	await build({
 		entryPoints: ['src/proxy/index.ts'],
-		outfile: 'dist/proxy/index.js',
+		outfile: 'dist/src/proxy/index.js',
 		...coreBuildOptions,
 	});
 

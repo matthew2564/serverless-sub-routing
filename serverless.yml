@@ -20,7 +20,7 @@ functions:
           path: /users/{staffNumber}
           method: DELETE
   app:
-    handler: dist/proxy/index.handler
+    handler: dist/src/proxy/index.handler
     events:
       - http:
           path: /{proxy+}

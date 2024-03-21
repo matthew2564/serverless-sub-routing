@@ -3,7 +3,7 @@ export class CustomError {
 	message: string;
 	statusCode: number;
 
-	constructor(message: string, statusCode: number) {
+	constructor(statusCode: number, message: string) {
 		this.message = message;
 		this.statusCode = statusCode;
 	}

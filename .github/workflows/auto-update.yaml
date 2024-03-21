@@ -63,7 +63,7 @@ jobs:
       - name: 🔄 Check for changes
         id: check_changes
         run: |
-          git diff-index --quiet HEAD || echo "CHANGES_DETECTED=true" >> $GITHUB_ENV  
+          git diff-index --quiet HEAD || echo "CHANGES_DETECTED=true" >> $GITHUB_ENV
 
       - name: 🔺 Bump package version
         if: ${{ env.CHANGES_DETECTED == 'true' }}

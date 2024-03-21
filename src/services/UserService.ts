@@ -4,6 +4,7 @@ import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes'
 import { UserProvider } from '../providers/UserProvider';
 import { ErrorEnum } from '../domain/enums/Error.enum';
 import type { User } from '../domain/models/UserModel';
+import { CustomError } from '../domain/models/CustomError';
 
 @Service()
 export class UserService {
@@ -32,7 +33,10 @@ export class UserService {
 		const statusCode = await this.userProvider.deleteUserRecord(staffNumber);
 
 		if (statusCode !== HttpStatus.OK) {
-			throw new Error(`${ErrorEnum.DELETING}. StatusCode from DynamoDB: ${statusCode}`);
+			throw new CustomError(
+				HttpStatus.INTERNAL_SERVER_ERROR,
+				`${ErrorEnum.DELETING}. StatusCode from DynamoDB: ${statusCode}`
+			);
 		}
 	}
 }

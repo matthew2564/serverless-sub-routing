@@ -1,5 +1,6 @@
 import { BadRequestError, HttpError } from 'routing-controllers';
 import { Request, Response, NextFunction } from 'express';
+import { HttpStatus } from '@dvsa/cvs-microservice-common/api/http-status-codes';
 import { CustomErrorMiddleware } from '../../../../src/proxy/middleware/CustomErrorMiddleware';
 import { ValidationError } from 'class-validator';
 import { ExpressMock } from '../../../mocks/packages/express.mock';
@@ -92,7 +93,7 @@ describe('CustomErrorMiddleware', () => {
 	});
 
 	it('should handle HttpError correctly for a CustomError', () => {
-		const httpError = new CustomError('Some custom error', 400);
+		const httpError = new CustomError(HttpStatus.BAD_REQUEST, 'Some custom error');
 		httpError.name = 'CustomError';
 
 		middleware.error(httpError, mockRequest as Request, mockResponse as Response, mockNext);

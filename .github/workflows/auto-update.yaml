@@ -63,20 +63,26 @@ jobs:
       - name: 🔄 Check for changes
         id: check_changes
         run: |
-          git diff-index --quiet HEAD || echo "CHANGES_DETECTED=true" >> $GITHUB_ENV  
+          git diff-index --quiet HEAD || echo "CHANGES_DETECTED=true" >> $GITHUB_ENV
 
       - name: 🔺 Bump package version
         if: ${{ env.CHANGES_DETECTED == 'true' }}
         run: npm version ${{ github.event.inputs.update-type }} --no-git-tag-version
 
+      - name: 🔨Set Branch Name
+        id: set_branch
+        run: |
+          echo "branch_name=build/${{ github.event.inputs.update-type }}-dependencies-bump-$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+
       - name: ✅ Commit and push changes
         if: ${{ env.CHANGES_DETECTED == 'true' }}
         run: |
+          git checkout -b ${{ steps.set_branch.outputs.branch_name }}
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
           git add .
           git commit -m "build: upgrading ${{ github.event.inputs.update-type }} versions of dependencies"
-          git push
+          git push --set-upstream origin ${{ steps.set_branch.outputs.branch_name }}
 
       - name: 📝 Create Pull Request
         uses: actions/github-script@v7
@@ -88,14 +94,22 @@ jobs:
             const title = '[Automated] Update ${{ github.event.inputs.update-type }} dependencies';
             const body = 'This is an auto-generated PR with dependency updates and version bump performed by `npm-check-updates`.';
             const dateInDDmmYYYY = new Date().toISOString().split('T')[0].split('-').reverse().join('-');
-            const branch = `build/${{ github.event.inputs.update-type }}-dependencies-bump-${dateInDDmmYYYY}`;
+            const branch = '${{ steps.set_branch.outputs.branch_name }}';
             const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
             const base = process.env.GITHUB_REF.split('/').slice(-1)[0];
 
-            await github.rest.pulls.create({
+            try {
+              console.log(`Creating PR with base: ${base}, head: ${branch}`);
+
+               await github.rest.pulls.create({
                 owner,
                 repo,
                 title,
                 body,
-                base,
-              });  
+                head: branch,
+                base: 'main'
+              });
+            } catch (err) {
+              console.error('ERROR PRINTED', err.response.data);
+              throw err;
+            }

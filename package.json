@@ -20,7 +20,7 @@
     "start": "npm run clean && npm run build -- --source-map && SLS_DEBUG=* sls offline start",
     "start:debug": "npm run clean && tsc && SLS_DEBUG=* sls offline start",
     "package:functions": "mkdir -p artifacts && cd dist/functions && for dir in *; do if [ -d \"$dir\" ]; then zip -r \"../../artifacts/${dir}.zip\" \"$dir\"; fi; done",
-    "package:proxy": "mkdir -p artifacts && cd dist && if [ -d \"proxy\" ]; then zip -r \"../artifacts/proxy.zip\" \"proxy\"; fi",
+    "package:proxy": "mkdir -p artifacts && cd dist && if [ -d \"src/proxy\" ]; then zip -r \"../artifacts/proxy.zip\" \"src/proxy\"; fi",
     "package": "npm run build && npm run package:proxy && npm run package:functions"
   },
   "keywords": [

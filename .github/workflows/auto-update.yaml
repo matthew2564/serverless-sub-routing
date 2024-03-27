@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out the repository
+      - name: 📨 Checkout
         uses: actions/checkout@v4
 
       - name: 🔍 Read .nvmrc

@@ -28,7 +28,12 @@ class LambdaHandler implements LambdaInterface {
 			const staffNumber = event?.pathParameters?.staffNumber;
 
 			if (!staffNumber) {
-				throw new Error(`${ErrorEnum.VALIDATION} - Staff number is required`);
+				this.logger.error(`[ERROR]: ${ErrorEnum.VALIDATION}`, { error: 'Staff number is required' });
+
+				return response.status(HttpStatus.BAD_REQUEST).payload({
+					message: ErrorEnum.VALIDATION,
+					error: 'Staff number is required',
+				});
 			}
 
 			this.logger.addPersistentLogAttributes({ staffNumber });

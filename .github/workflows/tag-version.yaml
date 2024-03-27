@@ -23,12 +23,12 @@ jobs:
 
       - name: 🔍 Read .nvmrc
         id: nvm
-        run: echo "NVMRC=$(cat .nvmrc)" >> $GITHUB_ENV  
+        run: echo "NVMRC=$(cat .nvmrc)" >> $GITHUB_ENV
 
       - name: ⚙️ Setup Node.js ${{ env.NVMRC }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NVMRC }}  
+          node-version: ${{ env.NVMRC }}
 
       - name: 🔍 Get version from `package.json`
         run: |
@@ -39,7 +39,7 @@ jobs:
           fi
           echo "VERSION=$PKG_VERSION" >> $GITHUB_ENV
 
-      - name:  ⚒️ Create tag
+      - name: ⚒️ Create tag
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
@@ -52,7 +52,7 @@ jobs:
           # Delete the local tag
           git tag -d v${{ env.VERSION }}
           echo "Deleted local tag due to failure."
-          
+
           # Push the deletion to the remote repository
           git push --delete origin v${{ env.VERSION }}
           echo "Deleted remote tag due to failure."

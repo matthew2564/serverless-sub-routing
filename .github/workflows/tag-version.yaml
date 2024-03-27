@@ -21,9 +21,18 @@ jobs:
       - name: 📨 Checkout
         uses: actions/checkout@v4
 
+      - name: 🔍 Read .nvmrc
+        id: nvm
+        run: echo "NVMRC=$(cat .nvmrc)" >> $GITHUB_ENV  
+
+      - name: ⚙️ Setup Node.js ${{ env.NVMRC }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NVMRC }}  
+
       - name: 🔍 Get version from `package.json`
         run: |
-          PKG_VERSION=$(node -e "console.log(require('./package.json').version)) || exit 1
+          PKG_VERSION=$(npm pkg get version | sed 's/"//g') || exit 1
           if [ -z "PKG_VERSION" ]; then
             echo "Version extraction failed"
             exit 1

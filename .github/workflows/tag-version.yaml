@@ -1,0 +1,49 @@
+name: Tag Version
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tag-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📨 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔍 Get version from `package.json`
+        run: |
+          PKG_VERSION=$(node -e "console.log(require('./package.json').version)) || exit 1
+          if [ -z "PKG_VERSION" ]; then
+            echo "Version extraction failed"
+            exit 1
+          fi
+          echo "VERSION=$PKG_VERSION" >> $GITHUB_ENV
+
+      - name:  ⚒️ Create tag
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git tag v${{ env.VERSION }} || { echo "Tagging failed"; exit 1; }
+          git push origin v${{ env.VERSION }} || { echo "Pushing tag failed"; exit 1; }
+
+      - name: 🧹 Cleanup on failure
+        if: ${{ failure() }}
+        run: |
+          # Delete the local tag
+          git tag -d v${{ env.VERSION }}
+          echo "Deleted local tag due to failure."
+          
+          # Push the deletion to the remote repository
+          git push --delete origin v${{ env.VERSION }}
+          echo "Deleted remote tag due to failure."
